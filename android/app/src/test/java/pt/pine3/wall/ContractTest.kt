@@ -51,4 +51,16 @@ class ContractTest {
         assertEquals(keys, Themes.all.map { it.key })
         assertEquals(tokens.getJSONArray("accents").length(), ACCENTS.size)
     }
+
+    @Test fun parsesThePeople() {
+        val people = Home.parse(example()).people
+        assertEquals(listOf("person.ana", "person.pedro"), people.map { it.id })
+        val pedro = people[1]
+        assertEquals("Pedro", pedro.alias)
+        assertEquals("/api/image/pedro.jpg", pedro.picture)
+        assertNull(people[0].picture) // "picture": null não pode virar o texto "null"
+        val tokens = JSONObject(File(root, "schema/tokens.json").readText()).getJSONArray("person_colors")
+        assertEquals((0 until tokens.length()).map { tokens.getString(it) }, PERSON_COLORS)
+        assertEquals(PERSON_COLORS[0], people[0].color)
+    }
 }

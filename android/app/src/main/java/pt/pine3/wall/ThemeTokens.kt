@@ -32,3 +32,4 @@ internal val THEME_TOKENS: List<Theme> = listOf(
 
 internal val CARD_COLORS: List<String> = listOf("#f5efe1", "#efe3c8", "#e6dcc2", "#d6e2e8", "#c3d3da", "#d9d3e3", "#e6d3d6", "#cfe0cc", "#bccfc3", "#cbb9a8", "#bcc6d3", "#d8ccb4", "#cdc6d8", "#b9d3cd")
 internal val ACCENTS: List<String> = listOf("#f6b83f", "#f5a524", "#ff9f43", "#ff7a59", "#ff6b81", "#f472b6", "#a78bfa", "#7c8cff", "#4aa8ff", "#2dd4bf", "#4ade80", "#a3e635")
+internal val PERSON_COLORS: List<String> = listOf("#f3a96b", "#f6cf6a", "#c9d3dc", "#b9e0c3", "#8ecbff", "#c9a7f5", "#ff9fb0", "#7fd8c7")
