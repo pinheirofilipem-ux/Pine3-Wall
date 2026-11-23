@@ -19,9 +19,9 @@ object Compat {
         return 0
     }
 
-    /** null se a app e a integração se entendem; senão, o que fazer (texto para o utilizador). */
-    fun problem(serverApi: Int, minAppVersion: String?, appVersion: String): String? = when {
-        serverApi <= 0 -> Tr.s(
+    /** null se a app e a integração se entendem; senão, o que fazer (texto para o utilizador). Sem layout = integração anterior à 0.3.0. */
+    fun problem(serverApi: Int, minAppVersion: String?, appVersion: String, hasLayout: Boolean = true): String? = when {
+        serverApi <= 0 || !hasLayout -> Tr.s(
             "A integração Pine3 Wall no Home Assistant é antiga para esta app. Atualiza-a no HACS e reinicia o HA.",
             "The Pine3 Wall integration in Home Assistant is too old for this app. Update it in HACS and restart HA.",
         )

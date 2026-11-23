@@ -36,7 +36,7 @@ object HaTest {
                         val rooms = res.optJSONArray("rooms")?.length() ?: 0
                         val ver = res.optString("version", "?")
                         line(true, "5/5  " + Tr.s("Pine3 Wall $ver respondeu: $rooms divisões", "Pine3 Wall $ver answered: $rooms rooms"))
-                        Compat.problem(res.optInt("api_version", 0), res.optString("min_app_version", "").ifBlank { null }, appVersion)?.let { line(false, it) }
+                        Compat.problem(res.optInt("api_version", 0), res.optString("min_app_version", "").ifBlank { null }, appVersion, res.has("layout"))?.let { line(false, it) }
                     } else {
                         line(false, "5/5  " + Tr.s("O Pine3 Wall não respondeu", "Pine3 Wall did not answer") + " (${h.optJSONObject("error")?.optString("code")}). " + Tr.s("Está instalado no HA e o HA foi reiniciado?", "Is it installed in HA, and was HA restarted?"))
                     }

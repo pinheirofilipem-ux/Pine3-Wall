@@ -208,11 +208,25 @@ private fun wxPill(kit: Kit, home: Home, onClick: () -> Unit): View? {
     }
 }
 
-/** Início: 4 disposições (clássica, topo, colunas e barra lateral), como no painel web. */
+/**
+ * Início, desenhado a partir do layout (página "home"): o template escolhe a disposição (clássica, topo, colunas ou barra lateral)
+ * e as secções dizem o que aparece; os cartões da grelha vêm do layout pelo [ModuleRegistry].
+ */
 class HomePage(kit: Kit, private val home: Home, private val nav: Nav) : Page(kit) {
     private val cards = ArrayList<Card>()
     private val s = home.settings
-    private val layout = s.optString("home_layout", "top")
+    private val page = home.layout?.page("home")
+    private val layout = page?.template?.takeIf { it in HomeModule.templates } ?: s.optString("home_layout", "top")
+
+    /** A secção [type] está no layout? (Sem layout, como nas definições.) */
+    private fun has(type: String): Boolean = page?.has(type) ?: when (type) {
+        "people" -> s.optBoolean("home_people", false)
+        "status" -> s.optBoolean("show_status", true)
+        "weather" -> s.optBoolean("show_weather", true)
+        "scenes" -> s.optBoolean("show_scenes", true) && home.scenes.isNotEmpty()
+        else -> true
+    }
+    private val sceneItems: List<String> = page?.section("scenes")?.items ?: home.scenes
     private val dense = layout == "columns" || layout == "sidebar"
     private val status = kit.text("", kit.clamp(24f, kit.vw(2.5f), 32f), kit.fg, 300, display = true).apply { setSingleLine(); ellipsize = TextUtils.TruncateAt.END }
     private val chips = LinearLayout(kit.ctx)
@@ -227,19 +241,19 @@ class HomePage(kit: Kit, private val home: Home, private val nav: Nav) : Page(ki
         val row = LinearLayout(kit.ctx).apply { gravity = Gravity.CENTER_VERTICAL }
         val fmt = SimpleDateFormat(if (Tr.en) "EEEE d MMMM" else "EEEE, d 'de' MMMM", if (Tr.en) java.util.Locale.UK else Tr.locale)
         row.addView(eyebrow(kit, fmt.format(Date())))
-        if (s.optBoolean("home_people", false)) row.addView(peopleBox, LinearLayout.LayoutParams(-2, -2).apply { marginStart = kit.dp(16) })
+        if (has("people")) row.addView(peopleBox, LinearLayout.LayoutParams(-2, -2).apply { marginStart = kit.dp(16) })
         return row
     }
 
     private fun clock(): View = TextClock(kit.ctx).apply {
-        val f = if (s.optBoolean("clock_24h", true)) "HH:mm" else "h:mm"
+        val f = if (home.layout?.clock24h ?: s.optBoolean("clock_24h", true)) "HH:mm" else "h:mm"
         format24Hour = f; format12Hour = f
         setTextColor(kit.fg); setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, clockSize)
         typeface = kit.font(300, true); includeFontPadding = false; letterSpacing = -0.02f
     }
 
     private fun stat(): View? {
-        if (!s.optBoolean("show_status", true) || Lay.edit != null) return null
+        if (!has("status") || Lay.edit != null) return null
         val c = LinearLayout(kit.ctx).apply { orientation = LinearLayout.VERTICAL }
         c.addView(eyebrow(kit, Tr.t("Estado da casa")))
         c.addView(status, lp(kit, top = 6))
@@ -248,16 +262,16 @@ class HomePage(kit: Kit, private val home: Home, private val nav: Nav) : Page(ki
     }
 
     private fun scenes(): View? {
-        if (!s.optBoolean("show_scenes", true) || home.scenes.isEmpty() || Lay.edit != null) return null
+        if (!has("scenes") || sceneItems.isEmpty() || Lay.edit != null) return null
         val c = LinearLayout(kit.ctx).apply { orientation = LinearLayout.VERTICAL }
         val head = LinearLayout(kit.ctx).apply { gravity = Gravity.CENTER_VERTICAL }
         head.addView(eyebrow(kit, Tr.t("Cenas")))
-        head.addView(kit.text("${home.scenes.size}", 12f, kit.fg, 600).apply {
+        head.addView(kit.text("${sceneItems.size}", 12f, kit.fg, 600).apply {
             background = kit.rounded(kit.soft, 20); setPadding(kit.dp(8), kit.dp(2), kit.dp(8), kit.dp(2))
         }, LinearLayout.LayoutParams(-2, -2).apply { marginStart = kit.dp(10) })
         c.addView(head)
         val row = LinearLayout(kit.ctx)
-        home.scenes.take(12).forEach { id ->
+        sceneItems.take(12).forEach { id ->
             row.addView(LinearLayout(kit.ctx).apply {
                 gravity = Gravity.CENTER_VERTICAL; background = kit.ripple(kit.glass(40)); isClickable = true
                 setPadding(kit.dp(20), 0, kit.dp(24), 0); minimumHeight = kit.dp(52)
@@ -273,6 +287,14 @@ class HomePage(kit: Kit, private val home: Home, private val nav: Nav) : Page(ki
     private fun grid(): View {
         val g = if (dense) Grid(kit.ctx, 0, kit.dp(kotlin.math.max(120f, kotlin.math.min(230f, (kit.hdp - 316f) / 3f)).toInt()), kit.dp(14), 4).also { it.list = kit.list }
         else Grid(kit.ctx, kit.dp(230), kit.dp(250), kit.dp(20)).also { it.list = kit.list }
+        val fromLayout = page?.section("grid")
+        if (Lay.edit == null && fromLayout != null) {
+            // O layout já traz os cartões pela ordem certa, sem os escondidos e com o tamanho de cada um.
+            val ctx = CardContext(kit, home, nav, dense)
+            fromLayout.cards.forEach { spec -> ModuleRegistry.card(ctx, spec)?.let { c -> c.key = spec.key; cards += c; g.addView(c) } }
+            return g
+        }
+        // Modo de edição: a cópia de trabalho das definições (ordem, escondidos e tamanhos ainda por gravar).
         val order = Lay.roomOrder(home)
         val items = ArrayList<Pair<String, Card>>()
         Lay.rooms(home).forEach { r -> items += r.id to RoomCard(kit, r, dense) { nav.openRoom(r) }.also { c -> c.key = r.id; c.setupEdit(kit, "room", r.id, Lay.isBigRoom(home, r.id)) } }
@@ -301,7 +323,7 @@ class HomePage(kit: Kit, private val home: Home, private val nav: Nav) : Page(ki
                     val left = LinearLayout(kit.ctx).apply { orientation = LinearLayout.VERTICAL }
                     left.addView(date()); left.addView(clock(), lp(kit, top = 8))
                     stat()?.let { left.addView(it, lp(kit, top = 24)) }
-                    if (s.optBoolean("show_weather", true)) left.addView(WxCard(kit, home, "tall") { nav.openScreen("weather") }.also { cards += it }, lp(kit, top = 20))
+                    if (has("weather")) left.addView(WxCard(kit, home, "tall") { nav.openScreen("weather") }.also { cards += it }, lp(kit, top = 20))
                     row.addView(left, LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = kit.dp(36) })
                     val main = LinearLayout(kit.ctx).apply { orientation = LinearLayout.VERTICAL }
                     scenesView?.let { main.addView(it, lp(kit, top = 0)) }
@@ -315,7 +337,7 @@ class HomePage(kit: Kit, private val home: Home, private val nav: Nav) : Page(ki
                         orientation = LinearLayout.VERTICAL; background = kit.glass(32); setPadding(kit.dp(20), kit.dp(22), kit.dp(20), kit.dp(16))
                     }
                     sb.addView(date()); sb.addView(clock(), lp(kit, top = 0))
-                    if (s.optBoolean("show_weather", true)) sb.addView(WxCard(kit, home, "tall side") { nav.openScreen("weather") }.also { cards += it }, lp(kit, top = 14))
+                    if (has("weather")) sb.addView(WxCard(kit, home, "tall side") { nav.openScreen("weather") }.also { cards += it }, lp(kit, top = 14))
                     stat()?.let { sb.addView(it, lp(kit, top = 14)) }
                     row.addView(sb, LinearLayout.LayoutParams(kit.dp(kit.clamp(290f, kit.vw(29f), 380f)), -2).apply { marginEnd = kit.dp(26) })
                     val main = LinearLayout(kit.ctx).apply { orientation = LinearLayout.VERTICAL }
@@ -330,7 +352,7 @@ class HomePage(kit: Kit, private val home: Home, private val nav: Nav) : Page(ki
                     l.addView(date()); l.addView(clock(), lp(kit, top = 8))
                     top.addView(l)
                     stat()?.let { top.addView(it, LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = kit.dp(32); marginEnd = kit.dp(16) }) } ?: top.addView(View(kit.ctx), LinearLayout.LayoutParams(0, 1, 1f))
-                    if (s.optBoolean("show_weather", true)) wxPill(kit, home) { nav.openScreen("weather") }?.let { top.addView(it) }
+                    if (has("weather")) wxPill(kit, home) { nav.openScreen("weather") }?.let { top.addView(it) }
                     w.addView(top)
                     scenesView?.let { w.addView(it, lp(kit, top = 20)) }
                     w.addView(grid(), lp(kit, top = 22))
@@ -351,7 +373,7 @@ class HomePage(kit: Kit, private val home: Home, private val nav: Nav) : Page(ki
                     left.addView(r1)
                     scenesView?.let { left.addView(it, lp(kit, top = 8)) }
                     top.addView(left, LinearLayout.LayoutParams(0, -2, 1f))
-                    if (s.optBoolean("show_weather", true))
+                    if (has("weather"))
                         top.addView(WxCard(kit, home, "big") { nav.openScreen("weather") }.also { cards += it }, LinearLayout.LayoutParams(kit.dp(kit.clamp(300f, kit.wdp * 0.36f, 470f)), -2).apply { marginStart = kit.dp(36) })
                     w.addView(top)
                     w.addView(grid(), lp(kit, top = 22))
