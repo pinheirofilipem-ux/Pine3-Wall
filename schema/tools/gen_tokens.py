@@ -13,6 +13,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 TOKENS = ROOT / "schema" / "tokens.json"
 JS_OUT = ROOT / "custom_components" / "pine3_wall" / "frontend" / "tokens.js"
+PY_OUT = ROOT / "custom_components" / "pine3_wall" / "person_colors.json"
 KT_OUT = ROOT / "android" / "app" / "src" / "main" / "java" / "pt" / "pine3" / "wall" / "ThemeTokens.kt"
 HEADER = "Generated from schema/tokens.json by schema/tools/gen_tokens.py. Do not edit by hand."
 
@@ -61,6 +62,7 @@ def gen_js(tokens: dict) -> str:
     out.append(f"export const THEME_NAMES = {{ {names} }};")
     out.append("export const CARD_COLORS = [" + ", ".join(f'"{c}"' for c in tokens["card_colors"]) + "];")
     out.append("export const ACCENTS = [" + ", ".join(f'"{c}"' for c in tokens["accents"]) + "];")
+    out.append("export const PERSON_COLORS = [" + ", ".join(f'"{c}"' for c in tokens["person_colors"]) + "];")
     return "\n".join(out) + "\n"
 
 
@@ -92,12 +94,13 @@ def gen_kt(tokens: dict) -> str:
     out.append("")
     out.append("internal val CARD_COLORS: List<String> = listOf(" + ", ".join(f'"{c}"' for c in tokens["card_colors"]) + ")")
     out.append("internal val ACCENTS: List<String> = listOf(" + ", ".join(f'"{c}"' for c in tokens["accents"]) + ")")
+    out.append("internal val PERSON_COLORS: List<String> = listOf(" + ", ".join(f'"{c}"' for c in tokens["person_colors"]) + ")")
     return "\n".join(out) + "\n"
 
 
 def outputs() -> dict[Path, str]:
     tokens = json.loads(TOKENS.read_text(encoding="utf-8"))
-    return {JS_OUT: gen_js(tokens), KT_OUT: gen_kt(tokens)}
+    return {JS_OUT: gen_js(tokens), KT_OUT: gen_kt(tokens), PY_OUT: json.dumps(tokens["person_colors"]) + "\n"}
 
 
 def main(argv: list[str]) -> int:

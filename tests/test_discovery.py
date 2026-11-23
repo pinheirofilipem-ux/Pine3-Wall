@@ -53,6 +53,8 @@ async def _setup_home(hass: HomeAssistant):
     scene = entity("scene", "movie", None, "scening")
     ents.async_update_entity(scene, area_id=sala.id)
     hass.states.async_set("weather.casa", "sunny", {})
+    hass.states.async_set("person.pedro", "home", {"friendly_name": "Pedro Silva", "entity_picture": "/api/image/pedro.jpg"})
+    hass.states.async_set("person.ana", "not_home", {"friendly_name": "Ana"})
     return locals()
 
 

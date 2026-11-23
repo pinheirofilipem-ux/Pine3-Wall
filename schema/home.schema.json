@@ -60,6 +60,13 @@
     "layout": {
       "$ref": "layout.schema.json",
       "description": "The layout document (schema/layout.schema.json)."
+    },
+    "people": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/person"
+      },
+      "description": "The family (person.*), sorted by name, with colour, alias and picture (settings 'people')."
     }
   },
   "$defs": {
@@ -394,6 +401,55 @@
         },
         "settings_version": {
           "type": "integer"
+        },
+        "people": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "color": {
+                "$ref": "#/$defs/color"
+              },
+              "alias": {
+                "type": "string",
+                "maxLength": 40
+              },
+              "hidden": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    "person": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "alias",
+        "color",
+        "picture",
+        "hidden"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/entity_id"
+        },
+        "name": {
+          "type": "string"
+        },
+        "alias": {
+          "type": "string"
+        },
+        "color": {
+          "$ref": "#/$defs/color"
+        },
+        "picture": {
+          "$ref": "#/$defs/nullable_string"
+        },
+        "hidden": {
+          "type": "boolean"
         }
       }
     }

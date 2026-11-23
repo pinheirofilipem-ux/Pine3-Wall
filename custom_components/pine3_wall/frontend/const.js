@@ -85,7 +85,7 @@ export const BIN_PT = {
 };
 
 // Themes, card colours and accents come from schema/tokens.json (generated tokens.js).
-export { THEMES, LIGHT_THEMES, AMBIENT_THEMES, VIVID_THEMES, THEME_NAMES, CARD_COLORS, ACCENTS } from "./tokens.js";
+export { THEMES, LIGHT_THEMES, AMBIENT_THEMES, VIVID_THEMES, THEME_NAMES, CARD_COLORS, ACCENTS, PERSON_COLORS } from "./tokens.js";
 export const DOCK_ITEMS = [
   ["home", "mdi:home-outline", "Casa", ""],
   ["rooms", "mdi:view-grid-outline", "Divisões", "Todas as divisões numa grelha."],
@@ -99,7 +99,7 @@ export const DEFAULTS = {
   show_weather: true, show_people: true, home_people: false, show_status: true, show_scenes: true, show_summary: true,
   dock: ["home", "rooms", "house", "scenes"], hidden: [], hidden_rooms: [], room_order: [],
   language: "pt", layout: "grid", home_layout: "top", appearance: "fixed", theme_day: "linho", theme_night: "ameixa", weather_entity: "", screensaver: 0, animations: true,
-  big_rooms: [], big_devices: [], device_order: {}, house_size: {}, house_layout: {}, shown: [], placements: {}, cam_doors: {}, wall_height: 30,
+  big_rooms: [], big_devices: [], device_order: {}, house_size: {}, house_layout: {}, shown: [], placements: {}, cam_doors: {}, wall_height: 30, people: {},
 };
 
 

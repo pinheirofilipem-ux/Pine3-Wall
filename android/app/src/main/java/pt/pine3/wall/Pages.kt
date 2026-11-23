@@ -74,6 +74,27 @@ fun devOf(id: String) = Dev(id, Fmt.name(id), Fmt.domain(id), emptyList(), empty
 
 private fun devices(home: Home) = home.rooms.filter { !it.hidden }.flatMap { it.devices }.filter { !it.hidden }
 
+/** Fotos das pessoas já descarregadas (o Início redesenha-se a cada mudança de estado). */
+private val photoCache = java.util.concurrent.ConcurrentHashMap<String, android.graphics.Bitmap>()
+
+private fun avatarPhoto(url: String, set: (android.graphics.Bitmap) -> Unit) {
+    photoCache[url]?.let { set(it); return }
+    Ha.fetchImage(url) { b -> if (b != null) { photoCache[url] = b; set(b) } }
+}
+
+/** A foto recortada num círculo. */
+private fun roundPhoto(kit: Kit, src: android.graphics.Bitmap): android.graphics.drawable.Drawable {
+    val size = minOf(src.width, src.height)
+    val out = android.graphics.Bitmap.createBitmap(size, size, android.graphics.Bitmap.Config.ARGB_8888)
+    val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+        shader = android.graphics.BitmapShader(src, android.graphics.Shader.TileMode.CLAMP, android.graphics.Shader.TileMode.CLAMP).apply {
+            setLocalMatrix(android.graphics.Matrix().apply { setTranslate(-(src.width - size) / 2f, -(src.height - size) / 2f) })
+        }
+    }
+    android.graphics.Canvas(out).drawCircle(size / 2f, size / 2f, size / 2f, paint)
+    return android.graphics.drawable.BitmapDrawable(kit.ctx.resources, out)
+}
+
 /** Todas as luzes visíveis da casa. */
 fun allLights(home: Home): List<String> = devices(home).filter { it.kind == "light" }.map { it.id }.distinct()
 
@@ -406,14 +427,21 @@ class HomePage(kit: Kit, private val home: Home, private val nav: Nav) : Page(ki
             }, LinearLayout.LayoutParams(-2, -2).apply { marginEnd = kit.dp(6) })
         }
         peopleBox.removeAllViews()
-        val tint = listOf("#F3A96B", "#F6CF6A", "#C9D3DC", "#B9E0C3")
-        home.persons.mapNotNull { id -> Fmt.state(id)?.let { id to it } }.take(4).forEachIndexed { k, (id, st) ->
+        // A família (cor, nome curto e foto vêm das definições > Pessoas); numa integração antiga, todas as person.* com as cores por omissão.
+        val family = home.people.filter { !it.hidden }.ifEmpty {
+            home.persons.mapIndexed { k, id -> Person(id, Fmt.name(id), Fmt.name(id), PERSON_COLORS[k % PERSON_COLORS.size], null, false) }
+        }
+        family.mapNotNull { p -> Fmt.state(p.id)?.let { p to it } }.take(4).forEachIndexed { k, (p, st) ->
             val box = FrameLayout(kit.ctx)
-            box.addView(kit.text(Fmt.name(id).trim().take(1).uppercase(), 20f, kit.ink, 600, display = true).apply {
+            val color = try { Color.parseColor(p.color) } catch (_: Exception) { Color.parseColor(PERSON_COLORS[0]) }
+            val avatar = kit.text(p.alias.trim().take(1).uppercase(), 20f, kit.ink, 600, display = true).apply {
                 gravity = Gravity.CENTER; background = android.graphics.drawable.GradientDrawable().apply {
-                    shape = android.graphics.drawable.GradientDrawable.OVAL; setColor(Color.parseColor(tint[k % 4])); setStroke(kit.dp(2), Color.argb(89, 255, 255, 255))
+                    shape = android.graphics.drawable.GradientDrawable.OVAL; setColor(color); setStroke(kit.dp(2), Color.argb(89, 255, 255, 255))
                 }
-            }, FrameLayout.LayoutParams(kit.dp(52), kit.dp(52)))
+            }
+            box.addView(avatar, FrameLayout.LayoutParams(kit.dp(52), kit.dp(52)))
+            p.picture?.let { pic -> avatarPhoto(pic) { bmp -> avatar.text = ""; avatar.background = android.graphics.drawable.LayerDrawable(arrayOf(
+                roundPhoto(kit, bmp), android.graphics.drawable.GradientDrawable().apply { shape = android.graphics.drawable.GradientDrawable.OVAL; setColor(Color.TRANSPARENT); setStroke(kit.dp(2), Color.argb(89, 255, 255, 255)) })) } }
             box.addView(View(kit.ctx).apply {
                 background = android.graphics.drawable.GradientDrawable().apply {
                     shape = android.graphics.drawable.GradientDrawable.OVAL; setColor(if (st.state == "home") Color.parseColor("#34C759") else Color.parseColor("#6B6B6B")); setStroke(kit.dp(2), Color.parseColor("#3A2238"))

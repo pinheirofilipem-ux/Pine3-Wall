@@ -3,7 +3,7 @@
 
 import {
   SHOWN, TOGGLE, DETAIL, SECTIONS, SECTION_ICON, DOMAIN_ICON, DEVICE_CLASS_ICON, ACCENT, STATE_PT, WEATHER_PT, WEATHER_ICON,
-  BIN_PT, NAME_ICON, THEMES, LIGHT_THEMES, VIVID_THEMES, AMBIENT_THEMES, CARD_COLORS, ACCENTS, DOCK_ITEMS, DEFAULTS, THEME_NAMES, esc, dom, store, loadFonts,
+  BIN_PT, NAME_ICON, THEMES, LIGHT_THEMES, VIVID_THEMES, AMBIENT_THEMES, CARD_COLORS, ACCENTS, PERSON_COLORS, DOCK_ITEMS, DEFAULTS, THEME_NAMES, esc, dom, store, loadFonts,
 } from "./const.js";
 import { css } from "./styles.js";
 import { t, tp, num, locale, setLang, lang } from "./i18n.js";
@@ -992,7 +992,7 @@ class Pine3WallPanel extends HTMLElement {
     const d = this._draft, sec = this._section || "look";
     const dirty = JSON.stringify(d) !== this._savedJson;
     const navItems = [
-      ["look", "mdi:palette-outline", t("Aparência")], ["home", "mdi:home-outline", t("Início")], ["rooms", "mdi:view-grid-outline", t("Divisões")],
+      ["look", "mdi:palette-outline", t("Aparência")], ["home", "mdi:home-outline", t("Início")], ["people", "mdi:account-group-outline", t("Pessoas")], ["rooms", "mdi:view-grid-outline", t("Divisões")],
       ["entities", "mdi:format-list-checks", t("Entidades")], ["plan", "mdi:floor-plan", t("Planta 3D")],
       ["nav", "mdi:dock-bottom", t("Navegação")], ["system", "mdi:cog-outline", t("Sistema")],
     ];
@@ -1078,6 +1078,8 @@ class Pine3WallPanel extends HTMLElement {
         <p style="margin:14px 0 0;font-size:14px">${t("Tamanho na Casa 3D: A = automático, P = pequeno, M = médio, G = grande. Os pisos vêm dos pisos do Home Assistant.")}</p></div>
         ${hiddenDev.length ? `<div class="panel glass"><h3 style="margin-top:0">${t("Dispositivos escondidos")}</h3><p>${t("Escondidos no modo de edição ou na folha de detalhe.")}</p><div class="list big">${hiddenDev.map((x) => `<div class="it"><span>${esc(x.name)} <small>${esc(x.room)}</small></span><button class="pill" data-unhide="${esc(x.id)}">${t("Mostrar")}</button></div>`).join("")}</div></div>` : ""}`;
       this._order = order;
+    } else if (sec === "people") {
+      main = this._peopleSection(d);
     } else if (sec === "entities") {
       main = this._entitiesSection(d);
     } else if (sec === "plan") {
@@ -1114,6 +1116,24 @@ class Pine3WallPanel extends HTMLElement {
   _planRooms() {
     if (this._model) return this._model.rooms.map((r) => ({ ...r, count: r.devices.length }));
     return this._localRooms();
+  }
+
+  /** Settings > People: colour, alias and visibility of each person.* (shared by the calendar, chores and home screen). */
+  _peopleSection(d) {
+    const fam = this._model?.people;
+    if (!fam) return `<div class="panel glass"><p>${t("Esta secção precisa da integração Pine3 Wall instalada.")}</p></div>`;
+    if (!fam.length) return `<div class="panel glass"><h3 style="margin-top:0">${t("Pessoas")}</h3><p>${t("Não há pessoas no Home Assistant. Cria-as em Definições → Pessoas.")}</p></div>`;
+    const cfg = (id) => (d.people || {})[id] || {};
+    return `<div class="panel glass"><h3 style="margin-top:0">${t("Pessoas")}</h3><p>${t("A família vem das pessoas do Home Assistant. A cor e o nome curto aparecem no início, no calendário e nas tarefas.")}</p>
+      <div class="list big">${fam.map((p) => {
+        const c = cfg(p.id), color = c.color || p.color, vis = !c.hidden;
+        return `<div class="it" style="flex-wrap:wrap;gap:12px">
+          <div class="av" style="width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-weight:600;color:#241a22;background-color:${color};background-size:cover;${p.picture ? `background-image:url('${esc(p.picture)}')` : ""}">${p.picture ? "" : esc((c.alias || p.alias || "?")[0].toUpperCase())}</div>
+          <span style="min-width:120px">${esc(p.name)} <small>${esc(p.id)}</small></span>
+          <input class="search" data-palias="${esc(p.id)}" value="${esc(c.alias || "")}" placeholder="${esc(p.alias)}" maxlength="40" style="width:160px;height:40px" title="${t("Nome curto")}">
+          <div class="swr">${PERSON_COLORS.map((col) => `<div class="swc ${col === color ? "act" : ""}" data-pcolor="${esc(p.id)}|${col}" style="background:${col}"></div>`).join("")}</div>
+          <div class="tg ${vis ? "on" : ""}" data-pvis="${esc(p.id)}" title="${t("Mostrar")}"><i></i></div></div>`;
+      }).join("")}</div></div>`;
   }
 
   _entShown(d, e) { return e.primary ? !d.hidden.includes(e.id) : d.shown.includes(e.id) && !d.hidden.includes(e.id); }
@@ -1205,6 +1225,14 @@ class Pine3WallPanel extends HTMLElement {
       d.room_order = full.map((x) => (x.startsWith("@") ? x : o[n++])).filter(Boolean).concat(o.slice(n));
       upd();
     });
+    const person = (id) => { d.people = { ...(d.people || {}) }; d.people[id] = { ...(d.people[id] || {}) }; return d.people[id]; };
+    on("[data-pcolor]", (el) => { const [id, col] = el.dataset.pcolor.split("|"); person(id).color = col; upd(); });
+    on("[data-pvis]", (el) => { const p = person(el.dataset.pvis); if (p.hidden) delete p.hidden; else p.hidden = true; upd(); });
+    root.querySelectorAll("[data-palias]").forEach((el) => el.addEventListener("change", () => {
+      const p = person(el.dataset.palias), v = el.value.trim().slice(0, 40);
+      if (v) p.alias = v; else delete p.alias;
+      upd();
+    }));
     on("[data-unhide]", (el) => { d.hidden = d.hidden.filter((x) => x !== el.dataset.unhide); upd(); });
     on("[data-reset]", () => { const keepLang = d.language; Object.assign(d, clone(DEFAULTS)); d.language = keepLang; d.room_order = (this._model?.rooms || []).map((r) => r.id); upd(); });
     on("[data-rebuild]", async () => { if (this._model) { this._model = await this._hass.callWS({ type: "pine3_wall/home" }); this._toast = t("Casa reconstruída"); upd(); setTimeout(() => { this._toast = null; upd(); }, 1500); } });
@@ -1542,12 +1570,14 @@ class Pine3WallPanel extends HTMLElement {
   _people() {
     if (!this._cfg().home_people) return "";
     const h = this._hass;
-    const persons = (this._model?.persons || Object.keys(h.states).filter((i) => dom(i) === "person")).map((i) => this._s(i)).filter(Boolean).slice(0, 4);
-    const tint = ["#f3a96b", "#f6cf6a", "#c9d3dc", "#b9e0c3"];
-    return persons.length ? `<div class="people">${persons.map((p, k) => {
-      const pic = p.attributes.entity_picture;
-      const ini = (p.attributes.friendly_name || "?").trim()[0].toUpperCase();
-      return `<div class="av ${p.state === "home" ? "home" : ""}" title="${esc(p.attributes.friendly_name)}" style="background-color:${tint[k % 4]};${pic ? `background-image:url('${esc(pic)}')` : ""}">${pic ? "" : esc(ini)}<i></i></div>`;
+    // the family from the integration (colour, alias, picture); without it, every person.* with the default colours
+    const fam = this._model?.people?.filter((p) => !p.hidden)
+      || Object.keys(h.states).filter((i) => dom(i) === "person").map((id, k) => ({ id, alias: this._s(id)?.attributes.friendly_name || id, color: PERSON_COLORS[k % PERSON_COLORS.length], picture: this._s(id)?.attributes.entity_picture }));
+    const persons = fam.map((p) => ({ p, st: this._s(p.id) })).filter((x) => x.st).slice(0, 4);
+    return persons.length ? `<div class="people">${persons.map(({ p, st }) => {
+      const pic = p.picture;
+      const ini = (p.alias || "?").trim()[0].toUpperCase();
+      return `<div class="av ${st.state === "home" ? "home" : ""}" title="${esc(p.alias)}" style="background-color:${p.color};${pic ? `background-image:url('${esc(pic)}')` : ""}">${pic ? "" : esc(ini)}<i></i></div>`;
     }).join("")}</div>` : "";
   }
   /** The date, with the people beside it when they are shown. */

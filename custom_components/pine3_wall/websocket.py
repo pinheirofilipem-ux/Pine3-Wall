@@ -17,6 +17,7 @@ from homeassistant.helpers.storage import Store
 from .const import API_VERSION, DOMAIN, EVENT_UPDATED, MIN_APP_VERSION, VERSION
 from .discovery import build_home
 from .layout import DOCK_ITEMS, build_layout
+from .people import build_people
 
 STORAGE_KEY = f"{DOMAIN}.settings"
 DEFAULT_SETTINGS: dict[str, Any] = {
@@ -51,6 +52,7 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "shown": [],
     "placements": {},
     "cam_doors": {},
+    "people": {},
     "wall_height": 30,
     "settings_version": 2,
 }
@@ -120,6 +122,7 @@ def _model(hass: HomeAssistant) -> dict[str, Any]:
     return {
         **home,
         "layout": build_layout(home, settings),
+        "people": build_people(hass, settings),
         "version": VERSION,
         "api_version": API_VERSION,
         "min_app_version": MIN_APP_VERSION,
@@ -202,6 +205,14 @@ def ws_subscribe(hass: HomeAssistant, connection: websocket_api.ActiveConnection
         },
         # the doors shown beside each camera's live picture
         vol.Optional("cam_doors"): {vol.Match(r"^camera\.[a-z0-9_]+$"): [str]},
+        # the family: colour, alias and whether to show each person (calendar, chores, home screen)
+        vol.Optional("people"): {
+            vol.Match(r"^person\.[a-z0-9_]+$"): {
+                vol.Optional("color"): COLOR,
+                vol.Optional("alias"): vol.All(str, vol.Length(max=40)),
+                vol.Optional("hidden"): bool,
+            }
+        },
         vol.Optional("settings_version"): int,
     }
 )

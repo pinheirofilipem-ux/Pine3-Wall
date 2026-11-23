@@ -261,7 +261,10 @@
   ],
   "scripts": [],
   "weather": "weather.casa",
-  "persons": [],
+  "persons": [
+    "person.pedro",
+    "person.ana"
+  ],
   "settings": {
     "hidden": [],
     "hidden_rooms": [],
@@ -299,6 +302,7 @@
     "shown": [],
     "placements": {},
     "cam_doors": {},
+    "people": {},
     "wall_height": 30,
     "settings_version": 2
   },
@@ -509,6 +513,24 @@
       }
     }
   },
+  "people": [
+    {
+      "id": "person.ana",
+      "name": "Ana",
+      "alias": "Ana",
+      "color": "#f3a96b",
+      "picture": null,
+      "hidden": false
+    },
+    {
+      "id": "person.pedro",
+      "name": "Pedro Silva",
+      "alias": "Pedro",
+      "color": "#f6cf6a",
+      "picture": "/api/image/pedro.jpg",
+      "hidden": false
+    }
+  ],
   "version": "0.0.0",
   "api_version": 1,
   "min_app_version": "0.1.0"

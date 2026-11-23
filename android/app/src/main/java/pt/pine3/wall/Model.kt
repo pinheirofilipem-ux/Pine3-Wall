@@ -9,6 +9,9 @@ class Dev(val id: String, val name: String, val kind: String, val extras: List<S
 /** Uma entidade de uma divisão, para escolher o que aparece (definições > Entidades). */
 class RoomEntity(val id: String, val name: String, val primary: Boolean, val category: Boolean, val haHidden: Boolean)
 
+/** Uma pessoa da família (person.*), com a cor, o nome curto e a foto partilhados pelos módulos. */
+class Person(val id: String, val name: String, val alias: String, val color: String, val picture: String?, val hidden: Boolean)
+
 class Room(
     val id: String, val name: String, val icon: String, val floor: String?,
     val devices: List<Dev>, val temperature: List<String>, val humidity: List<String>,
@@ -23,6 +26,8 @@ class Home(
     val apiVersion: Int = 0, val minAppVersion: String? = null, val version: String? = null,
     /** O layout de todos os ecrãs (schema/layout.schema.json); null numa integração anterior à 0.3.0. */
     val layout: LayoutDoc? = null,
+    /** A família (definições > Pessoas); vazia numa integração anterior à 0.6.0. */
+    val people: List<Person> = emptyList(),
 ) {
     fun color(key: String, fallback: Int): Int = try {
         android.graphics.Color.parseColor(settings.optString(key, "").ifBlank { return fallback })
@@ -77,6 +82,12 @@ class Home(
                 minAppVersion = o.optString("min_app_version", "").ifBlank { null },
                 version = o.optString("version", "").ifBlank { null },
                 layout = o.optJSONObject("layout")?.let { LayoutDoc.parse(it) },
+                people = o.optJSONArray("people")?.let { a ->
+                    (0 until a.length()).mapNotNull { a.optJSONObject(it) }.map { p ->
+                        Person(p.optString("id"), p.optString("name"), p.optString("alias").ifBlank { p.optString("name") },
+                            p.optString("color", "#F3A96B"), p.optString("picture", "").ifBlank { null }.takeIf { !p.isNull("picture") }, p.optBoolean("hidden"))
+                    }
+                } ?: emptyList(),
             )
         }
     }
