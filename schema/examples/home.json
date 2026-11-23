@@ -302,6 +302,213 @@
     "wall_height": 30,
     "settings_version": 2
   },
+  "layout": {
+    "schema_version": 1,
+    "generated": true,
+    "options": {
+      "display": "grid",
+      "clock_24h": true,
+      "animations": true
+    },
+    "dock": [
+      "home",
+      "rooms",
+      "house",
+      "scenes"
+    ],
+    "pages": {
+      "home": {
+        "template": "top",
+        "sections": [
+          {
+            "type": "clock"
+          },
+          {
+            "type": "status"
+          },
+          {
+            "type": "weather"
+          },
+          {
+            "type": "scenes",
+            "items": [
+              "scene.test_movie"
+            ]
+          },
+          {
+            "type": "grid",
+            "cards": [
+              {
+                "type": "room",
+                "room": "cozinha",
+                "size": "normal"
+              },
+              {
+                "type": "room",
+                "room": "sala",
+                "size": "normal"
+              },
+              {
+                "type": "room",
+                "room": "_none",
+                "size": "normal"
+              },
+              {
+                "type": "summary",
+                "summary": "climate"
+              },
+              {
+                "type": "summary",
+                "summary": "security"
+              },
+              {
+                "type": "summary",
+                "summary": "media"
+              }
+            ]
+          }
+        ]
+      },
+      "rooms": {
+        "sections": [
+          {
+            "type": "grid",
+            "cards": [
+              {
+                "type": "room",
+                "room": "cozinha",
+                "size": "normal"
+              },
+              {
+                "type": "room",
+                "room": "sala",
+                "size": "normal"
+              },
+              {
+                "type": "room",
+                "room": "_none",
+                "size": "normal"
+              }
+            ]
+          }
+        ]
+      },
+      "house": {
+        "sections": [
+          {
+            "type": "house3d"
+          }
+        ]
+      },
+      "scenes": {
+        "sections": [
+          {
+            "type": "scene_list"
+          }
+        ]
+      },
+      "climate": {
+        "sections": [
+          {
+            "type": "climate_list"
+          }
+        ]
+      },
+      "security": {
+        "sections": [
+          {
+            "type": "security_list"
+          }
+        ]
+      },
+      "room/cozinha": {
+        "room": "cozinha",
+        "sections": [
+          {
+            "type": "room_header",
+            "room": "cozinha"
+          },
+          {
+            "type": "grid",
+            "group": "category",
+            "cards": [
+              {
+                "type": "device",
+                "entity": "switch.test_plug",
+                "size": "normal"
+              }
+            ]
+          }
+        ]
+      },
+      "room/sala": {
+        "room": "sala",
+        "sections": [
+          {
+            "type": "room_header",
+            "room": "sala"
+          },
+          {
+            "type": "scenes",
+            "items": [
+              "scene.test_movie"
+            ]
+          },
+          {
+            "type": "grid",
+            "group": "category",
+            "cards": [
+              {
+                "type": "device",
+                "entity": "media_player.test_tv",
+                "size": "normal"
+              },
+              {
+                "type": "device",
+                "entity": "light.test_lamp",
+                "size": "normal"
+              },
+              {
+                "type": "device",
+                "entity": "light.test_relay2",
+                "size": "normal"
+              },
+              {
+                "type": "device",
+                "entity": "light.test_relay1",
+                "size": "normal"
+              },
+              {
+                "type": "device",
+                "entity": "sensor.test_th_t",
+                "size": "normal"
+              }
+            ]
+          }
+        ]
+      },
+      "room/_none": {
+        "room": "_none",
+        "sections": [
+          {
+            "type": "room_header",
+            "room": "_none"
+          },
+          {
+            "type": "grid",
+            "group": "category",
+            "cards": [
+              {
+                "type": "device",
+                "entity": "switch.test_loose",
+                "size": "normal"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
   "version": "0.0.0",
   "api_version": 1,
   "min_app_version": "0.1.0"

@@ -1,0 +1,28 @@
+{
+  "$comment": "Every section and card type a layout may use, by module. A renderer that meets a type it doesn't know shows a placeholder asking to update; 'platforms' says where each type is drawn today.",
+  "modules": {
+    "home": {
+      "version": 1,
+      "description": "The house: rooms, devices, scenes, weather and the home screen.",
+      "templates": ["classic", "top", "columns", "sidebar"],
+      "sections": {
+        "clock": {"platforms": ["android", "web"], "description": "Date and time."},
+        "people": {"platforms": ["android", "web"], "description": "Who is home, next to the date."},
+        "status": {"platforms": ["android", "web"], "description": "Home status: lights and other devices that are on."},
+        "weather": {"platforms": ["android", "web"], "description": "Weather card (or pill, depending on the template)."},
+        "scenes": {"platforms": ["android", "web"], "description": "A row of scene buttons.", "options": {"items": "entity ids"}},
+        "grid": {"platforms": ["android", "web"], "description": "Cards in a grid (or list).", "options": {"cards": "cards", "group": "'category': group device cards by kind"}},
+        "room_header": {"platforms": ["android", "web"], "description": "Room name, climate, what is on, lights on/off and category chips.", "options": {"room": "room id"}},
+        "house3d": {"platforms": ["android", "web"], "description": "The 3D home."},
+        "scene_list": {"platforms": ["android", "web"], "description": "Every scene and script."},
+        "climate_list": {"platforms": ["android", "web"], "description": "Every air conditioner and thermostat, and each room's temperature."},
+        "security_list": {"platforms": ["android", "web"], "description": "Doors, windows, locks and cameras."}
+      },
+      "cards": {
+        "room": {"platforms": ["android", "web"], "options": {"room": "room id", "size": "normal | big"}},
+        "device": {"platforms": ["android", "web"], "options": {"entity": "primary entity of the device", "size": "normal | big"}},
+        "summary": {"platforms": ["android", "web"], "options": {"summary": "climate | security | vacuum | media", "entity": "the vacuum, for summary 'vacuum'"}}
+      }
+    }
+  }
+}
