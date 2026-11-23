@@ -259,10 +259,14 @@ class HomePage(kit: Kit, private val home: Home, private val nav: Nav) : Page(ki
     override val view: View
 
     private fun date(): View {
-        val row = LinearLayout(kit.ctx).apply { gravity = Gravity.CENTER_VERTICAL }
         val fmt = SimpleDateFormat(if (Tr.en) "EEEE d MMMM" else "EEEE, d 'de' MMMM", if (Tr.en) java.util.Locale.UK else Tr.locale)
+        // Nas disposições estreitas (duas colunas, barra lateral) a data comprida empurrava e cortava os avatares:
+        // aí as pessoas ficam na linha de baixo, como no painel web quando falta espaço.
+        val row = LinearLayout(kit.ctx).apply {
+            if (dense) orientation = LinearLayout.VERTICAL else gravity = Gravity.CENTER_VERTICAL
+        }
         row.addView(eyebrow(kit, fmt.format(Date())))
-        if (has("people")) row.addView(peopleBox, LinearLayout.LayoutParams(-2, -2).apply { marginStart = kit.dp(16) })
+        if (has("people")) row.addView(peopleBox, LinearLayout.LayoutParams(-2, -2).apply { if (dense) topMargin = kit.dp(10) else marginStart = kit.dp(16) })
         return row
     }
 
