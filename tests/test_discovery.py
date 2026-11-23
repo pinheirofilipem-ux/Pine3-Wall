@@ -7,8 +7,8 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.pine3_view.websocket import async_setup_api
-from custom_components.pine3_view.discovery import build_home, room_icon
+from custom_components.pine3_wall.websocket import async_setup_api
+from custom_components.pine3_wall.discovery import build_home, room_icon
 
 
 async def _setup_home(hass: HomeAssistant):
@@ -115,14 +115,14 @@ async def test_websocket(hass: HomeAssistant, hass_ws_client) -> None:
     await async_setup_api(hass)
 
     ws = await hass_ws_client(hass)
-    await ws.send_json({"id": 1, "type": "pine3_view/home"})
+    await ws.send_json({"id": 1, "type": "pine3_wall/home"})
     msg = await ws.receive_json()
     assert msg["success"] and any(r["name"] == "Sala" for r in msg["result"]["rooms"])
 
-    await ws.send_json({"id": 2, "type": "pine3_view/subscribe"})
+    await ws.send_json({"id": 2, "type": "pine3_wall/subscribe"})
     assert (await ws.receive_json())["success"]
 
-    await ws.send_json({"id": 3, "type": "pine3_view/settings", "hidden": [h["lamp_id"]], "theme": "noite"})
+    await ws.send_json({"id": 3, "type": "pine3_wall/settings", "hidden": [h["lamp_id"]], "theme": "noite"})
     # the subscription pushes a fresh model, and the settings call returns
     got = {}
     for _ in range(2):
@@ -136,7 +136,7 @@ async def test_websocket(hass: HomeAssistant, hass_ws_client) -> None:
 async def test_settings_validation(hass: HomeAssistant, hass_ws_client) -> None:
     await async_setup_api(hass)
     ws = await hass_ws_client(hass)
-    await ws.send_json({"id": 1, "type": "pine3_view/settings", "card_color": "#e6dcc2", "accent_color": "#4aa8ff",
+    await ws.send_json({"id": 1, "type": "pine3_wall/settings", "card_color": "#e6dcc2", "accent_color": "#4aa8ff",
                         "dock": ["home", "climate", "security"], "appearance": "auto", "theme_day": "menta", "theme_night": "noite", "home_layout": "columns", "clock_24h": False, "animations": False})
     msg = await ws.receive_json()
     assert msg["success"]
@@ -144,12 +144,12 @@ async def test_settings_validation(hass: HomeAssistant, hass_ws_client) -> None:
     assert msg["result"]["show_scenes"] is True  # untouched defaults survive
     assert msg["result"]["animations"] is False
 
-    await ws.send_json({"id": 2, "type": "pine3_view/settings", "card_color": "red"})
+    await ws.send_json({"id": 2, "type": "pine3_wall/settings", "card_color": "red"})
     assert not (await ws.receive_json())["success"]
-    await ws.send_json({"id": 3, "type": "pine3_view/settings", "dock": ["home", "nope"]})
+    await ws.send_json({"id": 3, "type": "pine3_wall/settings", "dock": ["home", "nope"]})
     assert not (await ws.receive_json())["success"]
 
-    await ws.send_json({"id": 4, "type": "pine3_view/home"})
+    await ws.send_json({"id": 4, "type": "pine3_wall/home"})
     home = (await ws.receive_json())["result"]
     assert home["version"] and home["settings"]["card_color"] == "#e6dcc2"
 
@@ -157,7 +157,7 @@ async def test_settings_validation(hass: HomeAssistant, hass_ws_client) -> None:
 async def test_v05_settings(hass: HomeAssistant, hass_ws_client) -> None:
     await async_setup_api(hass)
     ws = await hass_ws_client(hass)
-    await ws.send_json({"id": 1, "type": "pine3_view/settings", "language": "en", "layout": "list", "screensaver": 5,
+    await ws.send_json({"id": 1, "type": "pine3_wall/settings", "language": "en", "layout": "list", "screensaver": 5,
                         "weather_entity": "open-meteo", "big_rooms": ["sala"], "device_order": {"sala": ["light.a", "light.b"]},
                         "house_size": {"sala": 3}})
     msg = await ws.receive_json()
@@ -168,15 +168,15 @@ async def test_v05_settings(hass: HomeAssistant, hass_ws_client) -> None:
 
     for bad_id, bad in enumerate([{"language": "fr"}, {"layout": "masonry"}, {"house_size": {"sala": 9}},
                                   {"weather_entity": "sensor.x"}, {"screensaver": -1}], start=2):
-        await ws.send_json({"id": bad_id, "type": "pine3_view/settings", **bad})
+        await ws.send_json({"id": bad_id, "type": "pine3_wall/settings", **bad})
         assert not (await ws.receive_json())["success"], bad
 
 
 async def test_dock_migration(hass: HomeAssistant, hass_storage) -> None:
-    hass_storage["pine3_view.settings"] = {"version": 1, "key": "pine3_view.settings",
+    hass_storage["pine3_wall.settings"] = {"version": 1, "key": "pine3_wall.settings",
                                            "data": {"dock": ["home", "scenes"], "theme": "noite"}}
     await async_setup_api(hass)
-    s = hass.data["pine3_view"]["settings"]
+    s = hass.data["pine3_wall"]["settings"]
     assert s["dock"] == ["home", "house", "scenes"]
     assert s["theme"] == "noite" and s["settings_version"] == 2
 
@@ -215,11 +215,11 @@ async def test_room_entities(hass: HomeAssistant) -> None:
 async def test_layout_settings(hass: HomeAssistant, hass_ws_client) -> None:
     await async_setup_api(hass)
     ws = await hass_ws_client(hass)
-    await ws.send_json({"id": 1, "type": "pine3_view/settings", "shown": ["switch.tv"],
+    await ws.send_json({"id": 1, "type": "pine3_wall/settings", "shown": ["switch.tv"],
                         "house_layout": {"sala": {"f": 0, "x": 0, "y": 0, "w": 5, "d": 4}}})
     msg = await ws.receive_json()
     assert msg["success"] and msg["result"]["house_layout"]["sala"]["w"] == 5
-    await ws.send_json({"id": 2, "type": "pine3_view/settings", "house_layout": {"sala": {"f": 0, "x": 0, "y": 0, "w": 0, "d": 4}}})
+    await ws.send_json({"id": 2, "type": "pine3_wall/settings", "house_layout": {"sala": {"f": 0, "x": 0, "y": 0, "w": 0, "d": 4}}})
     assert not (await ws.receive_json())["success"]
 
 
@@ -227,8 +227,8 @@ async def test_panel_setup_and_reload(hass: HomeAssistant) -> None:
     """The panel is served from a versioned path and the entry can be reloaded."""
     from unittest.mock import AsyncMock, patch
 
-    from custom_components.pine3_view import async_setup_entry, async_unload_entry
-    from custom_components.pine3_view.const import DOMAIN, VERSION
+    from custom_components.pine3_wall import async_setup_entry, async_unload_entry
+    from custom_components.pine3_wall.const import DOMAIN, VERSION
 
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
@@ -238,21 +238,21 @@ async def test_panel_setup_and_reload(hass: HomeAssistant) -> None:
         assert await async_setup_entry(hass, entry)
         assert await async_unload_entry(hass, entry)
         assert await async_setup_entry(hass, entry)
-    assert reg.call_args.kwargs["module_url"] == f"/pine3_view_static/{VERSION}/pine3-view-panel.js"
+    assert reg.call_args.kwargs["module_url"] == f"/pine3_wall_static/{VERSION}/pine3-wall-panel.js"
     assert hass.http.async_register_static_paths.await_count == 1
     path = hass.http.async_register_static_paths.await_args.args[0][0]
-    assert path.url_path == f"/pine3_view_static/{VERSION}"
+    assert path.url_path == f"/pine3_wall_static/{VERSION}"
 
 
 async def test_layout_cells(hass: HomeAssistant, hass_ws_client) -> None:
     await async_setup_api(hass)
     ws = await hass_ws_client(hass)
     l_shape = {"f": 0, "x": 0, "y": 0, "w": 3, "d": 3, "cells": [[0, 0], [0, 1], [0, 2], [1, 2], [2, 2]]}
-    await ws.send_json({"id": 1, "type": "pine3_view/settings", "house_layout": {"sala": l_shape}})
+    await ws.send_json({"id": 1, "type": "pine3_wall/settings", "house_layout": {"sala": l_shape}})
     msg = await ws.receive_json()
     assert msg["success"] and msg["result"]["house_layout"]["sala"]["cells"] == l_shape["cells"]
     for n, bad in enumerate([[[0]], [[0, 0, 0]], [[-1, 2]], []], start=2):
-        await ws.send_json({"id": n, "type": "pine3_view/settings", "house_layout": {"sala": {**l_shape, "cells": bad}}})
+        await ws.send_json({"id": n, "type": "pine3_wall/settings", "house_layout": {"sala": {**l_shape, "cells": bad}}})
         assert not (await ws.receive_json())["success"], bad
 
 
@@ -261,13 +261,13 @@ async def test_placements(hass: HomeAssistant, hass_ws_client) -> None:
     ws = await hass_ws_client(hass)
     pl = {"light.sala_teto": {"f": 0, "x": 2.5, "y": 1.5, "t": "ceiling"}, "media_player.tv": {"f": 0, "x": 3, "y": 4},
           "light.fita": {"f": 0, "x": 1, "y": 2, "t": "led", "l": 2.5, "r": 90}}
-    await ws.send_json({"id": 1, "type": "pine3_view/settings", "placements": pl})
+    await ws.send_json({"id": 1, "type": "pine3_wall/settings", "placements": pl})
     msg = await ws.receive_json()
     assert msg["success"] and msg["result"]["placements"]["light.sala_teto"]["t"] == "ceiling"
     assert msg["result"]["placements"]["light.fita"]["l"] == 2.5 and msg["result"]["placements"]["light.fita"]["r"] == 90
     for n, bad in enumerate([{"f": 0, "x": 99, "y": 1}, {"f": 0, "x": 1, "y": 1, "t": "rocket"}, {"x": 1, "y": 1},
                              {"f": 0, "x": 1, "y": 1, "l": 0}, {"f": 0, "x": 1, "y": 1, "r": 400}], start=2):
-        await ws.send_json({"id": n, "type": "pine3_view/settings", "placements": {"light.a": bad}})
+        await ws.send_json({"id": n, "type": "pine3_wall/settings", "placements": {"light.a": bad}})
         assert not (await ws.receive_json())["success"], bad
 
 
@@ -276,9 +276,9 @@ def test_device_type_lists_match() -> None:
     import re
     from pathlib import Path
 
-    from custom_components.pine3_view.websocket import DEVICE_TYPES
+    from custom_components.pine3_wall.websocket import DEVICE_TYPES
 
-    js = (Path(__file__).parents[1] / "custom_components/pine3_view/frontend/devtypes.js").read_text()
+    js = (Path(__file__).parents[1] / "custom_components/pine3_wall/frontend/devtypes.js").read_text()
     block = js[js.index("DEVICE_TYPES = {"):js.index("};", js.index("DEVICE_TYPES = {"))]
     assert re.findall(r"^\s+(\w+): \[", block, re.M) == DEVICE_TYPES
 
@@ -286,11 +286,11 @@ def test_device_type_lists_match() -> None:
 async def test_wall_height(hass: HomeAssistant, hass_ws_client) -> None:
     await async_setup_api(hass)
     ws = await hass_ws_client(hass)
-    await ws.send_json({"id": 1, "type": "pine3_view/settings", "wall_height": 60})
+    await ws.send_json({"id": 1, "type": "pine3_wall/settings", "wall_height": 60})
     msg = await ws.receive_json()
     assert msg["success"] and msg["result"]["wall_height"] == 60
     for n, bad in enumerate([0, 500, "alta"], start=2):
-        await ws.send_json({"id": n, "type": "pine3_view/settings", "wall_height": bad})
+        await ws.send_json({"id": n, "type": "pine3_wall/settings", "wall_height": bad})
         assert not (await ws.receive_json())["success"], bad
 
 
@@ -355,7 +355,7 @@ async def test_vacuum_dock_joins_vacuum(hass: HomeAssistant) -> None:
 
 async def test_ipma_warnings(hass: HomeAssistant, hass_ws_client, aioclient_mock) -> None:
     """All IPMA warnings of an area (the integration only exposes the first one)."""
-    from custom_components.pine3_view.websocket import IPMA_WARNINGS_URL
+    from custom_components.pine3_wall.websocket import IPMA_WARNINGS_URL
 
     aioclient_mock.get(IPMA_WARNINGS_URL, json=[
         {"text": "Chuva forte", "awarenessTypeName": "Precipitação", "idAreaAviso": "LSB", "startTime": "2026-11-09T12:00:00", "awarenessLevelID": "yellow", "endTime": "2026-11-09T18:00:00"},
@@ -365,12 +365,12 @@ async def test_ipma_warnings(hass: HomeAssistant, hass_ws_client, aioclient_mock
     ])
     await async_setup_api(hass)
     ws = await hass_ws_client(hass)
-    await ws.send_json({"id": 1, "type": "pine3_view/ipma_warnings", "area": "LSB"})
+    await ws.send_json({"id": 1, "type": "pine3_wall/ipma_warnings", "area": "LSB"})
     msg = await ws.receive_json()
     assert msg["success"]
     types = [w["awarenessTypeName"] for w in msg["result"]["warnings"]]
     assert types == ["Precipitação", "Agitação Marítima"]  # this area only, no green
-    await ws.send_json({"id": 2, "type": "pine3_view/ipma_warnings", "area": "GDA"})
+    await ws.send_json({"id": 2, "type": "pine3_wall/ipma_warnings", "area": "GDA"})
     assert [w["awarenessLevelID"] for w in (await ws.receive_json())["result"]["warnings"]] == ["red"]
     assert aioclient_mock.call_count == 1  # cached
 

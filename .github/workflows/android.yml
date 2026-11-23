@@ -1,9 +1,10 @@
-name: Android (nativo, experimental)
+name: Android
 
-# Só corre quando muda algo em android/ (a integração e o HACS não são afetados).
+# Corre em cada push (APK de teste) e em cada tag de release vX.Y.Z (APK publicado).
 on:
   push:
-    paths: ['android/**', '.github/workflows/android.yml']
+    branches: ['**']
+    tags: ['v*']
   workflow_dispatch:
 
 permissions:
@@ -15,6 +16,10 @@ jobs:
     defaults:
       run:
         working-directory: android
+    env:
+      PINE3_KEYSTORE_PASSWORD: ${{ secrets.PINE3_KEYSTORE_PASSWORD }}
+      PINE3_KEY_ALIAS: ${{ secrets.PINE3_KEY_ALIAS }}
+      PINE3_KEY_PASSWORD: ${{ secrets.PINE3_KEY_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -25,18 +30,44 @@ jobs:
         with:
           gradle-version: wrapper
           build-root-directory: android
+
+      # Keystore própria (secret PINE3_KEYSTORE_BASE64). Sem ela o APK sai com a chave debug do runner,
+      # que muda a cada build: serve para testar, mas não atualiza por cima de uma instalação anterior.
+      - name: Keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.PINE3_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/pine3.jks"
+            echo "PINE3_KEYSTORE_FILE=$RUNNER_TEMP/pine3.jks" >> "$GITHUB_ENV"
+          else
+            echo "::warning::PINE3_KEYSTORE_BASE64 is not set: the APK is signed with a throwaway debug key"
+          fi
+
+      - name: Tag matches VERSION
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: test "v$(cat ../VERSION)" = "${GITHUB_REF_NAME}"
+
       - run: chmod +x gradlew && ./gradlew --no-daemon :app:assembleRelease
-      - run: mv app/build/outputs/apk/release/app-release.apk Pine3ViewNative.apk
+      - run: mv app/build/outputs/apk/release/app-release.apk "Pine3Wall-$(cat ../VERSION).apk"
       - uses: actions/upload-artifact@v4
         with:
-          name: pine3-view-native-apk
-          path: android/Pine3ViewNative.apk
-      # Só no branch principal: atualiza a pre-release "android-latest" com o APK mais recente.
+          name: pine3-wall-apk
+          path: android/Pine3Wall-*.apk
+
+      # Branch principal: atualiza a pre-release "android-latest" com o APK mais recente.
       - uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
           tag_name: android-latest
-          name: Pine3 View nativo (último build)
+          name: Pine3 Wall app (último build do main)
           prerelease: true
-          files: android/Pine3ViewNative.apk
+          files: android/Pine3Wall-*.apk
           target_commitish: ${{ github.sha }}
+
+      # Tag vX.Y.Z: release com o APK (a integração vai no mesmo release, pelo HACS).
+      - uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          name: Pine3 Wall ${{ github.ref_name }}
+          files: android/Pine3Wall-*.apk

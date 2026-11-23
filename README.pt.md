@@ -1,11 +1,17 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/brand/dark_logo@2x.png">
-    <img src="docs/brand/logo@2x.png" alt="Pine3 View" width="420">
+    <img src="docs/brand/logo@2x.png" alt="Pine3 Wall" width="420">
   </picture>
 </p>
 
 <p align="center"><a href="README.md">English</a> · <b>Português</b></p>
+
+> **Pine3 Wall** é o sucessor do [Pine3 View](https://github.com/pinheirofilipem-ux/pine3-view): uma integração do Home
+> Assistant (o backend e um editor web) mais uma **app Android nativa** para tablets de parede. Começa com o mesmo código do
+> Pine3 View 0.27, com nome novo (`pine3_wall`), por isso os dois podem estar instalados lado a lado sem se tocarem.
+> O plano está em [PLANO.md](PLANO.md). As imagens do logótipo ainda mostram o nome antigo.
+
 
 Painel pessoal para o Home Assistant, inspirado no Apple Home. Organiza a casa automaticamente
 por divisão (Áreas → Dispositivos → Entidades), sem YAML, e junta uma vista 3D da casa que tu
@@ -43,20 +49,20 @@ No telemóvel:
 
 ## Instalar com HACS
 1. No Home Assistant abre **HACS** → menu **⋮** → **Repositórios personalizados**.
-2. Repositório: `https://github.com/pinheirofilipem-ux/pine3-view`, categoria **Integração** → **Adicionar**.
-3. Procura **Pine3 View**, abre e carrega em **Transferir**.
+2. Repositório: `https://github.com/pinheirofilipem-ux/pine3-wall`, categoria **Integração** → **Adicionar**.
+3. Procura **Pine3 Wall**, abre e carrega em **Transferir**.
 4. Reinicia o Home Assistant.
-5. **Definições → Dispositivos e serviços → Adicionar integração → Pine3 View**.
-6. Abre **Pine3 View** na barra lateral.
+5. **Definições → Dispositivos e serviços → Adicionar integração → Pine3 Wall**.
+6. Abre **Pine3 Wall** na barra lateral.
 
 Requer Home Assistant 2024.7 ou mais recente (o ícone da integração precisa da 2026.3 ou mais recente).
 Para atualizar, transfere a nova versão no HACS e reinicia o Home Assistant; o browser vai buscar os ficheiros novos sozinho.
 
 ### Instalação manual
-Copia `custom_components/pine3_view` para `/config/custom_components/`, reinicia e adiciona a integração.
+Copia `custom_components/pine3_wall` para `/config/custom_components/`, reinicia e adiciona a integração.
 
 ## Funcionalidades
-- **Disposição do início** (*Definições → Início → Disposição do início*): **Relógio grande** (relógio grande com o estado da casa ao lado), **Barra lateral** (uma barra de vidro com a altura do ecrã, com a data, o relógio, o tempo, o estado da casa e as pessoas, e as cenas e os cartões ao lado), **Duas colunas** (um terço com a data, um relógio grande, o tempo, as pessoas e o que está ligado; dois terços com Acender/Apagar luzes, cenas e os cartões em filas de quatro) ou **Clássica**. O Relógio grande e as Duas colunas mostram também um **cartão do tempo**: agora (temperatura, estado, máxima e mínima do dia), as próximas horas com a probabilidade de chuva e amanhã; toca nele para a previsão completa. Com a integração do **IPMA**, um aviso ativo (amarelo, laranja ou vermelho) aparece numa faixa colorida no cartão do tempo, com "+N" quando há mais (ou ⚠ na pílula do tempo), e a previsão lista todos os avisos da tua zona com início, fim e texto (a integração só expõe o primeiro, por isso o Pine3 View pede os restantes ao IPMA), o índice UV e o risco de incêndio. O estado da casa mostra também o que está ligado além das luzes (tomadas, purificadores, TV, ar condicionado…).
+- **Disposição do início** (*Definições → Início → Disposição do início*): **Relógio grande** (relógio grande com o estado da casa ao lado), **Barra lateral** (uma barra de vidro com a altura do ecrã, com a data, o relógio, o tempo, o estado da casa e as pessoas, e as cenas e os cartões ao lado), **Duas colunas** (um terço com a data, um relógio grande, o tempo, as pessoas e o que está ligado; dois terços com Acender/Apagar luzes, cenas e os cartões em filas de quatro) ou **Clássica**. O Relógio grande e as Duas colunas mostram também um **cartão do tempo**: agora (temperatura, estado, máxima e mínima do dia), as próximas horas com a probabilidade de chuva e amanhã; toca nele para a previsão completa. Com a integração do **IPMA**, um aviso ativo (amarelo, laranja ou vermelho) aparece numa faixa colorida no cartão do tempo, com "+N" quando há mais (ou ⚠ na pílula do tempo), e a previsão lista todos os avisos da tua zona com início, fim e texto (a integração só expõe o primeiro, por isso o Pine3 Wall pede os restantes ao IPMA), o índice UV e o risco de incêndio. O estado da casa mostra também o que está ligado além das luzes (tomadas, purificadores, TV, ar condicionado…).
 - **Início**: relógio, tempo com os próximos dias (toca para ver a previsão), estado da casa com o que mais está ligado em etiquetas (toca numa para a abrir; "+N" mostra o resto, cada um com um botão para desligar), cenas (as que não cabem ficam num menu "+N") (uma cena ativada fica destacada enquanto os seus dispositivos estiverem ligados, até outra cena mais recente mexer nos mesmos dispositivos, por isso cenas de divisões diferentes podem estar ativas ao mesmo tempo; tocar nela outra vez desliga-os), cartões de divisão e de resumo (Clima, Segurança, A tocar).
 - **Tempo**: usa a entidade de tempo do Home Assistant ou, se não houver, a [Open-Meteo](https://open-meteo.com) para a localização da casa (sem chave). Previsão das próximas 12 horas e 7 dias.
 - **Casa 3D**: cada divisão é um bloco, empilhado por piso (pisos do HA). As divisões acesas brilham com a cor e a intensidade das suas luzes (cada luz projeta no chão uma mancha da sua cor), as luzes aparecem como pontos que podes ligar e desligar, arrastas para rodar (a casa roda com o dedo), aproximas com dois dedos, a roda do rato ou os botões + e −, e tocas numa divisão para a abrir. Um toque perto de uma luz liga-a, mesmo que não acertes em cheio. A base de cada piso tem só o tamanho das suas divisões e a **altura das paredes** é ajustável (botões ↕ na Casa 3D ou um controlo deslizante nas definições).
@@ -79,7 +85,7 @@ Copia `custom_components/pine3_view` para `/config/custom_components/`, reinicia
 - **Modo de edição** (✎): arrasta para reordenar divisões e dispositivos (no início também os cartões Clima, Segurança, Aspirador e A tocar, no meio das divisões), toca em − para esconder e nas setas para duplicar o tamanho (um cartão de divisão duplo mostra atalhos para os dispositivos).
 - **Disposição**: grelha ou lista. Ao mudar de ecrã na dock, uma lente de vidro desliza até ao novo separador e o ecrã entra suavemente (*Definições → Aparência → Animações* desliga isto).
 - **Ecrã de descanso**: relógio grande e escurecido após 1–30 min sem toques.
-- **Menu e modo quiosque**: o pequeno botão ⋮ no canto superior direito abre *Editar ecrã* e *Definições*. O ecrã inteiro está em *Definições → Início → Este dispositivo*. Em *Definições → Início → Este dispositivo* escondes a barra lateral do Home Assistant e manténs o ecrã ligado (só nesse dispositivo). Abrir o painel com `?kiosk` no endereço (ex.: `http://homeassistant.local:8123/pine3-view?kiosk`) também esconde a barra lateral, ideal para um tablet na parede.
+- **Menu e modo quiosque**: o pequeno botão ⋮ no canto superior direito abre *Editar ecrã* e *Definições*. O ecrã inteiro está em *Definições → Início → Este dispositivo*. Em *Definições → Início → Este dispositivo* escondes a barra lateral do Home Assistant e manténs o ecrã ligado (só nesse dispositivo). Abrir o painel com `?kiosk` no endereço (ex.: `http://homeassistant.local:8123/pine3-wall?kiosk`) também esconde a barra lateral, ideal para um tablet na parede.
 - **Tablets mais fracos** (ex.: Samsung Galaxy Tab A7): em *Definições → Início → Este dispositivo* escolhes como esse dispositivo mostra a Casa 3D — **3D completo**, **3D leve** (sem os efeitos mais pesados), **Imagem 3D** (a casa desenhada como uma só imagem, leve e fluida, com as mesmas luzes e toques) ou **Planta 2D** (vista de cima, um piso de cada vez). **Efeitos leves** tira o desfoque do vidro, que em alguns tablets deixa zonas brancas ou vazias, e as **Animações** podem ser ligadas ou desligadas só nesse dispositivo. Em *Automático*, os dispositivos com pouca memória usam a Imagem 3D e os efeitos leves. A dock encolhe sozinha quando não cabe (primeiro só o separador ativo fica com nome, depois só ícones). Em ecrãs baixos, como um tablet deitado, os cartões das divisões e dos dispositivos ficam mais compactos, para caberem três filas acima da dock. No ecrã Casa, o relógio, o estado, as cenas e duas filas de cartões cabem num só ecrã.
 - **Idioma**: Português ou English, escolhido nas definições.
 
@@ -108,7 +114,7 @@ O servidor (`discovery.py`) lê os registos do Home Assistant e monta a casa:
 Fundo ameixa (e mais 5), cartões creme quando ligados, botão de energia por divisão e por dispositivo,
 pontos de estado, cartões de Clima, Segurança e "A tocar", dock em pílula.
 Tipografia: [Outfit](https://github.com/Outfitio/Outfit-Fonts) e [Figtree](https://github.com/erikdkennedy/figtree), ambas SIL OFL 1.1 (licenças em `frontend/fonts/`).
-O ícone e o logótipo estão em `custom_components/pine3_view/brand/` (origem: `docs/brand/source.html`).
+O ícone e o logótipo estão em `custom_components/pine3_wall/brand/` (origem: `docs/brand/source.html`).
 
 ## Testes
 ```
