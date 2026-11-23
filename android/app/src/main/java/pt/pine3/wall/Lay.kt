@@ -12,6 +12,15 @@ object Lay {
 
     var edit: Edit? = null
     var version = 0
+
+    /**
+     * Gravou-se uma edição e o HA ainda não mandou o layout atualizado: até lá as páginas desenham-se a partir das definições
+     * (já atualizadas localmente), para a mudança aparecer logo. Volta a false quando chega o modelo novo (Ha.setHome).
+     */
+    @Volatile var awaitingLayout = false
+
+    /** As páginas desenham-se a partir do layout do HA (fora do modo de edição e sem edição gravada à espera do HA). */
+    val useLayout: Boolean get() = edit == null && !awaitingLayout
     var onChange: (() -> Unit)? = null
     fun changed() { version++; onChange?.invoke() }
 
@@ -30,6 +39,7 @@ object Lay {
         val e = edit ?: return
         edit = null
         if (save && home != null) {
+            awaitingLayout = true
             val dord = JSONObject(); e.deviceOrder.forEach { (k, v) -> dord.put(k, JSONArray(v)) }
             Ha.saveSettings(JSONObject().put("room_order", JSONArray(e.roomOrder)).put("hidden_rooms", JSONArray(e.hiddenRooms)).put("big_rooms", JSONArray(e.bigRooms))
                 .put("hidden", JSONArray(e.hidden)).put("big_devices", JSONArray(e.bigDevices)).put("device_order", dord))

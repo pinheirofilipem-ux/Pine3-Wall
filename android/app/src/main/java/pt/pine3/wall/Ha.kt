@@ -301,6 +301,7 @@ object Ha {
     private fun setHome(o: JSONObject) {
         try {
             home = Home.parse(o)
+            Lay.awaitingLayout = false
             Fmt.names = home!!.rooms.flatMap { it.devices }.associate { it.id to it.name }
             log("Modelo da casa: ${home?.rooms?.size ?: 0} divisões")
             homeError = null

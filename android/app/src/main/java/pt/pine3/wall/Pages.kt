@@ -288,7 +288,7 @@ class HomePage(kit: Kit, private val home: Home, private val nav: Nav) : Page(ki
         val g = if (dense) Grid(kit.ctx, 0, kit.dp(kotlin.math.max(120f, kotlin.math.min(230f, (kit.hdp - 316f) / 3f)).toInt()), kit.dp(14), 4).also { it.list = kit.list }
         else Grid(kit.ctx, kit.dp(230), kit.dp(250), kit.dp(20)).also { it.list = kit.list }
         val fromLayout = page?.section("grid")
-        if (Lay.edit == null && fromLayout != null) {
+        if (Lay.useLayout && fromLayout != null) {
             // O layout já traz os cartões pela ordem certa, sem os escondidos e com o tamanho de cada um.
             val ctx = CardContext(kit, home, nav, dense)
             fromLayout.cards.forEach { spec -> ModuleRegistry.card(ctx, spec)?.let { c -> c.key = spec.key; cards += c; g.addView(c) } }
@@ -430,13 +430,22 @@ class RoomsPage(kit: Kit, home: Home, nav: Nav) : Page(kit) {
     override val view: View
 
     init {
-        val rooms = Lay.rooms(home)
+        // Os cartões vêm do layout (página "rooms"); no modo de edição, da cópia de trabalho.
+        val fromLayout = if (Lay.useLayout) home.layout?.page("rooms")?.section("grid")?.cards else null
+        val specs = fromLayout ?: Lay.rooms(home).map { r -> LCard("room", if (Lay.isBigRoom(home, r.id)) "big" else "normal", r.id, null, null) }
+        val roomCount = specs.count { it.type == "room" }
         view = pageOf(kit) { w ->
-            w.addView(hero(kit, Tr.pl(rooms.size, "divisão", "divisões", "room", "rooms"), Tr.t("Divisões")))
+            w.addView(hero(kit, Tr.pl(roomCount, "divisão", "divisões", "room", "rooms"), Tr.t("Divisões")))
             val sh = kit.short
             val g = if (sh) Grid(kit.ctx, kit.dp(210), kit.dp(kit.clamp(116f, (kit.hdp - 226f) / 3f, 250f).toInt()), kit.dp(14)).also { it.list = kit.list }
             else Grid(kit.ctx, kit.dp(230), kit.dp(250), kit.dp(20)).also { it.list = kit.list }
-            rooms.forEach { r -> val c = RoomCard(kit, r, false, sh) { nav.openRoom(r) }; c.key = r.id; c.setupEdit(kit, "room", r.id, Lay.isBigRoom(home, r.id)); cards += c; g.addView(c) }
+            val ctx = CardContext(kit, home, nav, dense = false, short = sh)
+            specs.forEach { spec ->
+                val c = ModuleRegistry.card(ctx, spec) ?: return@forEach
+                c.key = spec.key
+                if (spec.type == "room") c.setupEdit(kit, "room", spec.key, Lay.isBigRoom(home, spec.key))
+                cards += c; g.addView(c)
+            }
             if (Lay.edit != null) {
                 Lay.hiddenRoomCount(home).takeIf { it > 0 }?.let { n -> g.addView(RestoreCard(kit, Tr.pl(n, "escondida", "escondidas", "hidden", "hidden")) { Lay.restoreRooms() }) }
                 g.onReorder = { keys -> Lay.reorderRooms(keys) }
@@ -457,12 +466,20 @@ class RoomPage(kit: Kit, private val room: Room, private val nav: Nav) : Page(ki
     private val status = kit.text("", kit.clamp(22f, kit.vw(2.3f), 30f), kit.fg, 300, display = true)
     private var filter: Set<String>? = null
     override val view: View
-    private val devs = Ha.home?.let { Lay.devs(it, room) } ?: room.devices.filter { !it.hidden }
+    /** O que a página mostra: a grelha do layout ("room/<id>"); no modo de edição, a cópia de trabalho. */
+    private val section = if (Lay.useLayout) Ha.home?.layout?.page("room/${room.id}")?.section("grid") else null
+    private val specs: List<LCard> = section?.cards
+        ?: (Ha.home?.let { Lay.devs(it, room) } ?: room.devices.filter { !it.hidden })
+            .map { d -> LCard("device", if (Ha.home?.let { Lay.isBigDev(it, d.id) } == true) "big" else "normal", null, d.id, null) }
+    private val devs: List<Dev> = specs.mapNotNull { s -> if (s.type == "device") room.devices.firstOrNull { it.id == s.entity } else null }
 
     private fun cat(d: Dev) = Fmt.SECTIONS.indexOfFirst { (if (d.kind == "outlet") "outlet" else Fmt.domain(d.id)) in it.third }.let { if (it < 0) 99 else it }
 
     init {
-        val sorted = devs.mapIndexed { n, d -> Triple(d, cat(d), n) }.sortedWith(compareBy({ it.second }, { it.third })).map { it.first }
+        // Agrupados por categoria (luzes, clima, estores...) mantendo a ordem dentro de cada uma, como pede a secção.
+        val byCategory = section == null || section.group == "category"
+        val ordered = specs.mapIndexed { n, s -> Triple(s, room.devices.firstOrNull { it.id == s.entity }?.let { cat(it) } ?: 98, n) }
+        val sorted = if (byCategory) ordered.sortedWith(compareBy({ it.second }, { it.third })).map { it.first } else specs
         view = pageOf(kit) { w ->
             val head = LinearLayout(kit.ctx).apply { gravity = Gravity.CENTER_VERTICAL; setPadding(0, kit.dp(26), 0, 0) }
             head.addView(kit.roundButton("mdi:chevron-left", 46, kit.soft, kit.fg) { nav.back() }, LinearLayout.LayoutParams(kit.dp(46), kit.dp(46)).apply { marginEnd = kit.dp(18) })
@@ -478,10 +495,13 @@ class RoomPage(kit: Kit, private val room: Room, private val nav: Nav) : Page(ki
             }
             w.addView(head)
             w.addView(HorizontalScrollView(kit.ctx).apply { isHorizontalScrollBarEnabled = false; addView(chips) }, lp(kit, top = 18))
-            sorted.forEach { d ->
-                val card: Card = if (d.kind == "climate" && Fmt.state(d.id) != null) ClimateCard(kit, d, null) { nav.openDevice(it) } else if (d.kind == "vacuum" && Fmt.state(d.id) != null) VacCard(kit, d, room) { nav.openDevice(it) } else Tile(kit, d) { nav.openDevice(it) }
-                card.key = d.id; card.setupEdit(kit, "dev", d.id, Ha.home?.let { Lay.isBigDev(it, d.id) } == true)
-                tiles += d to card; grid.addView(card)
+            val ctx = Ha.home?.let { CardContext(kit, it, nav, dense = false, room = room) }
+            sorted.forEach { spec ->
+                val card = (if (ctx != null) ModuleRegistry.card(ctx, spec) else null) ?: return@forEach
+                card.key = spec.key
+                val d = room.devices.firstOrNull { it.id == spec.entity }
+                if (d != null) { card.setupEdit(kit, "dev", d.id, Ha.home?.let { Lay.isBigDev(it, d.id) } == true); tiles += d to card }
+                grid.addView(card)
             }
             if (Lay.edit != null) {
                 Ha.home?.let { h -> Lay.hiddenDevCount(h, room).takeIf { it > 0 }?.let { n -> grid.addView(RestoreCard(kit, Tr.pl(n, "escondido", "escondidos", "hidden", "hidden")) { Lay.restoreDevs(room) }) } }

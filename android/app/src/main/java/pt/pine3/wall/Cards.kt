@@ -151,7 +151,7 @@ class RoomCard(private val kit: Kit, private val room: Room, dense: Boolean, pri
 }
 
 /** Cartão de um dispositivo (.tile): creme se ligado, vidro se desligado. */
-class Tile(private val kit: Kit, private val dev: Dev, private val secWatch: Boolean = false, private val onOpen: (String) -> Unit) : Card(kit.ctx) {
+class Tile(private val kit: Kit, private val dev: Dev, private val secWatch: Boolean = false, bigSize: Boolean? = null, private val onOpen: (String) -> Unit) : Card(kit.ctx) {
     private val domain = Fmt.domain(dev.id)
     private val ic = IconCircle(kit, 48, 24, "mdi:circle-medium")
     private val pw = IconCircle(kit, 54, 24, "mdi:power")
@@ -163,7 +163,8 @@ class Tile(private val kit: Kit, private val dev: Dev, private val secWatch: Boo
         (Fmt.isTv(dev.id, dev.name) && ((Fmt.state(dev.id)?.attrs?.optInt("supported_features", 0) ?: 0) and 384) != 0)
 
     init {
-        if (!kit.list && Ha.home?.let { Lay.isBigDev(it, dev.id) } == true) tag = 2
+        // Tamanho duplo: o do layout quando vem dele; no modo de edição, a cópia de trabalho.
+        if (!kit.list && (if (Lay.edit == null && bigSize != null) bigSize else Ha.home?.let { Lay.isBigDev(it, dev.id) } == true)) tag = 2
         val pad = kit.dp(18)
         isClickable = domain != "sensor"
         setOnClickListener { if (domain in setOf("light", "cover", "climate", "media_player", "fan", "vacuum")) onOpen(dev.id) else Fmt.tap(dev.id) }
