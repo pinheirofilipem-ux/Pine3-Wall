@@ -1,0 +1,308 @@
+{
+  "rooms": [
+    {
+      "id": "cozinha",
+      "name": "Cozinha",
+      "icon": "mdi:silverware-fork-knife",
+      "picture": null,
+      "floor": null,
+      "floor_level": 0,
+      "devices": [
+        {
+          "id": "switch.test_plug",
+          "device_id": "device_1",
+          "manufacturer": null,
+          "model": null,
+          "name": "Máquina de café",
+          "kind": "outlet",
+          "extras": [
+            "sensor.test_plug_w"
+          ],
+          "hidden": false,
+          "members": [
+            "sensor.test_plug_w"
+          ]
+        }
+      ],
+      "temperature": [],
+      "humidity": [],
+      "scenes": [],
+      "entities": [
+        {
+          "id": "switch.test_plug",
+          "name": "switch.test_plug",
+          "primary": true,
+          "category": false,
+          "ha_hidden": false,
+          "manufacturer": null,
+          "model": null
+        },
+        {
+          "id": "sensor.test_plug_w",
+          "name": "sensor.test_plug_w",
+          "primary": false,
+          "category": false,
+          "ha_hidden": false,
+          "manufacturer": null,
+          "model": null
+        }
+      ],
+      "hidden": false
+    },
+    {
+      "id": "sala",
+      "name": "Sala",
+      "icon": "mdi:sofa",
+      "picture": null,
+      "floor": null,
+      "floor_level": 0,
+      "devices": [
+        {
+          "id": "media_player.test_tv",
+          "device_id": "device_2",
+          "manufacturer": null,
+          "model": null,
+          "name": "Televisão",
+          "kind": "media_player",
+          "extras": [],
+          "hidden": false,
+          "members": [
+            "switch.test_tv_power"
+          ]
+        },
+        {
+          "id": "light.test_lamp",
+          "device_id": "device_3",
+          "manufacturer": null,
+          "model": null,
+          "name": "Candeeiro de pé",
+          "kind": "light",
+          "extras": [],
+          "hidden": false,
+          "members": [
+            "sensor.test_lamp_sig"
+          ]
+        },
+        {
+          "id": "light.test_relay2",
+          "device_id": "device_4",
+          "manufacturer": null,
+          "model": null,
+          "name": "Parede",
+          "kind": "light",
+          "extras": [],
+          "hidden": false,
+          "members": [
+            "light.test_relay1"
+          ]
+        },
+        {
+          "id": "light.test_relay1",
+          "device_id": "device_4",
+          "manufacturer": null,
+          "model": null,
+          "name": "Teto",
+          "kind": "light",
+          "extras": [],
+          "hidden": false,
+          "members": [
+            "light.test_relay2"
+          ]
+        },
+        {
+          "id": "sensor.test_th_t",
+          "device_id": "device_5",
+          "manufacturer": null,
+          "model": null,
+          "name": "Sensor Sala",
+          "kind": "sensor",
+          "extras": [
+            "sensor.test_th_h"
+          ],
+          "hidden": false,
+          "members": [
+            "sensor.test_th_h"
+          ]
+        }
+      ],
+      "temperature": [
+        "sensor.test_th_t"
+      ],
+      "humidity": [
+        "sensor.test_th_h"
+      ],
+      "scenes": [
+        "scene.test_movie"
+      ],
+      "entities": [
+        {
+          "id": "light.test_lamp",
+          "name": "Candeeiro de pé",
+          "primary": true,
+          "category": false,
+          "ha_hidden": false,
+          "manufacturer": null,
+          "model": null
+        },
+        {
+          "id": "media_player.test_tv",
+          "name": "media_player.test_tv",
+          "primary": true,
+          "category": false,
+          "ha_hidden": false,
+          "manufacturer": null,
+          "model": null
+        },
+        {
+          "id": "light.test_relay2",
+          "name": "Parede",
+          "primary": true,
+          "category": false,
+          "ha_hidden": false,
+          "manufacturer": null,
+          "model": null
+        },
+        {
+          "id": "sensor.test_th_t",
+          "name": "sensor.test_th_t",
+          "primary": true,
+          "category": false,
+          "ha_hidden": false,
+          "manufacturer": null,
+          "model": null
+        },
+        {
+          "id": "light.test_relay1",
+          "name": "Teto",
+          "primary": true,
+          "category": false,
+          "ha_hidden": false,
+          "manufacturer": null,
+          "model": null
+        },
+        {
+          "id": "light.test_hid",
+          "name": "light.test_hid",
+          "primary": false,
+          "category": false,
+          "ha_hidden": true,
+          "manufacturer": null,
+          "model": null
+        },
+        {
+          "id": "sensor.test_th_h",
+          "name": "sensor.test_th_h",
+          "primary": false,
+          "category": false,
+          "ha_hidden": false,
+          "manufacturer": null,
+          "model": null
+        },
+        {
+          "id": "switch.test_tv_power",
+          "name": "switch.test_tv_power",
+          "primary": false,
+          "category": false,
+          "ha_hidden": false,
+          "manufacturer": null,
+          "model": null
+        },
+        {
+          "id": "sensor.test_lamp_sig",
+          "name": "sensor.test_lamp_sig",
+          "primary": false,
+          "category": true,
+          "ha_hidden": false,
+          "manufacturer": null,
+          "model": null
+        }
+      ],
+      "hidden": false
+    },
+    {
+      "id": "_none",
+      "name": "Outros",
+      "icon": "mdi:home-outline",
+      "picture": null,
+      "floor": null,
+      "floor_level": 0,
+      "devices": [
+        {
+          "id": "switch.test_loose",
+          "device_id": null,
+          "manufacturer": null,
+          "model": null,
+          "name": "Bomba",
+          "kind": "switch",
+          "extras": [],
+          "hidden": false,
+          "members": []
+        }
+      ],
+      "temperature": [],
+      "humidity": [],
+      "scenes": [],
+      "entities": [
+        {
+          "id": "switch.test_loose",
+          "name": "Bomba",
+          "primary": true,
+          "category": false,
+          "ha_hidden": false,
+          "manufacturer": null,
+          "model": null
+        }
+      ],
+      "hidden": false
+    }
+  ],
+  "scenes": [
+    "scene.test_movie"
+  ],
+  "scripts": [],
+  "weather": "weather.casa",
+  "persons": [],
+  "settings": {
+    "hidden": [],
+    "hidden_rooms": [],
+    "room_order": [],
+    "theme": "ameixa",
+    "appearance": "fixed",
+    "theme_day": "linho",
+    "theme_night": "ameixa",
+    "card_color": "#f5efe1",
+    "accent_color": "#f6b83f",
+    "clock_24h": true,
+    "animations": true,
+    "show_weather": true,
+    "show_people": true,
+    "home_people": false,
+    "show_status": true,
+    "show_scenes": true,
+    "show_summary": true,
+    "dock": [
+      "home",
+      "rooms",
+      "house",
+      "scenes"
+    ],
+    "language": "pt",
+    "layout": "grid",
+    "home_layout": "top",
+    "weather_entity": "",
+    "screensaver": 0,
+    "big_rooms": [],
+    "big_devices": [],
+    "device_order": {},
+    "house_size": {},
+    "house_layout": {},
+    "shown": [],
+    "placements": {},
+    "cam_doors": {},
+    "wall_height": 30,
+    "settings_version": 2
+  },
+  "version": "0.0.0",
+  "api_version": 1,
+  "min_app_version": "0.1.0"
+}

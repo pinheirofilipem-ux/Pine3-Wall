@@ -48,7 +48,8 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v')
         run: test "v$(cat ../VERSION)" = "${GITHUB_REF_NAME}"
 
-      - run: chmod +x gradlew && ./gradlew --no-daemon :app:assembleRelease
+      # Testes JVM do contrato (leem schema/ e custom_components/ do repositório) e o APK.
+      - run: chmod +x gradlew && ./gradlew --no-daemon :app:testReleaseUnitTest :app:assembleRelease
       - run: mv app/build/outputs/apk/release/app-release.apk "Pine3Wall-$(cat ../VERSION).apk"
       - uses: actions/upload-artifact@v4
         with:

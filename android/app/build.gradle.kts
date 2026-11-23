@@ -46,6 +46,12 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions { jvmTarget = "17" }
+    testOptions { unitTests.isReturnDefaultValues = true }
 }
 
-// Sem dependências externas: só o SDK Android e a stdlib do Kotlin.
+// Sem dependências externas na app: só o SDK Android e a stdlib do Kotlin.
+// Os testes (só JVM) usam JUnit e o org.json real (o android.jar dos testes só tem stubs).
+dependencies {
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.json:json:20240303")
+}

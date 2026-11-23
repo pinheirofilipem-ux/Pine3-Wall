@@ -5,7 +5,7 @@ import java.net.InetAddress
 
 /** Teste de ligação passo a passo, para ver exatamente onde falha (rede, endereço, token ou Pine3 Wall). */
 object HaTest {
-    fun run(url: String?, token: String, trustAll: Boolean, line: (ok: Boolean, text: String) -> Unit, done: () -> Unit) {
+    fun run(url: String?, token: String, trustAll: Boolean, appVersion: String, line: (ok: Boolean, text: String) -> Unit, done: () -> Unit) {
         Thread {
             try {
                 if (url == null) { line(false, Tr.s("Falta o endereço do Home Assistant.", "The Home Assistant address is missing.")); return@Thread }
@@ -32,8 +32,11 @@ object HaTest {
                     ws.send(JSONObject().put("id", 2).put("type", "pine3_wall/home").toString())
                     val h = JSONObject(ws.receive() ?: run { line(false, "O HA fechou a ligação"); return@Thread })
                     if (h.optBoolean("success")) {
-                        val rooms = h.optJSONObject("result")?.optJSONArray("rooms")?.length() ?: 0
-                        line(true, "5/5  " + Tr.s("Pine3 Wall respondeu: $rooms divisões", "Pine3 Wall answered: $rooms rooms"))
+                        val res = h.optJSONObject("result") ?: JSONObject()
+                        val rooms = res.optJSONArray("rooms")?.length() ?: 0
+                        val ver = res.optString("version", "?")
+                        line(true, "5/5  " + Tr.s("Pine3 Wall $ver respondeu: $rooms divisões", "Pine3 Wall $ver answered: $rooms rooms"))
+                        Compat.problem(res.optInt("api_version", 0), res.optString("min_app_version", "").ifBlank { null }, appVersion)?.let { line(false, it) }
                     } else {
                         line(false, "5/5  " + Tr.s("O Pine3 Wall não respondeu", "Pine3 Wall did not answer") + " (${h.optJSONObject("error")?.optString("code")}). " + Tr.s("Está instalado no HA e o HA foi reiniciado?", "Is it installed in HA, and was HA restarted?"))
                     }

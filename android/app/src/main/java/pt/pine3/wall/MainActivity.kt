@@ -296,12 +296,21 @@ class MainActivity : Activity(), Nav {
         (dockHost.layoutParams as FrameLayout.LayoutParams).bottomMargin = kit.dp(if (kit.compact) 14 else 22)
     }
 
+    private val appVersion: String by lazy {
+        try { packageManager.getPackageInfo(packageName, 0).versionName ?: "0.0.0" } catch (_: Exception) { "0.0.0" }
+    }
+
     /** (Re)constrói a página atual a partir do modelo. Só é chamada quando o modelo muda ou se navega. */
     private fun rebuild() {
         val home = Ha.home
         if (home == null) {
             val msg = Ha.homeError ?: Ha.status
             show(Placeholder(kit, "Pine3 Wall", msg))
+            shownHome = null; shownKey = ""
+            return
+        }
+        Compat.problem(home.apiVersion, home.minAppVersion, appVersion)?.let {
+            show(Placeholder(kit, "Pine3 Wall", it))
             shownHome = null; shownKey = ""
             return
         }

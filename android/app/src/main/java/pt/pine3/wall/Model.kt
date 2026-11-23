@@ -19,6 +19,8 @@ class Room(
 class Home(
     val rooms: List<Room>, val scenes: List<String>, val scripts: List<String>,
     val weather: String?, val persons: List<String>, val settings: JSONObject,
+    /** Versão do contrato e app mínima (schema/home.schema.json); 0 / null numa integração anterior ao contrato. */
+    val apiVersion: Int = 0, val minAppVersion: String? = null, val version: String? = null,
 ) {
     fun color(key: String, fallback: Int): Int = try {
         android.graphics.Color.parseColor(settings.optString(key, "").ifBlank { return fallback })
@@ -69,6 +71,9 @@ class Home(
                 rooms, strings(o.optJSONArray("scenes")), strings(o.optJSONArray("scripts")),
                 if (o.isNull("weather")) null else o.optString("weather"), strings(o.optJSONArray("persons")),
                 o.optJSONObject("settings") ?: JSONObject(),
+                apiVersion = o.optInt("api_version", 0),
+                minAppVersion = o.optString("min_app_version", "").ifBlank { null },
+                version = o.optString("version", "").ifBlank { null },
             )
         }
     }

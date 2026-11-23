@@ -453,7 +453,7 @@ class SettingsActivity : Activity() {
         fun commitHa() { prefs.haUrl = url.text.toString(); prefs.haToken = token.text.toString(); prefs.ignoreSsl = ssl }
         ha.addView(pillBtn("Testar ligação", "mdi:wifi") {
             commitHa(); testOut.text = ""
-            HaTest.run(prefs.wsUrl(), prefs.haToken, prefs.ignoreSsl,
+            HaTest.run(prefs.wsUrl(), prefs.haToken, prefs.ignoreSsl, try { packageManager.getPackageInfo(packageName, 0).versionName ?: "0.0.0" } catch (_: Exception) { "0.0.0" },
                 line = { ok, t -> runOnUiThread { testOut.append((if (ok) "✔ " else "✘ ") + t + "\n") } },
                 done = { runOnUiThread { testOut.append("\n" + Ha.log.takeLast(4).joinToString("\n")) } })
         }, LinearLayout.LayoutParams(-2, -2).apply { topMargin = d(14) })
@@ -693,10 +693,8 @@ class SettingsActivity : Activity() {
 
     // ---------------------------------------------------------------- Aparência
 
-    private val CARD_COLORS = listOf("#f5efe1", "#efe3c8", "#e6dcc2", "#d6e2e8", "#c3d3da", "#d9d3e3", "#e6d3d6", "#cfe0cc", "#bccfc3", "#cbb9a8", "#bcc6d3", "#d8ccb4", "#cdc6d8", "#b9d3cd")
-    private val ACCENTS = listOf("#f6b83f", "#f5a524", "#ff9f43", "#ff7a59", "#ff6b81", "#f472b6", "#a78bfa", "#7c8cff", "#4aa8ff", "#2dd4bf", "#4ade80", "#a3e635")
-    private val AMBIENT = setOf("nebulosa", "floresta", "ardosia", "vinho", "meia_noite", "brasa")
-    private val VIVID = setOf("ambar", "coral", "lima", "azul", "violeta", "magenta", "turquesa", "por_do_sol")
+    private val AMBIENT = Themes.all.filter { it.group == "ambient" }.map { it.key }.toSet()
+    private val VIVID = Themes.all.filter { it.group == "vivid" }.map { it.key }.toSet()
 
     private fun swatchRow(p: LinearLayout, colors: List<String>, cur: String, key: String) {
         val g = Grid(this, d(44), d(44), d(10))

@@ -100,8 +100,8 @@ equivalente no `ambient`.
 
 | # | Fase | Conteúdo | Resultado |
 |---|---|---|---|
-| 0 | Repositório | Repo a partir do Pine3 View com o histórico, domínio `pine3_wall` e `applicationId` `pt.pine3.wall`, keystore própria nos secrets, versão única (`VERSION`), release por tag com o APK, CI, sem valores pessoais fixos | O mesmo que existia, instalável ao lado do Pine3 View |
-| 1 | Contrato | `schema/`, `api_version` e `min_app_version`, `tokens.json` a gerar os temas em Kotlin e CSS, testes pytest e Kotlin com os mesmos `examples/` | A web e a app não se afastam sem um teste falhar |
+| 0 ✅ | Repositório | Repo a partir do Pine3 View com o histórico, domínio `pine3_wall` e `applicationId` `pt.pine3.wall`, keystore própria nos secrets, versão única (`VERSION`), release por tag com o APK, CI, sem valores pessoais fixos | O mesmo que existia, instalável ao lado do Pine3 View |
+| 1 ✅ | Contrato | `schema/`, `api_version` e `min_app_version`, `tokens.json` a gerar os temas em Kotlin e CSS, testes pytest e Kotlin com os mesmos `examples/` | A web e a app não se afastam sem um teste falhar |
 | 2 | Layouts, módulos e pessoas | Documento de layout (grelha com spans), `ModuleRegistry` no backend e na app, cartões atuais no módulo `home`, `Pages.kt` a interpretar layouts (templates → secções → cartões), layout automático por omissão, pessoas no núcleo | A app desenha o que o HA lhe diz, com o mesmo aspeto |
 | 3 | Editor web e renderer (níveis 1 e 2) | Renderer web pensado para o nível 3, construtor, pré-visualização com estados reais e ao vivo no tablet, rascunho/publicação/histórico, editor de planta 3D, ecrã de pessoas | A interface da app é construída na web |
 | 4 | Tablets no HA | `register_panel`, dispositivo HA por tablet (movimento, ecrã, bateria, versão), serviços `wake`, `show_page`, `notify`, layout por tablet. O screensaver continua local | Tablets geridos e automatizáveis a partir do HA |
