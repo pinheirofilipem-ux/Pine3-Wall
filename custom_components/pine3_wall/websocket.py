@@ -14,7 +14,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.storage import Store
 
-from .const import DOMAIN, EVENT_UPDATED, VERSION
+from .const import API_VERSION, DOMAIN, EVENT_UPDATED, MIN_APP_VERSION, VERSION
 from .discovery import build_home
 
 STORAGE_KEY = f"{DOMAIN}.settings"
@@ -115,7 +115,12 @@ def ws_home(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg
 
 
 def _model(hass: HomeAssistant) -> dict[str, Any]:
-    return {**build_home(hass, hass.data[DOMAIN]["settings"]), "version": VERSION}
+    return {
+        **build_home(hass, hass.data[DOMAIN]["settings"]),
+        "version": VERSION,
+        "api_version": API_VERSION,
+        "min_app_version": MIN_APP_VERSION,
+    }
 
 
 @websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/subscribe"})

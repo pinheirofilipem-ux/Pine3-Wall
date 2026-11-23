@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/pinheirofilipem-ux/pine3-wall/schema/home.schema.json",
+  "title": "Pine3 Wall home model",
+  "description": "Result of the websocket command pine3_wall/home and of each pine3_wall/subscribe event. Contract between the integration, the web panel and the Android app. Adding optional fields is compatible; removing or changing a field raises api_version.",
+  "type": "object",
+  "required": ["api_version", "min_app_version", "version", "rooms", "scenes", "scripts", "weather", "persons", "settings"],
+  "properties": {
+    "api_version": {"type": "integer", "minimum": 1, "description": "Version of this contract (custom_components/pine3_wall/const.py API_VERSION)."},
+    "min_app_version": {"$ref": "#/$defs/semver", "description": "Oldest Android app version that understands this model."},
+    "version": {"$ref": "#/$defs/semver", "description": "Version of the integration (VERSION file)."},
+    "rooms": {"type": "array", "items": {"$ref": "#/$defs/room"}},
+    "scenes": {"$ref": "#/$defs/entity_ids"},
+    "scripts": {"$ref": "#/$defs/entity_ids"},
+    "weather": {"anyOf": [{"$ref": "#/$defs/entity_id"}, {"type": "null"}]},
+    "persons": {"$ref": "#/$defs/entity_ids"},
+    "settings": {"$ref": "#/$defs/settings"}
+  },
+  "$defs": {
+    "semver": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+    "entity_id": {"type": "string", "pattern": "^[a-z_]+\\.[a-z0-9_]+$"},
+    "entity_ids": {"type": "array", "items": {"$ref": "#/$defs/entity_id"}},
+    "nullable_string": {"type": ["string", "null"]},
+    "color": {"type": "string", "pattern": "^#[0-9a-fA-F]{6}$"},
+    "room": {
+      "type": "object",
+      "required": ["id", "name", "icon", "floor", "floor_level", "devices", "temperature", "humidity", "scenes", "entities", "hidden"],
+      "properties": {
+        "id": {"type": "string"},
+        "name": {"type": "string"},
+        "icon": {"type": "string", "pattern": "^mdi:"},
+        "picture": {"$ref": "#/$defs/nullable_string"},
+        "floor": {"$ref": "#/$defs/nullable_string", "description": "Floor name, or null without floors."},
+        "floor_level": {"type": "integer"},
+        "devices": {"type": "array", "items": {"$ref": "#/$defs/device"}},
+        "temperature": {"$ref": "#/$defs/entity_ids"},
+        "humidity": {"$ref": "#/$defs/entity_ids"},
+        "scenes": {"$ref": "#/$defs/entity_ids"},
+        "entities": {"type": "array", "items": {"$ref": "#/$defs/room_entity"}},
+        "hidden": {"type": "boolean"}
+      }
+    },
+    "device": {
+      "type": "object",
+      "description": "One tile: a device's primary entity, with its extras (readings shown on the tile) and members (everything on its detail card).",
+      "required": ["id", "name", "kind", "extras", "hidden"],
+      "properties": {
+        "id": {"$ref": "#/$defs/entity_id"},
+        "device_id": {"$ref": "#/$defs/nullable_string"},
+        "manufacturer": {"$ref": "#/$defs/nullable_string"},
+        "model": {"$ref": "#/$defs/nullable_string"},
+        "name": {"type": "string"},
+        "kind": {"type": "string", "description": "Entity domain, or outlet / switch for plugs and input_boolean."},
+        "extras": {"$ref": "#/$defs/entity_ids"},
+        "members": {"$ref": "#/$defs/entity_ids"},
+        "hidden": {"type": "boolean"}
+      }
+    },
+    "room_entity": {
+      "type": "object",
+      "required": ["id", "name", "primary", "category", "ha_hidden"],
+      "properties": {
+        "id": {"$ref": "#/$defs/entity_id"},
+        "name": {"type": "string"},
+        "primary": {"type": "boolean"},
+        "category": {"type": "boolean"},
+        "ha_hidden": {"type": "boolean"},
+        "manufacturer": {"$ref": "#/$defs/nullable_string"},
+        "model": {"$ref": "#/$defs/nullable_string"}
+      }
+    },
+    "settings": {
+      "type": "object",
+      "description": "Shared settings stored in Home Assistant (pine3_wall/settings). Every key of DEFAULT_SETTINGS in websocket.py is listed here (checked by the tests).",
+      "required": ["theme", "language", "layout", "home_layout", "dock"],
+      "properties": {
+        "hidden": {"$ref": "#/$defs/entity_ids"},
+        "hidden_rooms": {"type": "array", "items": {"type": "string"}},
+        "room_order": {"type": "array", "items": {"type": "string"}},
+        "theme": {"type": "string"},
+        "appearance": {"enum": ["fixed", "auto"]},
+        "theme_day": {"type": "string"},
+        "theme_night": {"type": "string"},
+        "card_color": {"$ref": "#/$defs/color"},
+        "accent_color": {"$ref": "#/$defs/color"},
+        "clock_24h": {"type": "boolean"},
+        "animations": {"type": "boolean"},
+        "show_weather": {"type": "boolean"},
+        "show_people": {"type": "boolean"},
+        "home_people": {"type": "boolean"},
+        "show_status": {"type": "boolean"},
+        "show_scenes": {"type": "boolean"},
+        "show_summary": {"type": "boolean"},
+        "dock": {"type": "array", "items": {"enum": ["home", "rooms", "house", "scenes", "climate", "security"]}},
+        "language": {"enum": ["pt", "en"]},
+        "layout": {"enum": ["grid", "list"]},
+        "home_layout": {"enum": ["classic", "top", "columns", "sidebar"]},
+        "weather_entity": {"type": "string"},
+        "screensaver": {"type": "integer", "minimum": 0, "maximum": 240},
+        "big_rooms": {"type": "array", "items": {"type": "string"}},
+        "big_devices": {"type": "array", "items": {"type": "string"}},
+        "device_order": {"type": "object", "additionalProperties": {"type": "array", "items": {"type": "string"}}},
+        "house_size": {"type": "object", "additionalProperties": {"enum": [1, 2, 3]}},
+        "house_layout": {"type": "object"},
+        "shown": {"type": "array", "items": {"type": "string"}},
+        "placements": {"type": "object"},
+        "cam_doors": {"type": "object", "additionalProperties": {"type": "array", "items": {"type": "string"}}},
+        "wall_height": {"type": "integer", "minimum": 8, "maximum": 120},
+        "settings_version": {"type": "integer"}
+      }
+    }
+  }
+}
