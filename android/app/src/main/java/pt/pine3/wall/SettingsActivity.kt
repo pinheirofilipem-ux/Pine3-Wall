@@ -283,7 +283,7 @@ class SettingsActivity : Activity() {
 
     private val sections = listOf(
         Triple("app", "mdi:tablet", "App"), Triple("look", "mdi:palette-outline", "Aparência"), Triple("home", "mdi:home-outline", "Início"),
-        Triple("rooms", "mdi:view-grid-outline", "Divisões"), Triple("entities", "mdi:format-list-checks", "Entidades"), Triple("saver", "mdi:movie-open-play-outline", "Screensaver"),
+        Triple("people", "mdi:account-group-outline", "Pessoas"), Triple("rooms", "mdi:view-grid-outline", "Divisões"), Triple("entities", "mdi:format-list-checks", "Entidades"), Triple("saver", "mdi:movie-open-play-outline", "Screensaver"),
         Triple("plan", "mdi:floor-plan", "Planta 3D"), Triple("nav", "mdi:dock-bottom", "Navegação"), Triple("system", "mdi:cog-outline", "Sistema"),
     )
 
@@ -372,7 +372,7 @@ class SettingsActivity : Activity() {
         placeNav(animateNav && prev >= 0 && prev != navActive)
         mainBox.removeAllViews()
         when (key) {
-            "app" -> buildApp(); "look" -> buildLook(); "home" -> buildHome(); "rooms" -> buildRooms()
+            "app" -> buildApp(); "look" -> buildLook(); "home" -> buildHome(); "people" -> buildPeople(); "rooms" -> buildRooms()
             "entities" -> buildEntities(); "saver" -> buildSaver(); "plan" -> buildPlan(); "nav" -> buildNav(); else -> buildSystem()
         }
         if (keepScroll) { if (y > 0) restoreScroll(y) }
@@ -773,6 +773,66 @@ class SettingsActivity : Activity() {
         optToggle(p, Tr.t("Cenas"), "Faixa de cenas no início.", bool("show_scenes", true)) { setD("show_scenes", it) }
         optToggle(p, Tr.t("Cartões de resumo"), "Clima, Segurança e A tocar.", bool("show_summary", true)) { setD("show_summary", it) }
         optToggle(p, Tr.t("Relógio de 24 horas"), "Desliga para mostrar AM/PM.", bool("clock_24h", true)) { setD("clock_24h", it) }
+    }
+
+    // ---------------------------------------------------------------- Pessoas
+
+    /** A cópia das definições de uma pessoa no rascunho ("people": {person.x: {color, alias, hidden}}). */
+    private fun peopleDraft(): JSONObject = JSONObject((draft.optJSONObject("people") ?: JSONObject()).toString())
+
+    private fun setPerson(id: String, redraw: Boolean, change: (JSONObject) -> Unit) {
+        val all = peopleDraft()
+        val p = all.optJSONObject(id) ?: JSONObject()
+        change(p)
+        if (p.length() == 0) all.remove(id) else all.put(id, p)
+        draft.put("people", all); changed = true; updateSave()
+        if (redraw) redraw()
+    }
+
+    private fun buildPeople() {
+        val p = panel()
+        h3(p, Tr.t("Pessoas"), true)
+        para(p, "A família vem das pessoas do Home Assistant. A cor e o nome curto aparecem no início, no calendário e nas tarefas.")
+        val people = Ha.home?.people
+        if (people == null) { para(p, "Liga primeiro ao Home Assistant (secção App)."); return }
+        if (people.isEmpty()) { para(p, "Não há pessoas no Home Assistant. Cria-as em Definições → Pessoas."); return }
+        val cfg = peopleDraft()
+        people.forEachIndexed { k, person ->
+            val c = cfg.optJSONObject(person.id) ?: JSONObject()
+            val color = c.optString("color", "").ifBlank { person.color }
+            val alias = c.optString("alias", "")
+            val row = LinearLayout(this).apply { gravity = Gravity.CENTER_VERTICAL; setPadding(0, d(10), 0, d(4)) }
+            row.addView(kit.text((alias.ifBlank { person.alias }).take(1).uppercase(), 18f, kit.ink, 600, display = true).apply {
+                gravity = Gravity.CENTER
+                background = android.graphics.drawable.GradientDrawable().apply { shape = android.graphics.drawable.GradientDrawable.OVAL; setColor(try { Color.parseColor(color) } catch (_: Exception) { Color.GRAY }) }
+            }, LinearLayout.LayoutParams(d(44), d(44)).apply { marginEnd = d(14) })
+            row.addView(LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                addView(kit.text(person.name, 16f, kit.fg, 500)); addView(kit.text(person.id, 12f, kit.muted))
+            }, LinearLayout.LayoutParams(0, -2, 1f))
+            val nick = input(alias, person.alias, InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_WORDS).apply {
+                filters = arrayOf(android.text.InputFilter.LengthFilter(40))
+                addTextChangedListener(object : TextWatcher {
+                    override fun afterTextChanged(e: Editable?) { val v = e.toString().trim(); setPerson(person.id, false) { if (v.isEmpty()) it.remove("alias") else it.put("alias", v) } }
+                    override fun beforeTextChanged(t: CharSequence?, a: Int, b: Int, c: Int) {}
+                    override fun onTextChanged(t: CharSequence?, a: Int, b: Int, c: Int) {}
+                })
+            }
+            row.addView(nick, LinearLayout.LayoutParams(d(170), -2).apply { marginEnd = d(14) })
+            row.addView(Toggle(kit, !c.optBoolean("hidden", false)) { on -> setPerson(person.id, false) { if (on) it.remove("hidden") else it.put("hidden", true) } })
+            p.addView(row, LinearLayout.LayoutParams(-1, -2))
+            val g = Grid(this, d(40), d(40), d(10))
+            PERSON_COLORS.forEach { col ->
+                val sel = col.equals(color, true)
+                g.addView(View(this).apply {
+                    background = android.graphics.drawable.GradientDrawable().apply { shape = android.graphics.drawable.GradientDrawable.OVAL; setColor(Color.parseColor(col)); setStroke(d(if (sel) 3 else 1), if (sel) kit.fg else kit.soft) }
+                    isClickable = true; setOnClickListener { setPerson(person.id, true) { it.put("color", col) } }
+                })
+            }
+            p.addView(g, LinearLayout.LayoutParams(-1, -2).apply { topMargin = d(8); marginStart = d(58) })
+            if (k < people.size - 1) divider(p)
+        }
+        para(p, "O interruptor mostra ou esconde a pessoa no início e nos módulos da família.")
     }
 
     // ---------------------------------------------------------------- Divisões
