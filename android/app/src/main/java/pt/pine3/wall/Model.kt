@@ -21,6 +21,8 @@ class Home(
     val weather: String?, val persons: List<String>, val settings: JSONObject,
     /** Versão do contrato e app mínima (schema/home.schema.json); 0 / null numa integração anterior ao contrato. */
     val apiVersion: Int = 0, val minAppVersion: String? = null, val version: String? = null,
+    /** O layout de todos os ecrãs (schema/layout.schema.json); null numa integração anterior à 0.3.0. */
+    val layout: LayoutDoc? = null,
 ) {
     fun color(key: String, fallback: Int): Int = try {
         android.graphics.Color.parseColor(settings.optString(key, "").ifBlank { return fallback })
@@ -74,6 +76,7 @@ class Home(
                 apiVersion = o.optInt("api_version", 0),
                 minAppVersion = o.optString("min_app_version", "").ifBlank { null },
                 version = o.optString("version", "").ifBlank { null },
+                layout = o.optJSONObject("layout")?.let { LayoutDoc.parse(it) },
             )
         }
     }

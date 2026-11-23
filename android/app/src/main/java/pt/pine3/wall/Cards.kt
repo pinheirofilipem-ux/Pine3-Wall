@@ -60,7 +60,7 @@ private class IconCircle(val kit: Kit, sizeDp: Int, iconDp: Int, icon: String) :
 private fun TextView.oneLine() = apply { setSingleLine(); ellipsize = TextUtils.TruncateAt.END }
 
 /** Cartão de uma divisão (.rc): ícone, botão de ligar/desligar, nome, "x de y ligados", bolinhas e temperatura. */
-class RoomCard(private val kit: Kit, private val room: Room, dense: Boolean, private val short: Boolean = false, private val onOpen: () -> Unit) : Card(kit.ctx) {
+class RoomCard(private val kit: Kit, private val room: Room, dense: Boolean, private val short: Boolean = false, bigSize: Boolean? = null, private val onOpen: () -> Unit) : Card(kit.ctx) {
     private val ids = room.devices.filter { !it.hidden }.map { it.id }
     private val ri = IconCircle(kit, if (short) 42 else if (dense) 38 else 52, if (short || dense) 22 else 26, room.icon)
     private val pw = IconCircle(kit, if (short) 50 else if (dense) 44 else 64, if (short || dense) 24 else 28, "mdi:power")
@@ -68,7 +68,8 @@ class RoomCard(private val kit: Kit, private val room: Room, dense: Boolean, pri
     private val meta = kit.text("", if (short) 14f else 16f, kit.ink).oneLine()
     private val dots = Dots(kit.ctx, kit)
     private val tmp = kit.text("", if (short) 14f else 16f, kit.ink)
-    private val big = !kit.list && Ha.home?.let { Lay.isBigRoom(it, room.id) } == true
+    /** Tamanho duplo: o do layout quando vem dele; no modo de edição, a cópia de trabalho. */
+    private val big = !kit.list && (if (Lay.edit == null && bigSize != null) bigSize else Ha.home?.let { Lay.isBigRoom(it, room.id) } == true)
     private val quick = Grid(kit.ctx, kit.dp(120), kit.dp(38), kit.dp(8))
 
     init {

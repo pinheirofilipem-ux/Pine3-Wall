@@ -260,9 +260,10 @@ class MainActivity : Activity(), Nav {
     override fun openSettings() { startActivity(Intent(this, SettingsActivity::class.java)) }
 
     private fun dockKeys(): List<String> {
-        val chosen = Ha.home?.settings?.optJSONArray("dock")
-        val list = if (chosen == null) listOf("home", "rooms", "house", "scenes") else (0 until chosen.length()).map { chosen.getString(it) }
-        return DOCK_ITEMS.map { it.first }.filter { it == "home" || it in list }
+        // A dock vem do layout; só se mostram as páginas que esta app conhece.
+        val list = Ha.home?.layout?.dock ?: listOf("home", "rooms", "house", "scenes")
+        val known = DOCK_ITEMS.map { it.first }
+        return (listOf("home") + list).distinct().filter { it in known }
     }
 
     private fun showTab(key: String) {
@@ -309,7 +310,7 @@ class MainActivity : Activity(), Nav {
             shownHome = null; shownKey = ""
             return
         }
-        Compat.problem(home.apiVersion, home.minAppVersion, appVersion)?.let {
+        Compat.problem(home.apiVersion, home.minAppVersion, appVersion, home.layout != null)?.let {
             show(Placeholder(kit, "Pine3 Wall", it))
             shownHome = null; shownKey = ""
             return
