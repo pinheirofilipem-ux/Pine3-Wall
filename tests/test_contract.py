@@ -13,6 +13,7 @@ from pathlib import Path
 
 import jsonschema
 from homeassistant.core import HomeAssistant
+from referencing import Registry, Resource
 
 from custom_components.pine3_wall.const import API_VERSION, MIN_APP_VERSION, VERSION
 from custom_components.pine3_wall.websocket import DEFAULT_SETTINGS, async_setup_api
@@ -21,12 +22,16 @@ from .test_discovery import _setup_home
 
 ROOT = Path(__file__).parents[1]
 SCHEMA = json.loads((ROOT / "schema/home.schema.json").read_text())
+LAYOUT_SCHEMA = json.loads((ROOT / "schema/layout.schema.json").read_text())
+REGISTRY = Registry().with_resources(
+    (s["$id"], Resource.from_contents(s)) for s in (SCHEMA, LAYOUT_SCHEMA)
+)
 EXAMPLE = ROOT / "schema/examples/home.json"
 
 
-def _validate(model: dict) -> None:
-    jsonschema.Draft202012Validator.check_schema(SCHEMA)
-    jsonschema.validate(model, SCHEMA, cls=jsonschema.Draft202012Validator)
+def _validate(model: dict, schema: dict = SCHEMA) -> None:
+    jsonschema.Draft202012Validator.check_schema(schema)
+    jsonschema.Draft202012Validator(schema, registry=REGISTRY).validate(model)
 
 
 def _normalise(model: dict) -> dict:
@@ -36,6 +41,7 @@ def _normalise(model: dict) -> dict:
         for dev in room["devices"]:
             if dev.get("device_id"):
                 dev["device_id"] = ids.setdefault(dev["device_id"], f"device_{len(ids) + 1}")
+    assert "layout" in model
     model["version"] = "0.0.0"
     return model
 

@@ -16,6 +16,7 @@ from homeassistant.helpers.storage import Store
 
 from .const import API_VERSION, DOMAIN, EVENT_UPDATED, MIN_APP_VERSION, VERSION
 from .discovery import build_home
+from .layout import DOCK_ITEMS, build_layout
 
 STORAGE_KEY = f"{DOMAIN}.settings"
 DEFAULT_SETTINGS: dict[str, Any] = {
@@ -53,7 +54,6 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "wall_height": 30,
     "settings_version": 2,
 }
-DOCK_ITEMS = ["home", "rooms", "house", "scenes", "climate", "security"]
 DEVICE_TYPES = [
     "ceiling", "lamp", "led", "spot", "bulb", "tv", "appletv", "homepod", "speaker", "ac", "fan", "purifier",
     "blind", "door", "window", "plug", "sensor", "motion", "camera", "lock", "vacuum", "other",
@@ -115,8 +115,11 @@ def ws_home(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg
 
 
 def _model(hass: HomeAssistant) -> dict[str, Any]:
+    settings = hass.data[DOMAIN]["settings"]
+    home = build_home(hass, settings)
     return {
-        **build_home(hass, hass.data[DOMAIN]["settings"]),
+        **home,
+        "layout": build_layout(home, settings),
         "version": VERSION,
         "api_version": API_VERSION,
         "min_app_version": MIN_APP_VERSION,
