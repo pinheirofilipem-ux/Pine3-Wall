@@ -61,7 +61,7 @@ object Tr {
         "Idioma" to "Language", "Disposição" to "Layout", "Grelha" to "Grid", "Lista" to "List", "Animações" to "Animations",
         "Cor dos cartões" to "Card color", "Cor de destaque" to "Accent color", "Fundo" to "Background", "Fixo" to "Fixed", "Automático" to "Auto",
         "De dia" to "By day", "À noite" to "At night", "Ambiente" to "Ambient", "Vivos" to "Vivid", "Escuros" to "Dark", "Claros" to "Light",
-        "Ecrã inicial" to "Home screen", "Meteorologia" to "Weather", "Fonte do tempo" to "Weather source", "Pessoas" to "People",
+        "Ecrã inicial" to "Home screen", "Meteorologia" to "Weather", "Fonte do tempo" to "Weather source", "Pessoas" to "People", "A família vem das pessoas do Home Assistant. A cor e o nome curto aparecem no início, no calendário e nas tarefas." to "The family comes from the people in Home Assistant. Their colour and short name show on the home screen, the calendar and chores.", "Não há pessoas no Home Assistant. Cria-as em Definições → Pessoas." to "There are no people in Home Assistant. Create them in Settings → People.", "O interruptor mostra ou esconde a pessoa no início e nos módulos da família." to "The switch shows or hides the person on the home screen and in the family modules.",
         "Disposição do início" to "Home layout", "Relógio grande" to "Big clock", "Duas colunas" to "Two columns", "Barra lateral" to "Sidebar", "Clássica" to "Classic",
         "Estado da casa" to "Home status", "Cartões de resumo" to "Summary cards", "Relógio de 24 horas" to "24-hour clock", "Ecrã de descanso" to "Screensaver",
         "Desligado" to "Off", "Dock" to "Dock", "Versão" to "Version", "Reconstruir agora" to "Rebuild now", "Procurar entidades…" to "Search entities…",
