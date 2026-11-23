@@ -60,4 +60,23 @@ class LayoutTest {
         assertNotNull(Compat.problem(Compat.API_VERSION, "0.1.0", "0.4.0", hasLayout = false))
         assertNull(Compat.problem(Compat.API_VERSION, "0.1.0", "0.4.0", hasLayout = true))
     }
+
+    @Test fun roomPagesListTheVisibleDevices() {
+        val layout = home.layout!!
+        home.rooms.forEach { r ->
+            val grid = layout.page("room/${r.id}")!!.section("grid")!!
+            assertEquals("category", grid.group)
+            assertEquals(r.devices.filter { !it.hidden }.map { it.id }.toSet(), grid.cards.map { it.entity }.toSet())
+        }
+        val rooms = layout.page("rooms")!!.section("grid")!!.cards.map { it.room }
+        assertEquals(home.rooms.filter { !it.hidden }.map { it.id }, rooms)
+    }
+
+    @Test fun pagesWaitForTheLayoutAfterAnEdit() {
+        Lay.awaitingLayout = false
+        assertTrue(Lay.useLayout)
+        Lay.awaitingLayout = true // gravou-se uma edição: desenha-se pelas definições até o HA mandar o layout novo
+        assertFalse(Lay.useLayout)
+        Lay.awaitingLayout = false
+    }
 }

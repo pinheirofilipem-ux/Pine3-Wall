@@ -5,7 +5,7 @@ import android.view.Gravity
 import android.widget.LinearLayout
 
 /** O que um módulo precisa para desenhar um cartão. */
-class CardContext(val kit: Kit, val home: Home, val nav: Nav, val dense: Boolean, val short: Boolean = false)
+class CardContext(val kit: Kit, val home: Home, val nav: Nav, val dense: Boolean, val short: Boolean = false, val room: Room? = null)
 
 /**
  * Um módulo (schema/catalog.json): os tipos de secção e de cartão que sabe desenhar.
@@ -47,8 +47,12 @@ object HomeModule : Module {
         }
         "summary" -> spec.summary?.let { SummaryCard(c.kit, it, spec.entity, c.home, c.nav, c.dense) }
         "device" -> spec.entity?.let { id ->
-            val d = c.home.rooms.flatMap { it.devices }.firstOrNull { it.id == id } ?: devOf(id)
-            Tile(c.kit, d) { c.nav.openDevice(it) }
+            val d = (c.room?.devices ?: c.home.rooms.flatMap { it.devices }).firstOrNull { it.id == id } ?: devOf(id)
+            when {
+                d.kind == "climate" && Fmt.state(d.id) != null -> ClimateCard(c.kit, d, null) { c.nav.openDevice(it) }
+                d.kind == "vacuum" && Fmt.state(d.id) != null -> VacCard(c.kit, d, c.room) { c.nav.openDevice(it) }
+                else -> Tile(c.kit, d, bigSize = spec.big) { c.nav.openDevice(it) }
+            }
         }
         else -> null
     }
