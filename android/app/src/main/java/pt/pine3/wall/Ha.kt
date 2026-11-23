@@ -68,6 +68,10 @@ object Ha {
     private const val ID_HOME = 3
     private const val ID_HOME_SUB = 4
 
+    /** Ids do pedido do modelo e da subscrição nesta ligação (mudam quando se volta a pedir: o HA não aceita ids repetidos). */
+    @Volatile private var homeId = ID_HOME
+    @Volatile private var homeSubId = ID_HOME_SUB
+
     private fun notifyMain(block: (Listener) -> Unit) = main.post { listeners.forEach(block) }
     private fun setStatus(text: String, ok: Boolean) { status = text; connected = ok; notifyMain { it.onStatus() } }
 
@@ -236,6 +240,7 @@ object Ha {
         setStatus(Tr.s("Ligado", "Connected"), true)
         socket.send(JSONObject().put("id", ID_EVENTS).put("type", "subscribe_events").put("event_type", "state_changed").toString())
         socket.send(JSONObject().put("id", ID_STATES).put("type", "get_states").toString())
+        homeId = ID_HOME; homeSubId = ID_HOME_SUB
         socket.send(JSONObject().put("id", ID_HOME).put("type", "pine3_wall/home").toString())
         socket.send(JSONObject().put("id", ID_HOME_SUB).put("type", "pine3_wall/subscribe").toString())
 
@@ -272,21 +277,46 @@ object Ha {
                 val cb = pending.remove(m.optInt("id"))
                 val res = if (m.optBoolean("success")) m.optJSONObject("result") ?: JSONObject() else null
                 if (cb != null) main.post { cb(res) }
-            } else when (m.optInt("id")) {
+            } else when (val rid = m.optInt("id")) {
                 ID_STATES -> m.optJSONArray("result")?.let { loadStates(it) }
-                ID_HOME -> {
+                homeId -> {
                     if (m.optBoolean("success")) {
                         m.optJSONObject("result")?.let { setHome(it) }
                     } else {
                         val code = m.optJSONObject("error")?.optString("code").orEmpty()
                         log("pine3_wall/home falhou: $code")
-                        homeError = "O Pine3 Wall não respondeu no Home Assistant ($code). Está instalado e reiniciado?"
+                        homeError = Tr.s(
+                            "O Pine3 Wall ainda não respondeu no Home Assistant ($code). A tentar de novo… Se não passar, confirma que a integração Pine3 Wall está instalada e carregada (Definições → Dispositivos e serviços).",
+                            "Pine3 Wall did not answer in Home Assistant yet ($code). Retrying… If it persists, check that the Pine3 Wall integration is installed and loaded (Settings → Devices & services).",
+                        )
                         notifyMain { it.onHome() }
+                        retryHome()
                     }
                 }
+                else -> if (rid == homeSubId && m.optBoolean("success")) log("Subscrição do modelo ativa")
             }
-            "event" -> if (m.optInt("id") == ID_HOME_SUB) m.optJSONObject("event")?.let { setHome(it) }
+            "event" -> if (m.optInt("id") == homeSubId) m.optJSONObject("event")?.let { setHome(it) }
         }
+    }
+
+    /**
+     * O HA aceita ligações antes de acabar de carregar as integrações: logo a seguir a um reinício o comando do Pine3 Wall
+     * ainda não existe (unknown_command). Volta a pedir o modelo (e a subscrição) a cada 10 s, nesta mesma ligação.
+     */
+    private fun retryHome() {
+        val socket = ws ?: return
+        main.postDelayed({
+            if (!running || ws !== socket || home != null && homeError == null) return@postDelayed
+            Thread {
+                try {
+                    val hid = ids.incrementAndGet(); val sid = ids.incrementAndGet()
+                    homeId = hid; homeSubId = sid
+                    socket.send(JSONObject().put("id", hid).put("type", "pine3_wall/home").toString())
+                    socket.send(JSONObject().put("id", sid).put("type", "pine3_wall/subscribe").toString())
+                    log("A pedir de novo o modelo da casa")
+                } catch (_: Exception) {}
+            }.start()
+        }, 10_000)
     }
 
     private fun loadStates(arr: JSONArray) {
