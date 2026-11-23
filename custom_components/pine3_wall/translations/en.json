@@ -1,0 +1,6 @@
+{
+  "config": {
+    "step": {"user": {"title": "Pine3 Wall", "description": "Add the Pine3 Wall dashboard to the sidebar."}},
+    "abort": {"single_instance_allowed": "Pine3 Wall is already set up."}
+  }
+}

@@ -1,11 +1,17 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/brand/dark_logo@2x.png">
-    <img src="docs/brand/logo@2x.png" alt="Pine3 View" width="420">
+    <img src="docs/brand/logo@2x.png" alt="Pine3 Wall" width="420">
   </picture>
 </p>
 
 <p align="center"><b>English</b> · <a href="README.pt.md">Português</a></p>
+
+> **Pine3 Wall** is the successor of [Pine3 View](https://github.com/pinheirofilipem-ux/pine3-view): a Home Assistant
+> integration (the backend and a web editor) plus a **native Android app** for wall tablets. It starts as the same code as
+> Pine3 View 0.27 under a new name (`pine3_wall`), so both can be installed side by side without touching each other.
+> The roadmap is in [PLANO.md](PLANO.md) (Portuguese). The logo images still show the old name for now.
+
 
 A personal dashboard for Home Assistant, inspired by Apple Home. It organises your home
 by room automatically (Areas → Devices → Entities), with no YAML, and adds a 3D view of
@@ -43,20 +49,20 @@ On a phone:
 
 ## Install with HACS
 1. In Home Assistant open **HACS** → **⋮** menu → **Custom repositories**.
-2. Repository: `https://github.com/pinheirofilipem-ux/pine3-view`, type **Integration** → **Add**.
-3. Search for **Pine3 View**, open it and select **Download**.
+2. Repository: `https://github.com/pinheirofilipem-ux/pine3-wall`, type **Integration** → **Add**.
+3. Search for **Pine3 Wall**, open it and select **Download**.
 4. Restart Home Assistant.
-5. **Settings → Devices & services → Add integration → Pine3 View**.
-6. Open **Pine3 View** in the sidebar.
+5. **Settings → Devices & services → Add integration → Pine3 Wall**.
+6. Open **Pine3 Wall** in the sidebar.
 
 Requires Home Assistant 2024.7 or newer (the integration icon needs 2026.3 or newer). To update,
 download the new version in HACS and restart Home Assistant; the browser picks up the new files on its own.
 
 ### Manual install
-Copy `custom_components/pine3_view` to `/config/custom_components/`, restart and add the integration.
+Copy `custom_components/pine3_wall` to `/config/custom_components/`, restart and add the integration.
 
 ## Features
-- **Home layouts** (*Settings → Home → Home layout*): **Big clock** (a large clock with the home status beside it), **Sidebar** (a full-height glass sidebar with the date, clock, weather, home status and people, and the scenes and cards beside it), **Two columns** (a third for the date, a big clock, weather, people and what is on; two thirds for Lights on/off, scenes and the cards in rows of four) or **Classic**. Big clock and Two columns also show a **weather card**: now (temperature, condition, today's high and low), the next hours with rain chance, and tomorrow; tap it for the full forecast. With the **IPMA** integration, an active warning (yellow, orange or red) shows as a coloured strip on the weather card, with "+N" when there are more (or ⚠ on the weather pill), and the forecast lists every warning of your area with its start, end and text (the integration exposes only the first, so Pine3 View asks IPMA for the rest), the UV index and the fire risk. The home status lists what else is on besides the lights (plugs, purifiers, TVs, AC…).
+- **Home layouts** (*Settings → Home → Home layout*): **Big clock** (a large clock with the home status beside it), **Sidebar** (a full-height glass sidebar with the date, clock, weather, home status and people, and the scenes and cards beside it), **Two columns** (a third for the date, a big clock, weather, people and what is on; two thirds for Lights on/off, scenes and the cards in rows of four) or **Classic**. Big clock and Two columns also show a **weather card**: now (temperature, condition, today's high and low), the next hours with rain chance, and tomorrow; tap it for the full forecast. With the **IPMA** integration, an active warning (yellow, orange or red) shows as a coloured strip on the weather card, with "+N" when there are more (or ⚠ on the weather pill), and the forecast lists every warning of your area with its start, end and text (the integration exposes only the first, so Pine3 Wall asks IPMA for the rest), the UV index and the fire risk. The home status lists what else is on besides the lights (plugs, purifiers, TVs, AC…).
 - **Home**: clock, weather with the next days (tap for the forecast), home status with what else is on as chips (tap one to open it; "+N" lists the rest, each with a power button), scenes (those that don't fit go in a "+N" menu) (an activated scene stays highlighted while its devices are on, until a later scene sets the same devices, so scenes for different rooms can be on together; tap it again to turn them off), room cards and summary cards (Climate, Security, Now playing).
 - **Weather**: uses your Home Assistant weather entity or, if there is none, [Open-Meteo](https://open-meteo.com) for your home's location (no API key). Forecast for the next 12 hours and 7 days.
 - **3D Home**: every room is a block, stacked by floor (Home Assistant floors). Lit rooms glow in the colour and brightness of their lights (each light casts a pool of its own colour on the floor), lights show as points you can toggle, drag to rotate (the house turns with your finger), zoom with two fingers, the mouse wheel or the + and − buttons, and tap a room to open it. A tap near a light toggles it, even if you miss it slightly. Each floor's slab is only as big as its rooms, and the **wall height** is adjustable (↕ buttons in the 3D Home or a slider in Settings).
@@ -79,7 +85,7 @@ Copy `custom_components/pine3_view` to `/config/custom_components/`, restart and
 - **Edit mode** (✎): drag to reorder rooms and devices (on the home screen also the Climate, Security, Vacuum and Now playing cards, among the rooms), tap − to hide, tap the arrows to make a card double size (a double room card gets shortcuts to its devices).
 - **Layout**: grid or list. Switching screens in the dock slides a glass lens to the new tab and the screen flows in (*Settings → Appearance → Animations* turns this off).
 - **Screensaver**: a large dimmed clock after 1–30 minutes without touches.
-- **Menu and kiosk mode**: the small ⋮ button at the top right opens *Edit screen* and *Settings*. Full screen is in *Settings → Home → This device*. In *Settings → Home → This device* you can hide the Home Assistant sidebar and keep the screen on (on that device only). Opening the panel with `?kiosk` in the address (e.g. `http://homeassistant.local:8123/pine3-view?kiosk`) also hides the sidebar, ideal for a wall tablet.
+- **Menu and kiosk mode**: the small ⋮ button at the top right opens *Edit screen* and *Settings*. Full screen is in *Settings → Home → This device*. In *Settings → Home → This device* you can hide the Home Assistant sidebar and keep the screen on (on that device only). Opening the panel with `?kiosk` in the address (e.g. `http://homeassistant.local:8123/pine3-wall?kiosk`) also hides the sidebar, ideal for a wall tablet.
 - **Weaker tablets** (e.g. Samsung Galaxy Tab A7): in *Settings → Home → This device* you choose how that device shows the 3D Home — **Full 3D**, **Light 3D** (without the heaviest effects), **3D picture** (the home drawn as one image, light and smooth, with the same lights and taps) or **2D plan** (seen from above, one floor at a time). **Light effects** removes the frosted-glass blur, which leaves white or empty areas on some tablets, and **Animations** can be turned on or off on that device only. On *Auto*, devices with little memory use the 3D picture and light effects. The dock shrinks by itself when it doesn't fit (first only the active tab keeps its name, then icons only). On short screens, such as a tablet in landscape, room and device cards get more compact so three rows fit above the dock. On the Home screen, the clock, status, scenes and two rows of cards fit on one screen.
 - **Language**: Português or English, chosen in Settings.
 
@@ -108,7 +114,7 @@ The server side (`discovery.py`) reads Home Assistant's registries and assembles
 Plum background (plus 5 others), cream cards when something is on, a power button per room and per device,
 status dots, Climate / Security / Now playing cards, a pill-shaped dock.
 Typefaces: [Outfit](https://github.com/Outfitio/Outfit-Fonts) and [Figtree](https://github.com/erikdkennedy/figtree), both SIL OFL 1.1 (licences in `frontend/fonts/`).
-The icon and logo live in `custom_components/pine3_view/brand/` (source: `docs/brand/source.html`).
+The icon and logo live in `custom_components/pine3_wall/brand/` (source: `docs/brand/source.html`).
 
 ## Tests
 ```

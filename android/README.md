@@ -1,20 +1,19 @@
-# Pine3 View, versão nativa (experimental)
+# Pine3 Wall: app Android
 
-Uma app Android **nativa** (sem WebView) que mostra a mesma casa do painel web do Pine3 View. Serve para comparar a fluidez com o
-WebView e junta, num tablet de parede, o que o *Pine3 Wallpanel* já faz: acordar com o movimento, desligar o ecrã sem luz e ligar-se ao
-Home Assistant.
+A app Android **nativa** (sem WebView) do Pine3 Wall: mostra a casa que a integração `pine3_wall` monta no Home Assistant e
+junta, num tablet de parede, acordar com o movimento, desligar o ecrã sem luz, o screensaver e a campainha.
 
-O código desta pasta é **independente** da integração (`custom_components/`): a instalação por HACS não é afetada.
+A app e a integração têm **a mesma versão** (ficheiro `VERSION` na raiz). Pode estar instalada ao lado da app antiga do Pine3 View
+(`applicationId` `pt.pine3.wall`), mas precisa da integração **Pine3 Wall**, não da Pine3 View.
 
-> Estado: experimental. O código é compilado no CI e testado à mão num OPPO Pad SE (Android 13, ColorOS, 90 Hz); outros dispositivos
-> podem comportar-se de forma diferente.
+> Testada à mão num OPPO Pad SE (Android 13, ColorOS, 90 Hz); outros dispositivos podem comportar-se de forma diferente.
 
 ## Ligação ao Home Assistant
-- WebSocket com token de acesso de longa duração. Lê o **mesmo modelo da casa** do painel web (`pine3_view/home`, `pine3_view/subscribe`)
-  e grava as definições de volta (`pine3_view/settings`), por isso o que mudas aqui vale também no painel web.
-- Endereço por omissão: `http://homeassistant.local:8123/pine3-view` (só a origem conta para a ligação). O Android muitas vezes não
+- WebSocket com token de acesso de longa duração. Lê o **mesmo modelo da casa** do painel web (`pine3_wall/home`, `pine3_wall/subscribe`)
+  e grava as definições de volta (`pine3_wall/settings`), por isso o que mudas aqui vale também no painel web.
+- Endereço por omissão: `http://homeassistant.local:8123/pine3-wall` (só a origem conta para a ligação). O Android muitas vezes não
   resolve nomes `.local`: se falhar, usa o IP do HA.
-- Religa sozinha, mantém-se viva com o ecrã desligado e tem um **teste de ligação** passo a passo (DNS, WebSocket, token, Pine3 View).
+- Religa sozinha, mantém-se viva com o ecrã desligado e tem um **teste de ligação** passo a passo (DNS, WebSocket, token, Pine3 Wall).
 
 ## Ecrãs
 - **Início** com as 4 disposições do painel web (clássica, topo, colunas, barra lateral), com as medidas do CSS (px = dp, `vw`, `clamp`).
@@ -44,8 +43,8 @@ O código desta pasta é **independente** da integração (`custom_components/`)
 - A câmara frontal deteta movimento e **acorda o ecrã**, que **desliga sem luz** (administrador de dispositivo) ao fim de X segundos, com
   fade para preto e de volta, à mesma velocidade. Toques em qualquer janela (incluindo as definições) contam como atividade.
   Arranque automático depois de reiniciar.
-- **Campainha que acorda o ecrã**: uma entidade configurável (por omissão `event.entry_hallway_comelit_intercom_doorbell`, só em `ring`,
-  durante 120 s).
+- **Campainha que acorda o ecrã**: por omissão **qualquer campainha** do HA (`event.*` de classe doorbell), só em `ring`, durante 120 s;
+  pode-se escolher uma entidade concreta.
 - **Screensaver** (secção própria nas definições, com a entrada e o bloqueio juntos):
   - *Entrada* em segundos (barra até 120 s) e *bloqueio do ecrã* (3 a 180 s). O screensaver entra sempre **antes** do bloqueio e fica
     **por cima de tudo**; ao passar para o bloqueio o vídeo mantém-se até o ecrã ficar negro.
@@ -86,12 +85,26 @@ bloqueada nos recentes, poupança de energia inteligente desligada e, nas permis
 cd android
 ./gradlew :app:assembleRelease
 ```
-O APK fica em `app/build/outputs/apk/release/`. Os builds do GitHub Actions (`Android (nativo, experimental)`) publicam-no na
-pre-release `android-latest`.
+O APK fica em `app/build/outputs/apk/release/`. A versão (`versionName` e `versionCode`) vem do ficheiro `VERSION` na raiz.
 
-## Comparar com o WebView
-Mesmo tablet, mesmo Home Assistant, mesmos dados: instala esta app e o *Pine3 Wallpanel* (WebView) e compara a fluidez do scroll,
-o tempo até aparecer o ecrã ao acordar e o uso de memória.
+## Releases e assinatura
+- Cada push compila o APK (artefacto do workflow **Android**). No `main`, atualiza também a pre-release `android-latest`.
+- Uma tag `vX.Y.Z` (igual ao `VERSION`) cria o release com o APK `Pine3Wall-X.Y.Z.apk`.
+- Para que cada APK instale **por cima** do anterior (sem perder o token e as definições), todos têm de ser assinados com a mesma chave.
+  Cria-a uma vez e guarda-a nos secrets do repositório (*Settings → Secrets and variables → Actions*):
+  ```bash
+  keytool -genkeypair -v -keystore pine3.jks -alias pine3 -keyalg RSA -keysize 4096 -validity 36500
+  base64 -w0 pine3.jks
+  ```
+  | Secret | Valor |
+  |---|---|
+  | `PINE3_KEYSTORE_BASE64` | o resultado do `base64` |
+  | `PINE3_KEYSTORE_PASSWORD` | a palavra-passe da keystore |
+  | `PINE3_KEY_ALIAS` | `pine3` |
+  | `PINE3_KEY_PASSWORD` | a palavra-passe da chave |
+
+  Guarda o `pine3.jks` e as palavras-passe num sítio seguro: sem eles, uma app nova não instala por cima da antiga.
+  Sem estes secrets o CI assina com uma chave debug descartável (avisa no log).
 
 ## Créditos
 Ícones: [Material Design Icons](https://pictogrammers.com/library/mdi/) (Apache 2.0). Tipos de letra Outfit e Figtree (SIL OFL 1.1).
