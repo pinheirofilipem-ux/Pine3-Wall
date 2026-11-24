@@ -254,8 +254,10 @@ class LayoutStore:
             raise vol.Invalid("no such layout in the history") from err
 
     def edit(self, home: dict[str, Any], settings: dict[str, Any], edit: dict[str, Any]) -> bool:
-        """The app's edit mode on the published layout. False when the layout is the automatic one."""
-        if not self.data.get("published"):
+        """The app's edit mode on the layout the tablets show: the draft while it is on preview, else the published one.
+        False when the layout is the automatic one."""
+        key = "draft" if self.data.get("preview") and self.data.get("draft") else "published"
+        if not self.data.get(key):
             return False
-        self.data["published"] = apply_edit(self.data["published"], home, settings, edit)
+        self.data[key] = apply_edit(self.data[key], home, settings, edit)
         return True

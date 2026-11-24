@@ -23,12 +23,13 @@ const SUMMARIES = { climate: ["mdi:thermometer", "Clima"], security: ["mdi:shiel
 // ---------------------------------------------------------------- state and server
 
 /** Opens the editor: loads the layouts and starts from the draft, else the published layout, else the automatic one. */
-export async function openEditor(p) {
-  p._le = { page: "home", sel: null, dirty: false, busy: true, msg: "" };
+export async function openEditor(p, page = "home") {
+  p._le = { page, sel: null, dirty: false, busy: true, msg: "" };
   p._go("layout");
   try {
     const data = await p._hass.callWS({ type: "pine3_wall/layout/get" });
-    Object.assign(p._le, { data, doc: clone(data.draft || data.published || data.auto), busy: false });
+    const doc = clone(data.draft || data.published || data.auto);
+    Object.assign(p._le, { data, doc, busy: false, page: doc.pages[page] ? page : "home" });
   } catch (e) {
     console.error("Pine3 Wall editor", e);
     Object.assign(p._le, { busy: false, error: t("Esta função precisa da integração Pine3 Wall 0.7.0 ou mais recente.") });
@@ -135,7 +136,7 @@ function sectionBody(p, page, sec, si, rooms) {
           <button data-le-csize="${si}:${ci}" title="${t("Tamanho duplo")}"><ha-icon icon="${spec.size === "big" ? "mdi:arrow-collapse" : "mdi:arrow-expand"}"></ha-icon></button>
           <button data-le-cdel="${si}:${ci}" title="${t("Tirar")}"><ha-icon icon="mdi:close"></ha-icon></button></div>`;
         const html = cardHtml(p, spec, rooms);
-        return decorate(html, `le-card ${spec.size === "big" ? "big" : ""} ${selected ? "le-on" : ""}`, tools, `data-le-ci="${si}:${ci}"`);
+        return decorate(html, `le-card ${spec.size === "big" ? "big" : ""} ${selected ? "le-on" : ""}`, tools, `data-le-ci="${si}:${ci}" draggable="true"`);
       }).join("");
       const note = sec.group === "category" ? `<small class="le-note">${t("No tablet os cartões são agrupados por categoria (luzes, clima…), por esta ordem dentro de cada uma.")}</small>` : "";
       return `${note}<div class="${cls}">${cards || `<small>${t("Grelha vazia: acrescenta cartões à direita.")}</small>`}</div>`;
@@ -248,7 +249,7 @@ export function editorView(p) {
       <nav class="le-nav">${pageList(p, rooms)}</nav>
       <div class="le-canvas ${le.doc.options?.display === "list" ? "as-list" : ""}">
         <div class="le-cap"><b>${esc(roomName || t(pageName || le.page))}</b>${le.page === "home" ? ` · ${esc(t(TEMPLATES.find(([k]) => k === le.doc.pages.home.template)?.[1] || "Relógio grande"))}` : ""}
-          <small>${t("Pré-visualização simplificada; com \"Rascunho nos tablets\" ligado vês o resultado real no tablet.")}</small></div>
+          <small>${t("Pré-visualização simplificada; com \"Rascunho nos tablets\" ligado vês o resultado real no tablet.")} ${t("Arrasta os cartões para os mudar de lugar.")}</small></div>
         ${pagePreview(p, le.page, rooms)}
       </div>
       <div class="le-side">${addPanel(p, rooms)}${dockPanel(p)}</div>
@@ -305,6 +306,28 @@ export function bindEditor(p) {
 
   on("[data-le-page]", (el) => { le.page = el.dataset.lePage; le.sel = null; p._render(); });
   on("[data-le-ci]", (el) => { const [s, c] = pair(el.dataset.leCi); le.sel = le.sel && le.sel[0] === s && le.sel[1] === c ? null : [s, c]; p._render(); });
+
+  // cards: drag one onto another to put it in that place (within the same grid)
+  root.querySelectorAll("[data-le-ci]").forEach((el) => {
+    el.addEventListener("dragstart", (e) => { le.dragFrom = el.dataset.leCi; e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", le.dragFrom); el.classList.add("le-drag"); });
+    el.addEventListener("dragend", () => { el.classList.remove("le-drag"); root.querySelectorAll(".le-over").forEach((x) => x.classList.remove("le-over")); });
+    el.addEventListener("dragover", (e) => {
+      if (!le.dragFrom || le.dragFrom.split(":")[0] !== el.dataset.leCi.split(":")[0]) return;
+      e.preventDefault(); el.classList.add("le-over");
+    });
+    el.addEventListener("dragleave", () => el.classList.remove("le-over"));
+    el.addEventListener("drop", (e) => {
+      e.preventDefault();
+      const from = le.dragFrom; le.dragFrom = null;
+      if (!from) return;
+      const [s, c] = pair(from), [s2, c2] = pair(el.dataset.leCi);
+      if (s !== s2 || c === c2) { p._render(); return; }
+      const cards = page().sections[s].cards;
+      const [moved] = cards.splice(c, 1);
+      cards.splice(c2, 0, moved);
+      le.sel = [s, c2]; changed(p);
+    });
+  });
 
   on("[data-le-smove]", (el) => {
     const [i, dir] = pair(el.dataset.leSmove), secs = page().sections, j = i + dir;
@@ -387,6 +410,9 @@ export const cssEditor = `
 .le-card{position:relative;outline:2px solid transparent;outline-offset:3px;transition:outline-color .15s}
 .le-card:hover{outline-color:rgba(255,255,255,.35)}
 .le-card.le-on{outline-color:var(--amber)}
+.le-card[draggable]{cursor:grab}
+.le-card.le-drag{opacity:.45}
+.le-card.le-over{outline-color:#fff;outline-style:dashed}
 .le-ctools{position:absolute;top:8px;right:8px;z-index:3;display:none;gap:4px;background:rgba(20,12,24,.82);border-radius:999px;padding:4px}
 .le-card:hover .le-ctools,.le-card.le-on .le-ctools{display:flex}
 .le-ctools button{all:unset;cursor:pointer;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;color:#fff}

@@ -19,6 +19,9 @@ export function num(n) { return LANG === "en" ? String(n) : String(n).replace(".
 
 export const EN = {
   // layout editor
+  "Os tablets usam o layout do editor.": "The tablets use the editor's layout.",
+  "A ordem, os escondidos, o tamanho dos cartões, as secções do início e a dock dos tablets mudam-se no Editor de layout. Estas opções só mudam o layout automático.": "The tablets' order, hidden items, card sizes, home sections and dock are changed in the Layout editor. These options only change the automatic layout.",
+  "Arrasta os cartões para os mudar de lugar.": "Drag the cards to move them.",
   "Editor de layout": "Layout editor",
   "Layout": "Layout",
   "Layout dos tablets": "Tablet layout",
