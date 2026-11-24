@@ -113,4 +113,26 @@ class LayoutTest {
         assertTrue(Lay.edit!!.custom)
         Lay.edit = null
     }
+
+    @Test fun appKnowsTheAmbientModule() {
+        val m = json("schema/catalog.json").getJSONObject("modules").getJSONObject("ambient")
+        assertEquals(m.getJSONObject("sections").keys().asSequence().toSet(), AmbientModule.sectionTypes)
+        assertEquals(m.getJSONObject("faces").keys().asSequence().toSet(), AmbientFace.TYPES)
+        assertTrue(ModuleRegistry.knowsSection("ambient"))
+    }
+
+    @Test fun parsesAnAmbientScreen() {
+        val doc = LayoutDoc.parse(JSONObject("""{"dock":["home","ambient/noite"],"pages":{"home":{"sections":[]},
+            "ambient/noite":{"title":"Noite","sections":[{"type":"ambient","night":true,"color":"#ff0000",
+            "faces":[{"type":"clock_analog","style":"bold","seconds":false},{"type":"sensor","entity":"sensor.t","label":"Sala"},{"type":"date"},{"type":"weather"}]}]}}}"""))
+        val spec = AmbientSpec.of(doc, "ambient/noite")!!
+        assertEquals("Noite", spec.title)
+        assertTrue(spec.night)
+        assertEquals(listOf("clock_analog", "sensor", "date"), spec.faces.map { it.type }) // no máximo 3
+        assertEquals("bold", spec.faces[0].style)
+        assertEquals(false, spec.faces[0].seconds)
+        assertEquals("sensor.t", spec.faces[1].entity)
+        assertEquals(listOf("ambient/noite" to "Noite"), AmbientSpec.all(doc))
+        assertNull(AmbientSpec.of(doc, "home"))
+    }
 }

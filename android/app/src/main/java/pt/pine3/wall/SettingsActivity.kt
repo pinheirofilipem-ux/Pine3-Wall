@@ -591,6 +591,16 @@ class SettingsActivity : Activity() {
         }
         ent.addView(sens, LinearLayout.LayoutParams(-1, -2).apply { topMargin = d(6) })
 
+        // ecrãs ambiente do layout (módulo ambient) como screensaver
+        val amb = panel()
+        h3(amb, Tr.t("Ecrã ambiente"), true)
+        para(amb, "Um ecrã composto do layout (relógio analógico, tempo, data…) em vez do relógio clássico ou dos vídeos. Os ecrãs criam-se no Editor de layout do painel web.")
+        val ambients = AmbientSpec.all(Ha.home?.layout)
+        if (ambients.isEmpty()) para(amb, "O layout ainda não tem ecrãs ambiente.")
+        else optChoice(amb, Tr.t("Usar no screensaver"), null, listOf("" to Tr.s("Não (clássico ou vídeo)", "No (classic or video)")) + ambients, prefs.saverAmbient.takeIf { k -> ambients.any { it.first == k } } ?: "") {
+            prefs.saverAmbient = it; markApp(); redraw()
+        }
+
         val vid = panel()
         h3(vid, Tr.t("Vídeos"), true)
         para(vid, "Vídeos sem som em ecrã inteiro, com a hora e a data por cima.")

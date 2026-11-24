@@ -25,7 +25,7 @@ class LayoutDoc(val generated: Boolean, val display: String, val clock24h: Boole
     }
 }
 
-class LPage(val template: String?, val room: String?, val sections: List<LSection>) {
+class LPage(val template: String?, val room: String?, val sections: List<LSection>, val title: String? = null, val raw: JSONObject? = null) {
     fun has(type: String) = sections.any { it.type == type }
     fun section(type: String) = sections.firstOrNull { it.type == type }
 
@@ -33,6 +33,7 @@ class LPage(val template: String?, val room: String?, val sections: List<LSectio
         fun parse(o: JSONObject) = LPage(
             o.optString("template", "").ifBlank { null }, o.optString("room", "").ifBlank { null },
             o.optJSONArray("sections")?.let { a -> (0 until a.length()).mapNotNull { a.optJSONObject(it)?.let(LSection::parse) } } ?: emptyList(),
+            o.optString("title", "").ifBlank { null }, o,
         )
     }
 }

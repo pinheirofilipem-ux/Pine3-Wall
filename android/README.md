@@ -60,6 +60,12 @@ A app e a integração têm **a mesma versão** (ficheiro `VERSION` na raiz). Po
   (por omissão 10 s, 0 = nunca); a câmara e a campainha ficam abertas.
 - Atalho para as definições: dois dedos premidos durante 2 s, ou o menu ⋮.
 
+## Ecrãs ambiente
+- Ecrãs compostos (módulo `ambient`), criados no **Editor de layout** do painel web (*Novo ecrã ambiente*): 1 a 3 faces lado a lado —
+  relógio analógico (clássico, minimalista ou forte), relógio digital, data, tempo, um sensor em destaque e quem está em casa —, cor de
+  destaque e **modo noturno** (vermelho escuro, pouco brilho).
+- Cada ecrã pode ter um botão na **dock** e pode ser o **screensaver** do tablet (definições da app → Screensaver → Ecrã ambiente).
+
 ## O tablet no Home Assistant
 - Ao ligar-se, a app regista o tablet no HA como um **dispositivo** "Pine3 Wall <nome>" com: *Ligado*, *Movimento* (câmara frontal),
   *Ecrã*, *Bateria*, *Brilho do ecrã*, *Página* e o botão *Acordar*. O nome muda-se no painel web (Definições → Tablets).

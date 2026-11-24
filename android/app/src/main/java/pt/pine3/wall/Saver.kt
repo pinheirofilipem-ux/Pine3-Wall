@@ -19,7 +19,8 @@ import android.widget.LinearLayout
 import android.widget.TextView
 
 /** Ecrã de descanso: relógio grande e escurecido (ou, com vídeo, a hora e a data por cima). Um toque fecha. */
-class SaverView(private val kit: Kit, private val h24: Boolean, private val video: Boolean = false, private val bg: Int? = null, private val blend: String = "white", private val fit: String = "height", private val onClose: () -> Unit) : FrameLayout(kit.ctx) {
+class SaverView(private val kit: Kit, private val h24: Boolean, private val video: Boolean = false, private val bg: Int? = null, private val blend: String = "white", private val fit: String = "height",
+                ambient: AmbientSpec? = null, weatherPref: String = "", private val onClose: () -> Unit) : FrameLayout(kit.ctx) {
     private var player: AerialView? = null
     private val overlay = TimeOverlay(kit, if (video) kit.clamp(64f, kit.vw(9f), 120f) else kit.clamp(90f, kit.vw(16f), 200f), h24, center = !video)
     private var right = false
@@ -34,7 +35,11 @@ class SaverView(private val kit: Kit, private val h24: Boolean, private val vide
         }
         isClickable = true
         setOnClickListener { onClose() }
-        if (video) {
+        if (ambient != null) {
+            // um ecrã ambiente do layout (módulo ambient) como screensaver
+            setBackgroundColor(Color.BLACK)
+            addView(AmbientView(kit, ambient, h24, weatherPref).apply { isClickable = false }, LayoutParams(-1, -1))
+        } else if (video) {
             setBackgroundColor(bg ?: Color.BLACK)
             player = AerialView(kit.ctx, bg != null, blend).also {
                 it.fitMode = fit; addView(it, LayoutParams(-1, -1))

@@ -42,6 +42,10 @@ _SECTION = vol.Schema(
         vol.Optional("room"): str,
         vol.Optional("group"): vol.In(["category"]),
         vol.Optional("cards"): [_CARD],
+        # module ambient: a composed screen
+        vol.Optional("faces"): vol.All([vol.Schema({vol.Required("type"): vol.All(str, vol.Length(min=1, max=40))}, extra=vol.ALLOW_EXTRA)], vol.Length(max=3)),
+        vol.Optional("color"): vol.Match(r"^#[0-9a-fA-F]{6}$"),
+        vol.Optional("night"): bool,
     },
     extra=vol.ALLOW_EXTRA,
 )

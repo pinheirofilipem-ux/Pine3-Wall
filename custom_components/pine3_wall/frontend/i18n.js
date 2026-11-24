@@ -18,6 +18,32 @@ export function tp(n, one, many, vars) { return t(n === 1 ? one : many, { n, ...
 export function num(n) { return LANG === "en" ? String(n) : String(n).replace(".", ","); }
 
 export const EN = {
+  // ambient screens
+  "Ecrãs ambiente": "Ambient screens",
+  "Novo ecrã ambiente": "New ambient screen",
+  "Ecrã ambiente": "Ambient screen",
+  "Faces": "Faces",
+  "até 3, lado a lado": "up to 3, side by side",
+  "Relógio analógico": "Analog clock",
+  "Relógio digital": "Digital clock",
+  "Data": "Date",
+  "Sensor": "Sensor",
+  "Clássico": "Classic",
+  "Minimalista": "Minimal",
+  "Forte": "Bold",
+  "Segundos": "Seconds",
+  "Legenda (opcional)": "Label (optional)",
+  "Acrescentar face…": "Add a face…",
+  "Cor": "Colour",
+  "Modo noturno": "Night mode",
+  "Vermelho escuro e pouco brilho, para o quarto à noite.": "Dark red and dim, for the bedroom at night.",
+  "Na dock": "In the dock",
+  "Um botão na dock abre este ecrã. Para o usar como screensaver escolhe-o nas definições da app (Screensaver).": "A dock button opens this screen. To use it as the screensaver, choose it in the app's settings (Screensaver).",
+  "Apagar este ecrã": "Delete this screen",
+  "Nome do ecrã (ex.: Noite, Cozinha):": "Screen name (e.g. Night, Kitchen):",
+  "Apagar este ecrã ambiente?": "Delete this ambient screen?",
+  "Sem faces: acrescenta à direita.": "No faces: add them on the right.",
+  "Escolhe um sensor": "Choose a sensor",
   // tablets
   "Tablets": "Tablets", "Principal": "Main", "Acordar": "Wake", "Testar mensagem": "Test message", "Visto": "Seen", "Página": "Page", "Feito": "Done",
   "Ligado": "Online", "Desligado": "Offline", "Nome": "Name", "O tablet não está ligado": "The tablet is not connected",

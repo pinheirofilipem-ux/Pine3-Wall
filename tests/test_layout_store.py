@@ -168,3 +168,20 @@ async def test_app_edit_goes_to_the_draft_on_preview(hass: HomeAssistant, hass_w
     assert _grid(got["published"]["pages"]["home"])[0].get("size") == "normal"  # the published one is untouched
     home = (await call("home"))["result"]
     assert _grid(home["layout"]["pages"]["home"])[0]["room"] == sala
+
+
+async def test_ambient_screens_are_kept(hass: HomeAssistant, hass_ws_client) -> None:
+    """Module ambient: 'ambient/<id>' pages (1-3 faces) are stored, published and can go in the dock."""
+    _, call = await _ws(hass, hass_ws_client)
+    doc = copy.deepcopy((await call("layout/get"))["result"]["auto"])
+    doc["pages"]["ambient/noite"] = {"title": "Noite", "sections": [{"type": "ambient", "color": "#f6b83f", "night": True,
+                                     "faces": [{"type": "clock_analog", "style": "bold"}, {"type": "weather"}]}]}
+    doc["dock"].append("ambient/noite")
+    assert (await call("layout/publish", layout=doc))["success"]
+    layout = (await call("home"))["result"]["layout"]
+    _validate(layout, LAYOUT_SCHEMA)
+    assert layout["pages"]["ambient/noite"]["sections"][0]["faces"][0]["style"] == "bold"
+    assert "ambient/noite" in layout["dock"]
+    too_many = copy.deepcopy(doc)
+    too_many["pages"]["ambient/noite"]["sections"][0]["faces"] *= 2
+    assert not (await call("layout/save_draft", layout=too_many))["success"]

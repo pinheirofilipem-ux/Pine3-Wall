@@ -121,9 +121,12 @@ class MainActivity : Activity(), Nav {
 
     private fun showSaver() {
         PokeDialog.closeIdle() // o screensaver fica por cima de tudo: as janelas normais fecham primeiro
-        val video = prefs.saverVideo && !saverVideoFailed
+        // um ecrã ambiente escolhido nas definições (se ainda existir no layout) tem prioridade sobre o vídeo
+        val ambient = prefs.saverAmbient.takeIf { it.isNotEmpty() }?.let { AmbientSpec.of(Ha.home?.layout, it) }
+        val video = ambient == null && prefs.saverVideo && !saverVideoFailed
         Aerials.setExtra(prefs.saverExtra); Aerials.setLocal(this)
-        val s = SaverView(kit, Ha.home?.settings?.optBoolean("clock_24h", true) ?: true, video, null, "black", prefs.saverFit) { hideSaver() }
+        val h24 = Ha.home?.layout?.clock24h ?: Ha.home?.settings?.optBoolean("clock_24h", true) ?: true
+        val s = SaverView(kit, h24, video, null, "black", prefs.saverFit, ambient, Ha.home?.settings?.optString("weather_entity", "").orEmpty()) { hideSaver() }
         if (video) {
             val begin = { if (Aerials.count > 0) s.startVideo() else if (saver === s) { saverVideoFailed = true; hideSaver(); showSaver() } }
             // a lista própria e a fonte da Apple (se houver) carregam em paralelo; começa quando a primeira trouxer vídeos
@@ -167,7 +170,7 @@ class MainActivity : Activity(), Nav {
                 hideSaver()
                 val page = cmd.optString("page")
                 if (page.startsWith("room/")) Ha.home?.rooms?.firstOrNull { it.id == page.removePrefix("room/") }?.let { if (Lay.edit != null) finishEdit(false); openRoom(it) }
-                else if (page in DOCK_ITEMS.map { it.first }) showTab(page)
+                else if (page in DOCK_ITEMS.map { it.first } || (page.startsWith("ambient/") && Ha.home?.layout?.page(page) != null)) showTab(page)
             }
             "show_camera" -> {
                 val cam = cmd.optString("entity_id")
@@ -297,7 +300,14 @@ class MainActivity : Activity(), Nav {
         // A dock vem do layout; só se mostram as páginas que esta app conhece.
         val list = Ha.home?.layout?.dock ?: listOf("home", "rooms", "house", "scenes")
         val known = DOCK_ITEMS.map { it.first }
-        return (listOf("home") + list).distinct().filter { it in known }
+        // ecrãs ambiente (módulo ambient) também podem estar na dock
+        return (listOf("home") + list).distinct().filter { it in known || (it.startsWith("ambient/") && Ha.home?.layout?.page(it) != null) }
+    }
+
+    /** Nome e ícone de um botão da dock. */
+    private fun dockItem(key: String): Triple<String, String, String> =
+        DOCK_ITEMS.firstOrNull { it.first == key }?.let { Triple(Tr.t(it.third), it.second, it.first) }
+            ?: Triple(Ha.home?.layout?.page(key)?.title ?: key.substringAfter('/'), "mdi:clock-time-four-outline", key)
     }
 
     private fun showTab(key: String) {
@@ -312,7 +322,7 @@ class MainActivity : Activity(), Nav {
 
     override fun openScreen(key: String) {
         if (key == "weather") { ForecastSheet(this, kit, Ha.home?.settings?.optString("weather_entity", "").orEmpty()).show(); return }
-        if (key in DOCK_ITEMS.map { it.first }) showTab(key)
+        if (key in DOCK_ITEMS.map { it.first } || key.startsWith("ambient/")) showTab(key)
     }
 
     override fun openDevice(id: String) {
@@ -324,7 +334,7 @@ class MainActivity : Activity(), Nav {
     private fun buildDock() {
         dockHost.removeAllViews()
         val keys = dockKeys()
-        val d = DockView(kit, keys.map { k -> DOCK_ITEMS.first { it.first == k }.let { Triple(Tr.t(it.third), it.second, it.first) } }, animationsOn) { showTab(keys[it]) }
+        val d = DockView(kit, keys.map { dockItem(it) }, animationsOn) { showTab(keys[it]) }
         dockHost.addView(d)
         dockView = d
         d.setActive(keys.indexOf(tab).coerceAtLeast(0), animate = false)
@@ -369,6 +379,7 @@ class MainActivity : Activity(), Nav {
             tab == "scenes" -> ScenesPage(kit, home, this)
             tab == "climate" -> ClimatePage(kit, home, this)
             tab == "security" -> SecurityPage(kit, home, this)
+            tab.startsWith("ambient/") -> AmbientPage(kit, home, tab)
             else -> HomePage(kit, home, this)
         }
         val animate = animationsOn && shownKey.isNotEmpty() && shownKey != key
