@@ -60,6 +60,13 @@ A app e a integração têm **a mesma versão** (ficheiro `VERSION` na raiz). Po
   (por omissão 10 s, 0 = nunca); a câmara e a campainha ficam abertas.
 - Atalho para as definições: dois dedos premidos durante 2 s, ou o menu ⋮.
 
+## O tablet no Home Assistant
+- Ao ligar-se, a app regista o tablet no HA como um **dispositivo** "Pine3 Wall <nome>" com: *Ligado*, *Movimento* (câmara frontal),
+  *Ecrã*, *Bateria*, *Brilho do ecrã*, *Página* e o botão *Acordar*. O nome muda-se no painel web (Definições → Tablets).
+- Serviços para automações (alvo: um ou mais tablets; sem alvo, todos): `pine3_wall.wake`, `pine3_wall.show_page` (ex. `room/sala`),
+  `pine3_wall.show_camera`, `pine3_wall.notify` (mensagem no ecrã) e `pine3_wall.screensaver`.
+- Cada tablet pode usar o layout principal ou uma **variante** criada no Editor de layout (Definições → Tablets → Layout).
+
 ## Definições (mesmo formato do painel web)
 Aparência, Início, Divisões, Entidades, **Screensaver**, Planta 3D, Navegação, Sistema, mais uma secção inicial **App** com o que é só do
 dispositivo (ligação, tamanho da interface, campainha e teste, arranque, permissões). As alterações de aspeto aplicam-se na hora, sem

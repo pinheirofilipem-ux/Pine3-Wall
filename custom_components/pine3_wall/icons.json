@@ -1,0 +1,14 @@
+{
+  "entity": {
+    "binary_sensor": {"screen_on": {"default": "mdi:tablet"}},
+    "sensor": {"brightness": {"default": "mdi:brightness-6"}, "page": {"default": "mdi:book-open-page-variant-outline"}},
+    "button": {"wake": {"default": "mdi:gesture-tap"}}
+  },
+  "services": {
+    "wake": {"service": "mdi:gesture-tap"},
+    "show_page": {"service": "mdi:book-open-page-variant-outline"},
+    "show_camera": {"service": "mdi:cctv"},
+    "notify": {"service": "mdi:message-text-outline"},
+    "screensaver": {"service": "mdi:movie-open-play-outline"}
+  }
+}

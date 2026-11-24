@@ -7,6 +7,7 @@ from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
+from .services import async_setup_services, async_unload_services
 from .websocket import async_setup_api, async_unload_api
 from .const import (
     DOMAIN,
@@ -19,6 +20,8 @@ from .const import (
 )
 
 FRONTEND_DIR = Path(__file__).parent / "frontend"
+# each wall tablet is a device with these entities (panels.py)
+PLATFORMS = ["binary_sensor", "sensor", "button"]
 STATIC_KEY = f"{DOMAIN}_static_registered"
 
 
@@ -41,10 +44,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         sidebar_icon=PANEL_ICON,
         require_admin=False,
     )
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    await async_setup_services(hass)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     frontend.async_remove_panel(hass, PANEL_URL_PATH)
+    async_unload_services(hass)
     async_unload_api(hass)
-    return True
+    return unloaded

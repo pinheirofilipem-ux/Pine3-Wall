@@ -63,4 +63,11 @@ class ContractTest {
         assertEquals((0 until tokens.length()).map { tokens.getString(it) }, PERSON_COLORS)
         assertEquals(PERSON_COLORS[0], people[0].color)
     }
+
+    @Test fun appHandlesEveryTabletCommand() {
+        val src = File(root, "custom_components/pine3_wall/panels.py").readText()
+        val line = Regex("""COMMANDS = \(([^)]*)\)""").find(src)!!.groupValues[1]
+        val commands = Regex("\"([a-z_]+)\"").findAll(line).map { it.groupValues[1] }.toSet()
+        assertEquals(commands, Compat.PANEL_COMMANDS)
+    }
 }

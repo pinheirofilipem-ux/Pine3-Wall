@@ -8,6 +8,9 @@ object Compat {
     /** Versão do contrato que esta app entende (igual a API_VERSION em custom_components/pine3_wall/const.py). */
     const val API_VERSION = 1
 
+    /** Os comandos de tablet que a app trata (os mesmos de COMMANDS em custom_components/pine3_wall/panels.py; verificado nos testes). */
+    val PANEL_COMMANDS = setOf("wake", "show_page", "show_camera", "notify", "screensaver")
+
     /** Compara versões X.Y.Z (partes em falta ou inválidas contam como 0). */
     fun compare(a: String, b: String): Int {
         fun parts(v: String) = v.trim().split(".").map { it.takeWhile(Char::isDigit).toIntOrNull() ?: 0 }

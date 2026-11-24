@@ -1,6 +1,110 @@
 {
   "config": {
-    "step": {"user": {"title": "Pine3 Wall", "description": "Add the Pine3 Wall dashboard to the sidebar."}},
-    "abort": {"single_instance_allowed": "Pine3 Wall is already set up."}
+    "step": {
+      "user": {
+        "title": "Pine3 Wall",
+        "description": "Add the Pine3 Wall dashboard to the sidebar."
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Pine3 Wall is already set up."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "online": {
+        "name": "Online"
+      },
+      "motion": {
+        "name": "Motion"
+      },
+      "screen_on": {
+        "name": "Screen"
+      }
+    },
+    "sensor": {
+      "battery": {
+        "name": "Battery"
+      },
+      "brightness": {
+        "name": "Screen brightness"
+      },
+      "page": {
+        "name": "Page"
+      }
+    },
+    "button": {
+      "wake": {
+        "name": "Wake"
+      }
+    }
+  },
+  "services": {
+    "wake": {
+      "name": "Wake the tablet",
+      "description": "Turns the screen on and keeps it on.",
+      "fields": {
+        "seconds": {
+          "name": "Seconds",
+          "description": "How long the screen stays on."
+        }
+      }
+    },
+    "show_page": {
+      "name": "Show a page",
+      "description": "Opens a page on the tablet.",
+      "fields": {
+        "page": {
+          "name": "Page",
+          "description": "home, rooms, house, scenes, climate, security or room/<room id>."
+        }
+      }
+    },
+    "show_camera": {
+      "name": "Show a camera",
+      "description": "Opens a camera's live view on the tablet (and wakes it).",
+      "fields": {
+        "entity_id": {
+          "name": "Camera",
+          "description": "The camera to show."
+        },
+        "seconds": {
+          "name": "Seconds",
+          "description": "How long it stays open."
+        }
+      }
+    },
+    "notify": {
+      "name": "Show a message",
+      "description": "Shows a message on the tablet.",
+      "fields": {
+        "title": {
+          "name": "Title",
+          "description": "Optional title."
+        },
+        "message": {
+          "name": "Message",
+          "description": "The text."
+        },
+        "seconds": {
+          "name": "Seconds",
+          "description": "How long it stays on screen."
+        },
+        "wake": {
+          "name": "Wake",
+          "description": "Turn the screen on to show it."
+        }
+      }
+    },
+    "screensaver": {
+      "name": "Screensaver",
+      "description": "Starts or stops the screensaver on the tablet.",
+      "fields": {
+        "on": {
+          "name": "On",
+          "description": "Start (on) or stop (off) the screensaver."
+        }
+      }
+    }
   }
 }

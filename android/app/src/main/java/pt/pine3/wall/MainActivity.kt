@@ -76,6 +76,7 @@ class MainActivity : Activity(), Nav {
         override fun onHome() = rebuild()
         override fun onStatus() = updateBanner()
         override fun onBell(id: String, type: String, attrs: org.json.JSONObject) = bellEvent(id, type, attrs)
+        override fun onCommand(cmd: org.json.JSONObject) = panelCommand(cmd)
     }
 
     private var bell: BellDialog? = null
@@ -157,6 +158,29 @@ class MainActivity : Activity(), Nav {
 
     private fun doorsFor(camId: String): List<String> = doorsForCamera(camId)
 
+    /** Comandos dos serviços pine3_wall.* (o serviço de fundo já acordou o ecrã quando é preciso). */
+    private fun panelCommand(cmd: org.json.JSONObject) {
+        if (!resumed) return // fica em Ha.pendingCommand; corre no onResume
+        Ha.pendingCommand = null
+        when (cmd.optString("command")) {
+            "show_page" -> {
+                hideSaver()
+                val page = cmd.optString("page")
+                if (page.startsWith("room/")) Ha.home?.rooms?.firstOrNull { it.id == page.removePrefix("room/") }?.let { if (Lay.edit != null) finishEdit(false); openRoom(it) }
+                else if (page in DOCK_ITEMS.map { it.first }) showTab(page)
+            }
+            "show_camera" -> {
+                val cam = cmd.optString("entity_id")
+                if (cam.startsWith("camera.")) { hideSaver(); camViewer(cam, Fmt.name(cam)) }
+            }
+            "notify" -> {
+                if (cmd.optBoolean("wake", true)) hideSaver()
+                Notice(this, kit, cmd.optString("title"), cmd.optString("message"), cmd.optInt("seconds", 30)).show()
+            }
+            "screensaver" -> if (cmd.optBoolean("on")) { if (saver == null) showSaver() } else hideSaver()
+        }
+    }
+
     // Dois dedos premidos > 2 s abrem as definições.
     private val openSettingsRun = Runnable { openSettings() }
     private var gx = 0f
@@ -232,6 +256,8 @@ class MainActivity : Activity(), Nav {
         MotionService.poke()
         rebuild()
         updateBanner()
+        // um comando do HA (página, câmara, mensagem…) chegou enquanto a atividade acordava
+        Ha.pendingCommand?.let { (c, at) -> if (System.currentTimeMillis() - at < 30_000) handler.postDelayed({ panelCommand(c) }, 400) else Ha.pendingCommand = null }
         // o ecrã acordou por causa da campainha: o evento chegou antes de a atividade estar pronta
         Ha.pendingBell?.let { b -> if (System.currentTimeMillis() - b.at < 20_000) handler.postDelayed({ bellEvent(b.id, b.type, b.attrs) }, 400) else Ha.pendingBell = null }
     }
@@ -349,6 +375,9 @@ class MainActivity : Activity(), Nav {
         shownHome = home
         shownKey = key
         show(p, animate)
+        // a página no ecrã, para a entidade "Página" do tablet no HA
+        val pageKey = room?.let { "room/${it.id}" } ?: tab
+        if (Ha.currentPage != pageKey) { Ha.currentPage = pageKey; Ha.reportState("page" to pageKey) }
     }
 
     /** Aplica tema (fixo ou dia/noite) e língua; devolve true se algo mudou (e então a página tem de ser refeita). */

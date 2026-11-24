@@ -956,6 +956,7 @@ class Pine3WallPanel extends HTMLElement {
   // ---------- settings ----------
   _openSettings(section) {
     if (section) this._section = section;
+    this._tablets = null; // Settings > Tablets reloads the tablets and the layout variants
     const c = this._saved();
     if (!c.room_order?.length) c.room_order = this._rooms().map((r) => r.id);
     this._draft = clone(c);
@@ -995,7 +996,7 @@ class Pine3WallPanel extends HTMLElement {
     const navItems = [
       ["look", "mdi:palette-outline", t("Aparência")], ["home", "mdi:home-outline", t("Início")], ["people", "mdi:account-group-outline", t("Pessoas")], ["rooms", "mdi:view-grid-outline", t("Divisões")],
       ["entities", "mdi:format-list-checks", t("Entidades")], ["plan", "mdi:floor-plan", t("Planta 3D")],
-      ["nav", "mdi:dock-bottom", t("Navegação")], ["layout", "mdi:view-dashboard-edit-outline", t("Layout")], ["system", "mdi:cog-outline", t("Sistema")],
+      ["nav", "mdi:dock-bottom", t("Navegação")], ["layout", "mdi:view-dashboard-edit-outline", t("Layout")], ["tablets", "mdi:tablet-dashboard", t("Tablets")], ["system", "mdi:cog-outline", t("Sistema")],
     ];
     let main = "";
     // the tablets use the editor's layout: these options only change the automatic one
@@ -1097,6 +1098,8 @@ class Pine3WallPanel extends HTMLElement {
         <p><b>${src === "published" ? t("Os tablets mostram o layout publicado no editor.") : src === "preview" ? t("Os tablets estão a mostrar o rascunho do editor.") : t("Os tablets mostram o layout automático.")}</b>
         ${src && src !== "auto" ? `<br><small>${t("Com um layout publicado, a ordem, os escondidos e o tamanho duplo das divisões e dos cartões vêm dele (o modo de edição do tablet grava nele). Divisões, Início e Navegação aqui só mudam o layout automático.")}</small>` : ""}</p>
         <button class="pill solid" data-openeditor><ha-icon icon="mdi:view-dashboard-edit-outline"></ha-icon>${t("Abrir o editor")}</button></div>`;
+    } else if (sec === "tablets") {
+      main = this._tabletsSection();
     } else if (sec === "nav") {
       main = `<div class="panel glass"><h3 style="margin-top:0">${t("Dock")}</h3><p>${t("Botões da barra de navegação. A Casa está sempre presente.")}</p><div class="opts">
         ${DOCK_ITEMS.filter(([k]) => k !== "home").map(([k, , label, sub]) => this._toggle("dock:" + k, d.dock.includes(k), t(label), t(sub))).join("")}
@@ -1147,6 +1150,38 @@ class Pine3WallPanel extends HTMLElement {
           <div class="swr">${PERSON_COLORS.map((col) => `<div class="swc ${col === color ? "act" : ""}" data-pcolor="${esc(p.id)}|${col}" style="background:${col}"></div>`).join("")}</div>
           <div class="tg ${vis ? "on" : ""}" data-pvis="${esc(p.id)}" title="${t("Mostrar")}"><i></i></div></div>`;
       }).join("")}</div></div>`;
+  }
+
+  /** Settings > Tablets: every Pine3 Wall app that connected, its state, the layout it uses and quick commands. */
+  _tabletsSection() {
+    if (!this._model) return `<div class="panel glass"><p>${t("Esta secção precisa da integração Pine3 Wall instalada.")}</p></div>`;
+    if (!this._tablets) {
+      this._tablets = { loading: true };
+      this._hass.callWS({ type: "pine3_wall/panel/list" })
+        .then((r) => { this._tablets = r; this._render(); })
+        .catch(() => { this._tablets = { error: true }; this._render(); });
+    }
+    const tb = this._tablets;
+    if (tb.loading) return `<div class="panel glass"><p>${t("A carregar…")}</p></div>`;
+    if (tb.error) return `<div class="panel glass"><p>${t("Esta função precisa da integração Pine3 Wall 0.8.0 ou mais recente.")}</p></div>`;
+    const intro = `<p>${t("Cada tablet com a app Pine3 Wall aparece aqui e no Home Assistant como um dispositivo (movimento, ecrã, bateria, página e um botão Acordar). Nas automações usa os serviços pine3_wall.wake, show_page, show_camera, notify e screensaver.")}</p>`;
+    if (!tb.panels.length) return `<div class="panel glass"><h3 style="margin-top:0">${t("Tablets")}</h3>${intro}<p><b>${t("Ainda nenhum tablet se ligou. Abre a app Pine3 Wall 0.8.0 ou mais recente num tablet.")}</b></p></div>`;
+    const when = (iso) => { try { return new Date(iso).toLocaleString(locale(), { dateStyle: "short", timeStyle: "short" }); } catch { return iso || "—"; } };
+    const layouts = tb.layouts || ["main"];
+    return `<div class="panel glass"><h3 style="margin-top:0">${t("Tablets")}</h3>${intro}
+      <div class="list big">${tb.panels.map((p) => {
+        const st = p.state || {};
+        const facts = [p.model, p.app_version && `v${p.app_version}`, st.battery != null && `🔋 ${st.battery}%${st.charging ? " ⚡" : ""}`, st.page && `${t("Página")}: ${st.page}`, !p.online && `${t("Visto")}: ${when(p.last_seen)}`].filter(Boolean).map(esc).join(" · ");
+        return `<div class="it" style="flex-wrap:wrap;gap:10px;align-items:center">
+          <span style="flex:0 0 12px;width:12px;height:12px;border-radius:50%;background:${p.online ? "#34c759" : "#6b6b6b"}" title="${p.online ? t("Ligado") : t("Desligado")}"></span>
+          <input class="search" data-tname="${esc(p.id)}" value="${esc(p.name)}" maxlength="60" style="width:200px;height:40px" title="${t("Nome")}">
+          <span style="flex:1;min-width:200px"><small>${facts}</small></span>
+          <label style="display:flex;gap:8px;align-items:center"><small>${t("Layout")}</small><select data-tlayout="${esc(p.id)}" class="search" style="width:170px;height:40px">${layouts.map((k) => `<option value="${esc(k)}" ${(p.layout || "main") === k ? "selected" : ""}>${k === "main" ? esc(t("Principal")) : esc(k)}</option>`).join("")}</select></label>
+          <button class="pill" data-tcmd="${esc(p.id)}|wake" ${p.online ? "" : "disabled"}><ha-icon icon="mdi:gesture-tap"></ha-icon>${t("Acordar")}</button>
+          <button class="pill" data-tcmd="${esc(p.id)}|notify" ${p.online ? "" : "disabled"}><ha-icon icon="mdi:message-text-outline"></ha-icon>${t("Testar mensagem")}</button>
+          <button class="mini" data-trm="${esc(p.id)}" title="${t("Remover")}"><ha-icon icon="mdi:delete-outline"></ha-icon></button></div>`;
+      }).join("")}</div>
+      <p style="margin:14px 0 0;font-size:14px">${t("O layout de cada tablet: o principal, ou uma variante criada no Editor de layout (escolhe \"Nova variante…\" no topo do editor).")}</p></div>`;
   }
 
   _entShown(d, e) { return e.primary ? !d.hidden.includes(e.id) : d.shown.includes(e.id) && !d.hidden.includes(e.id); }
@@ -1247,6 +1282,20 @@ class Pine3WallPanel extends HTMLElement {
       upd();
     }));
     on("[data-openeditor]", () => { this._draft = null; openEditor(this); });
+    // Settings > Tablets: changes apply at once (not with "Save")
+    const tabletCall = async (msg) => {
+      try { const r = await this._hass.callWS(msg); if (r?.panels) this._tablets = { ...this._tablets, panels: r.panels }; this._toast = t("Feito"); }
+      catch (e) { this._toast = e.code === "offline" ? t("O tablet não está ligado") : t("Não foi possível guardar"); }
+      this._render(); setTimeout(() => { this._toast = null; this._render(); }, 1500);
+    };
+    root.querySelectorAll("[data-tname]").forEach((el) => el.addEventListener("change", () => { const v = el.value.trim(); if (v) tabletCall({ type: "pine3_wall/panel/update", panel_id: el.dataset.tname, name: v }); }));
+    root.querySelectorAll("[data-tlayout]").forEach((el) => el.addEventListener("change", () => tabletCall({ type: "pine3_wall/panel/update", panel_id: el.dataset.tlayout, layout: el.value })));
+    on("[data-tcmd]", (el) => {
+      const [id, cmd] = el.dataset.tcmd.split("|");
+      tabletCall({ type: "pine3_wall/panel/command", panel_id: id, command: cmd, data: cmd === "notify" ? { title: "Pine3 Wall", message: t("Mensagem de teste do painel web."), seconds: 15 } : { seconds: 60 } });
+    });
+    on("[data-trm]", (el) => { if (confirm(t("Remover este tablet do Home Assistant? Volta a aparecer quando a app se ligar de novo."))) tabletCall({ type: "pine3_wall/panel/remove", panel_id: el.dataset.trm }); });
+    on("[data-sec]", (el) => { if (el.dataset.sec === "tablets") { this._tablets = null; this._render(); } });
     on("[data-unhide]", (el) => { d.hidden = d.hidden.filter((x) => x !== el.dataset.unhide); upd(); });
     on("[data-reset]", () => { const keepLang = d.language; Object.assign(d, clone(DEFAULTS)); d.language = keepLang; d.room_order = (this._model?.rooms || []).map((r) => r.id); upd(); });
     on("[data-rebuild]", async () => { if (this._model) { this._model = await this._hass.callWS({ type: "pine3_wall/home" }); this._toast = t("Casa reconstruída"); upd(); setTimeout(() => { this._toast = null; upd(); }, 1500); } });
