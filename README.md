@@ -88,6 +88,7 @@ Copy `custom_components/pine3_wall` to `/config/custom_components/`, restart and
 - **Menu and kiosk mode**: the small ⋮ button at the top right opens *Edit screen* and *Settings*. Full screen is in *Settings → Home → This device*. In *Settings → Home → This device* you can hide the Home Assistant sidebar and keep the screen on (on that device only). Opening the panel with `?kiosk` in the address (e.g. `http://homeassistant.local:8123/pine3-wall?kiosk`) also hides the sidebar, ideal for a wall tablet.
 - **Weaker tablets** (e.g. Samsung Galaxy Tab A7): in *Settings → Home → This device* you choose how that device shows the 3D Home — **Full 3D**, **Light 3D** (without the heaviest effects), **3D picture** (the home drawn as one image, light and smooth, with the same lights and taps) or **2D plan** (seen from above, one floor at a time). **Light effects** removes the frosted-glass blur, which leaves white or empty areas on some tablets, and **Animations** can be turned on or off on that device only. On *Auto*, devices with little memory use the 3D picture and light effects. The dock shrinks by itself when it doesn't fit (first only the active tab keeps its name, then icons only). On short screens, such as a tablet in landscape, room and device cards get more compact so three rows fit above the dock. On the Home screen, the clock, status, scenes and two rows of cards fit on one screen.
 - **Language**: Português or English, chosen in Settings.
+- **Family calendar** (*Settings → Calendar*): one shared calendar for the family, e.g. a "Família" calendar in iCloud connected with Home Assistant's **CalDAV** integration (server `https://caldav.icloud.com`, your Apple ID and an app-specific password; Google, Outlook or the HA local calendar work too). Whose each event is comes from its title: `[Pedro] Swimming`, `Pedro: Swimming`, `Pedro and Ana: Dinner` or `Swimming [Pedro]` (name or short name from *Settings → People*; no name = the whole family). A calendar can be shown only as "Busy". The **Agenda** page (dock) has **Day** with a column per person and one for the family, **Week** and **Month**; tap an event for its time, place and people. The **Coming up** card (all, or one person's) goes on the home screen from the layout editor, and the ambient screens get **Next event** and **Today's agenda** faces. The app and the web show the same events.
 
 ## Settings
 ⚙ button in the top-right corner:
@@ -96,7 +97,8 @@ Copy `custom_components/pine3_wall` to `/config/custom_components/`, restart and
 - **Rooms**: reorder and hide rooms, choose their size in the automatic 3D layout, show hidden devices again.
 - **Entities**: pick exactly what appears.
 - **3D floor plan**: the editor above and the wall height.
-- **Navigation**: dock buttons (Rooms, 3D Home, Scenes, Security).
+- **Calendar**: which calendar(s) to read, the ones shown only as "Busy", days ahead, the family colour and a preview of whose each event is.
+- **Navigation**: dock buttons (Rooms, 3D Home, Scenes, Climate, Security, Agenda).
 - **System**: version, counts, rebuild now, reset to defaults.
 
 Settings are stored in Home Assistant and apply to every device, except the *This device* options, which stay in each browser.

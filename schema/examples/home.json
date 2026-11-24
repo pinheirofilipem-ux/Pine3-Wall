@@ -304,6 +304,11 @@
     "cam_doors": {},
     "people": {},
     "wall_height": 30,
+    "calendar": {
+      "entities": [],
+      "private": [],
+      "days": 14
+    },
     "settings_version": 2
   },
   "layout": {
@@ -422,6 +427,15 @@
         "sections": [
           {
             "type": "security_list"
+          }
+        ]
+      },
+      "calendar": {
+        "title": "Agenda",
+        "sections": [
+          {
+            "type": "agenda",
+            "view": "day"
           }
         ]
       },

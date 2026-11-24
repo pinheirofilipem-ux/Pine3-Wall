@@ -59,9 +59,11 @@ async def test_every_type_is_in_the_catalog(hass: HomeAssistant) -> None:
     _, _, layout = await _layout(hass, home_people=True)
     sections, cards = _types(layout)
     home = CATALOG["modules"]["home"]
-    assert sections <= set(home["sections"])
-    assert cards <= set(home["cards"])
+    mods = CATALOG["modules"].values()
+    assert sections <= {s for m in mods for s in m["sections"]}
+    assert cards <= {c for m in mods for c in m["cards"]}
     assert layout["pages"]["home"]["template"] in home["templates"]
+    assert layout["pages"]["calendar"]["sections"] == [{"type": "agenda", "view": "day"}]
 
 
 async def test_order_hidden_and_size(hass: HomeAssistant) -> None:
@@ -115,4 +117,6 @@ async def test_vacuum_summary(hass: HomeAssistant) -> None:
 def test_catalog_faces_and_modules() -> None:
     ambient = CATALOG["modules"]["ambient"]
     assert set(ambient["sections"]) == {"ambient"}
-    assert set(ambient["faces"]) == {"clock_analog", "clock_digital", "date", "weather", "sensor", "people"}
+    assert set(ambient["faces"]) == {"clock_analog", "clock_digital", "date", "weather", "sensor", "people", "next_event", "agenda_today"}
+    cal = CATALOG["modules"]["calendar"]
+    assert set(cal["sections"]) == {"agenda"} and set(cal["cards"]) == {"upcoming"}

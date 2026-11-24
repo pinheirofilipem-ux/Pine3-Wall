@@ -32,6 +32,7 @@ class MainActivity : Activity(), Nav {
             Triple("home", "mdi:home-outline", "Casa"), Triple("rooms", "mdi:view-grid-outline", "Divisões"),
             Triple("house", "mdi:cube-outline", "Casa 3D"), Triple("scenes", "mdi:creation-outline", "Cenas"),
             Triple("climate", "mdi:thermometer", "Clima"), Triple("security", "mdi:shield-outline", "Segurança"),
+            Triple("calendar", "mdi:calendar-month-outline", "Agenda"),
         )
     }
 
@@ -388,6 +389,7 @@ class MainActivity : Activity(), Nav {
             tab == "climate" -> ClimatePage(kit, home, this)
             tab == "security" -> SecurityPage(kit, home, this)
             tab.startsWith("ambient/") -> AmbientPage(kit, home, tab)
+            tab == "calendar" -> AgendaPage(kit, home)
             else -> HomePage(kit, home, this)
         }
         val animate = animationsOn && shownKey.isNotEmpty() && shownKey != key

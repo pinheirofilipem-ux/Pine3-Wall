@@ -75,6 +75,10 @@
         "preview"
       ],
       "description": "Where the layout comes from: automatic (settings), published in the web editor, or the draft shown as a preview."
+    },
+    "calendar": {
+      "$ref": "#/$defs/calendar",
+      "description": "Module calendar: the family calendar's events (only when a calendar is chosen in the settings)."
     }
   },
   "$defs": {
@@ -427,6 +431,35 @@
               }
             }
           }
+        },
+        "calendar": {
+          "type": "object",
+          "description": "Module calendar: calendar.* entities read, those shown only as 'Busy', days ahead and the family colour.",
+          "properties": {
+            "entities": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^calendar\\.[a-z0-9_]+$"
+              },
+              "maxItems": 5
+            },
+            "private": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^calendar\\.[a-z0-9_]+$"
+              }
+            },
+            "days": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 62
+            },
+            "color": {
+              "$ref": "#/$defs/color"
+            }
+          }
         }
       }
     },
@@ -458,6 +491,98 @@
         },
         "hidden": {
           "type": "boolean"
+        }
+      }
+    },
+    "calendar": {
+      "type": "object",
+      "required": [
+        "entities",
+        "days",
+        "events"
+      ],
+      "properties": {
+        "entities": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^calendar\\.[a-z0-9_]+$"
+          }
+        },
+        "days": {
+          "type": "integer"
+        },
+        "color": {
+          "$ref": "#/$defs/color"
+        },
+        "from": {
+          "type": "string",
+          "format": "date",
+          "description": "First day read (inclusive)."
+        },
+        "to": {
+          "type": "string",
+          "format": "date",
+          "description": "Last day read (exclusive)."
+        },
+        "error": {
+          "type": "string",
+          "description": "Why the last read failed (the previous events are kept)."
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/event"
+          }
+        }
+      }
+    },
+    "event": {
+      "type": "object",
+      "required": [
+        "id",
+        "title",
+        "start",
+        "end",
+        "all_day",
+        "people",
+        "calendar"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string",
+          "description": "Without the people tag; empty when private."
+        },
+        "start": {
+          "type": "string",
+          "description": "Local time 'YYYY-MM-DDTHH:MM', or 'YYYY-MM-DD' when all_day."
+        },
+        "end": {
+          "type": "string",
+          "description": "Same format; for all-day events the day after the last one (exclusive)."
+        },
+        "all_day": {
+          "type": "boolean"
+        },
+        "people": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "person.* ids from the title; empty = the whole family."
+        },
+        "calendar": {
+          "type": "string"
+        },
+        "location": {
+          "type": "string"
+        },
+        "private": {
+          "type": "boolean",
+          "description": "Shown only as 'Busy'."
         }
       }
     }

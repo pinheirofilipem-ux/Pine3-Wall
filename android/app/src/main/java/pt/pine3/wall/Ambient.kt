@@ -18,7 +18,7 @@ import kotlin.math.sin
 class AmbientFace(val type: String, val style: String, val seconds: Boolean?, val entity: String?, val label: String?) {
     companion object {
         /** As faces que esta app sabe desenhar (as mesmas do catálogo; verificado nos testes). */
-        val TYPES = setOf("clock_analog", "clock_digital", "date", "weather", "sensor", "people")
+        val TYPES = setOf("clock_analog", "clock_digital", "date", "weather", "sensor", "people", "next_event", "agenda_today")
 
         fun parse(o: JSONObject) = AmbientFace(
             o.optString("type"), o.optString("style", "classic"), if (o.has("seconds")) o.optBoolean("seconds") else null,
@@ -89,6 +89,8 @@ class AmbientView(private val kit: Kit, private val spec: AmbientSpec, private v
                 "weather" -> weather(c, r)
                 "sensor" -> sensor(c, r, f)
                 "people" -> people(c, r)
+                "next_event" -> nextEvent(c, r)
+                "agenda_today" -> agendaToday(c, r)
                 else -> text(c, Tr.s("Atualiza a app", "Update the app"), r.centerX(), r.centerY(), kit.dp(18).toFloat(), dim, 500)
             }
         }
@@ -181,6 +183,38 @@ class AmbientView(private val kit: Kit, private val spec: AmbientSpec, private v
         text(c, value, r.centerX(), r.centerY() + size * 0.3f, size, fg)
         val name = f.label ?: id?.let { Fmt.name(it) } ?: Tr.s("Escolhe um sensor", "Choose a sensor")
         text(c, name, r.centerX(), r.centerY() + size * 0.3f + kit.dp(46), fit(name, r.width(), kit.dp(26).toFloat(), 500), accent, 500, false)
+    }
+
+    /** Módulo calendar: o próximo evento (título, quando e de quem). */
+    private fun nextEvent(c: Canvas, r: RectF) {
+        val cal = Ha.home?.calendar
+        val e = cal?.upcoming(1)?.firstOrNull()
+        if (cal == null || e == null) { text(c, if (cal == null) Tr.s("Sem calendário", "No calendar") else Tr.t("Nada marcado."), r.centerX(), r.centerY(), kit.dp(22).toFloat(), dim, 500, false); return }
+        val color = if (night) accent else CalendarModule.color(kit, cal, e)
+        val title = e.label
+        val size = fit(title, r.width(), min(r.height() * 0.16f, kit.dp(64).toFloat()), 400)
+        text(c, Tr.s("PRÓXIMO", "NEXT"), r.centerX(), r.centerY() - size * 1.1f, kit.dp(22).toFloat(), color, 600, false)
+        text(c, title, r.centerX(), r.centerY() + size * 0.35f, size, fg, 400)
+        val w = CalFmt.whenText(e)
+        text(c, w, r.centerX(), r.centerY() + size * 0.35f + kit.dp(44), fit(w, r.width(), kit.dp(24).toFloat(), 500), dim, 500, false)
+        val who = e.people.mapNotNull { id -> Ha.home?.people?.firstOrNull { it.id == id }?.alias }.ifEmpty { listOf(Tr.t("Família")) }.joinToString(" · ")
+        text(c, who, r.centerX(), r.centerY() + size * 0.35f + kit.dp(80), fit(who, r.width(), kit.dp(20).toFloat(), 600), color, 600, false)
+    }
+
+    /** Módulo calendar: os eventos de hoje, por hora. */
+    private fun agendaToday(c: Canvas, r: RectF) {
+        val cal = Ha.home?.calendar
+        if (cal == null) { text(c, Tr.s("Sem calendário", "No calendar"), r.centerX(), r.centerY(), kit.dp(22).toFloat(), dim, 500, false); return }
+        val list = cal.on(CalFmt.key(java.time.LocalDate.now())).take(6)
+        val line = min(kit.dp(48).toFloat(), r.height() / (list.size + 2))
+        var y = r.centerY() - line * (list.size + 1) / 2f + line * 0.5f
+        text(c, Tr.t("Hoje").uppercase(), r.centerX(), y, kit.dp(22).toFloat(), accent, 600, false)
+        if (list.isEmpty()) { text(c, Tr.t("Nada marcado."), r.centerX(), y + line * 1.2f, kit.dp(24).toFloat(), dim, 500, false); return }
+        list.forEach { e ->
+            y += line
+            val s = (if (e.allDay) "" else e.time + "  ") + e.label
+            text(c, s, r.centerX(), y, fit(s, r.width(), line * 0.55f, 400), if (night) fg else fg, 400, false)
+        }
     }
 
     private fun people(c: Canvas, r: RectF) {

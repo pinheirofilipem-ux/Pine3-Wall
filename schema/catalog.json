@@ -180,6 +180,43 @@
         },
         "people": {
           "description": "Who is home (the family's colours)."
+        },
+        "next_event": {
+          "description": "The next event: title, when and whose."
+        },
+        "agenda_today": {
+          "description": "Today's events, by time."
+        }
+      }
+    },
+    "calendar": {
+      "version": 1,
+      "description": "The family calendar: one shared calendar (iCloud via CalDAV, or any calendar.* entity); people from the event title.",
+      "pages": "calendar: the agenda page (Today by person, Week, Month); it can go in the dock.",
+      "sections": {
+        "agenda": {
+          "platforms": [
+            "android",
+            "web"
+          ],
+          "description": "The agenda with Today / Week / Month.",
+          "options": {
+            "view": "day | week | month (the one it opens on)"
+          }
+        }
+      },
+      "cards": {
+        "upcoming": {
+          "platforms": [
+            "android",
+            "web"
+          ],
+          "description": "The next events.",
+          "options": {
+            "count": "how many (default 4)",
+            "person": "only this person.* (and the family's)",
+            "size": "normal | big"
+          }
         }
       }
     }
