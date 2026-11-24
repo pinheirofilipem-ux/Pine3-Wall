@@ -105,7 +105,7 @@ equivalente no `ambient`.
 | 2 ✅ | Layouts, módulos e pessoas | Documento de layout (grelha com spans), `ModuleRegistry` no backend e na app, cartões atuais no módulo `home`, `Pages.kt` a interpretar layouts (templates → secções → cartões), layout automático por omissão, pessoas no núcleo | A app desenha o que o HA lhe diz, com o mesmo aspeto |
 | 3 ✅ | Editor web e renderer (níveis 1 e 2) | Renderer web pensado para o nível 3, construtor, pré-visualização com estados reais e ao vivo no tablet, rascunho/publicação/histórico, editor de planta 3D, ecrã de pessoas | A interface da app é construída na web |
 | 4 ✅ | Tablets no HA | `register_panel`, dispositivo HA por tablet (movimento, ecrã, bateria, versão), serviços `wake`, `show_page`, `notify`, layout por tablet. O screensaver continua local | Tablets geridos e automatizáveis a partir do HA |
-| 5 | Módulo `ambient` | Faces, composição na web, página e modo de screensaver | Primeiro módulo novo |
+| 5 ✅ | Módulo `ambient` | Faces, composição na web, página e modo de screensaver | Primeiro módulo novo |
 | 6 | Módulo `calendar` | Ligar o iCloud via CalDAV e confirmar o que é possível; leitura, "Próximos", Hoje/Semana/Mês, atribuição pelo título, privacidade, faces | Calendário de família |
 | 7 | Módulo `chores` | Tarefas, grelha semanal, cartões "Hoje" e por pessoa, sensor por pessoa | Tarefas da casa |
 | 8 | O dia da família | Página e face que juntam eventos e tarefas por pessoa | A vista "família" |

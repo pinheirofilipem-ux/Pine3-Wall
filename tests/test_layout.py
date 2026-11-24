@@ -110,3 +110,9 @@ async def test_vacuum_summary(hass: HomeAssistant) -> None:
     summaries = [c for c in _grid(layout["pages"]["home"]) if c["type"] == "summary"]
     assert {"type": "summary", "summary": "vacuum", "entity": "vacuum.robot"} in summaries
     assert h  # fixture used
+
+
+def test_catalog_faces_and_modules() -> None:
+    ambient = CATALOG["modules"]["ambient"]
+    assert set(ambient["sections"]) == {"ambient"}
+    assert set(ambient["faces"]) == {"clock_analog", "clock_digital", "date", "weather", "sensor", "people"}

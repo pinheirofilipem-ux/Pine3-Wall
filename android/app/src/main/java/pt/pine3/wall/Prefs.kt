@@ -36,6 +36,11 @@ class Prefs(ctx: Context) {
         get() = sp.getBoolean("saverVideo", false)
         set(v) = sp.edit().putBoolean("saverVideo", v).apply()
 
+    /** Ecrã ambiente usado como screensaver (chave da página "ambient/<id>" do layout); vazio = clássico ou vídeo. */
+    var saverAmbient: String
+        get() = sp.getString("saverAmbient", "") ?: ""
+        set(v) = sp.edit().putString("saverAmbient", v).apply()
+
     /** Qualidade dos vídeos: "1080" (H.264) ou "4k". */
     var saverQuality: String
         get() = sp.getString("saverQuality", "1080") ?: "1080"

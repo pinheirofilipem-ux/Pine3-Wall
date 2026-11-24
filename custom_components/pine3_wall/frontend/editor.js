@@ -2,7 +2,7 @@
 // panel's own cards and the home's real states. Draft, publish, history, back to automatic, and a live preview on the tablets.
 
 import { t } from "./i18n.js";
-import { esc, dom } from "./const.js";
+import { esc, dom, ACCENTS } from "./const.js";
 
 const clone = (o) => JSON.parse(JSON.stringify(o));
 
@@ -18,6 +18,13 @@ const SECTIONS = {
   room_header: ["mdi:format-header-1", "Cabeçalho da divisão"], house3d: ["mdi:cube-outline", "Casa 3D"], scene_list: ["mdi:format-list-bulleted", "Todas as cenas"],
   climate_list: ["mdi:thermometer", "Clima de toda a casa"], security_list: ["mdi:shield-outline", "Portas, janelas e câmaras"],
 };
+// module ambient: composed screens ("ambient/<id>" pages with one "ambient" section of 1-3 faces)
+const FACES = {
+  clock_analog: ["mdi:clock-outline", "Relógio analógico"], clock_digital: ["mdi:clock-digital", "Relógio digital"], date: ["mdi:calendar-today", "Data"],
+  weather: ["mdi:weather-partly-cloudy", "Tempo"], sensor: ["mdi:gauge", "Sensor"], people: ["mdi:account-group-outline", "Pessoas"],
+};
+const ANALOG_STYLES = [["classic", "Clássico"], ["minimal", "Minimalista"], ["bold", "Forte"]];
+const ambientSec = (page) => page?.sections.find((s) => s.type === "ambient");
 const SUMMARIES = { climate: ["mdi:thermometer", "Clima"], security: ["mdi:shield-check-outline", "Segurança"], media: ["mdi:music", "A tocar"], vacuum: ["mdi:robot-vacuum", "Aspirador"] };
 
 // ---------------------------------------------------------------- state and server
@@ -163,9 +170,45 @@ function sectionBody(p, page, sec, si, rooms) {
   }
 }
 
+/** An ambient screen drawn roughly as the tablet draws it (the real one is on the tablet with the preview on). */
+function ambientPreview(p, sec) {
+  const night = !!sec.night, fg = night ? "#b3261e" : "#fff", dim = night ? "#5c1410" : "rgba(255,255,255,.6)", acc = night ? "#d33a2c" : sec.color || "var(--amber)";
+  const now = new Date(), h24 = p._le.doc.options?.clock_24h !== false;
+  const face = (f) => {
+    switch (f.type) {
+      case "clock_analog": {
+        const s = now.getSeconds(), m = now.getMinutes() + s / 60, h = (now.getHours() % 12) + m / 60;
+        const hand = (deg, len, w, col) => { const a = (deg - 90) * Math.PI / 180; return `<line x1="50" y1="50" x2="${50 + len * Math.cos(a)}" y2="${50 + len * Math.sin(a)}" stroke="${col}" stroke-width="${w}" stroke-linecap="round"/>`; };
+        const ticks = [...Array(f.style === "minimal" ? 4 : 12)].map((_, i) => { const a = (i * (f.style === "minimal" ? 90 : 30) - 90) * Math.PI / 180; return `<line x1="${50 + 40 * Math.cos(a)}" y1="${50 + 40 * Math.sin(a)}" x2="${50 + 46 * Math.cos(a)}" y2="${50 + 46 * Math.sin(a)}" stroke="${fg}" stroke-width="${f.style === "bold" ? 3.5 : 2}" stroke-linecap="round"/>`; }).join("");
+        return `<svg viewBox="0 0 100 100" class="le-af">${f.style === "minimal" ? "" : `<circle cx="50" cy="50" r="47" fill="none" stroke="${dim}" stroke-width=".8"/>`}${ticks}
+          ${hand(h * 30, 24, f.style === "bold" ? 5 : 3.5, fg)}${hand(m * 6, 37, f.style === "bold" ? 3.5 : 2.5, fg)}${f.seconds === false ? "" : hand(s * 6, 41, 1, acc)}<circle cx="50" cy="50" r="2" fill="${acc}"/></svg>`;
+      }
+      case "clock_digital":
+        return `<div class="le-at" style="color:${fg}">${esc(now.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: f.seconds ? "2-digit" : undefined, hour12: !h24 }))}</div><small style="color:${dim}">${esc(p._dateText())}</small>`;
+      case "date":
+        return `<small style="color:${acc};font-weight:600;letter-spacing:.1em">${esc(now.toLocaleDateString(undefined, { weekday: "long" }).toUpperCase())}</small><div class="le-at" style="color:${fg}">${now.getDate()}</div><small style="color:${dim}">${esc(now.toLocaleDateString(undefined, { month: "long" }))}</small>`;
+      case "weather": {
+        const w = p._model?.weather && p._s(p._model.weather);
+        return `<ha-icon icon="mdi:weather-partly-cloudy" style="--mdc-icon-size:42px;color:${acc}"></ha-icon><div class="le-at" style="color:${fg}">${w?.attributes.temperature != null ? Math.round(w.attributes.temperature) + "°" : "–"}</div><small style="color:${dim}">${esc(w?.state || t("Tempo"))}</small>`;
+      }
+      case "sensor": {
+        const s = f.entity && p._s(f.entity);
+        return `<div class="le-at" style="color:${fg}">${s ? esc(s.state + (s.attributes.unit_of_measurement ? " " + s.attributes.unit_of_measurement : "")) : "–"}</div><small style="color:${acc}">${esc(f.label || (f.entity ? p._name(f.entity) : t("Escolhe um sensor")))}</small>`;
+      }
+      case "people":
+        return `<div class="people">${(p._model?.people || []).filter((x) => !x.hidden).map((x) => `<div class="av" style="background-color:${night ? fg : x.color};opacity:${p._s(x.id)?.state === "home" ? 1 : 0.35}">${esc((x.alias || "?")[0])}</div>`).join("")}</div>`;
+      default:
+        return `<small>${esc(f.type)}</small>`;
+    }
+  };
+  return `<div class="le-amb" style="${night ? "background:#000" : `background:radial-gradient(70% 70% at 50% 45%, ${sec.color || "#f6b83f"}33, #000 70%)`}">
+    ${(sec.faces || []).map((f) => `<div class="le-face">${face(f)}</div>`).join("") || `<small>${t("Sem faces: acrescenta à direita.")}</small>`}</div>`;
+}
+
 function pagePreview(p, key, rooms) {
   const le = p._le, page = le.doc.pages[key];
   if (!page) return `<div class="empty">${t("Página sem conteúdo.")}</div>`;
+  if (key.startsWith("ambient/") && ambientSec(page)) return ambientPreview(p, ambientSec(page));
   return page.sections.map((sec, si) => {
     const [icon, label] = SECTIONS[sec.type] || ["mdi:puzzle-outline", sec.type];
     return `<div class="le-sec">
@@ -185,12 +228,42 @@ function pageList(p, rooms) {
   const item = (key, icon, label) => `<button class="${key === le.page ? "act" : ""}" data-le-page="${esc(key)}"><ha-icon icon="${icon}"></ha-icon>${esc(label)}</button>`;
   return `<div class="le-pages">${FIXED_PAGES.filter(([k]) => doc.pages[k]).map(([k, icon, label]) => item(k, icon, t(label))).join("")}
     <div class="eyebrow" style="margin:14px 0 6px">${t("Divisões")}</div>
-    ${roomPages.map((k) => { const r = rooms[k.slice(5)]; return item(k, r?.icon || "mdi:door", r ? p._roomName(r) : k.slice(5)); }).join("")}</div>`;
+    ${roomPages.map((k) => { const r = rooms[k.slice(5)]; return item(k, r?.icon || "mdi:door", r ? p._roomName(r) : k.slice(5)); }).join("")}
+    <div class="eyebrow" style="margin:14px 0 6px">${t("Ecrãs ambiente")}</div>
+    ${Object.keys(doc.pages).filter((k) => k.startsWith("ambient/")).map((k) => item(k, "mdi:clock-time-four-outline", doc.pages[k].title || k.slice(8))).join("")}
+    <button data-le-act="newambient"><ha-icon icon="mdi:plus"></ha-icon>${t("Novo ecrã ambiente")}</button></div>`;
+}
+
+function ambientPanel(p, key) {
+  const le = p._le, page = le.doc.pages[key], sec = ambientSec(page), faces = sec.faces || [];
+  const sensors = Object.keys(p._hass.states).filter((i) => ["sensor", "binary_sensor"].includes(dom(i))).sort();
+  return `<div class="panel glass le-add"><h3 style="margin-top:0">${t("Ecrã ambiente")}</h3>
+    <label>${t("Nome")}</label><input class="search" data-le-atitle value="${esc(page.title || "")}" maxlength="40" style="height:42px">
+    <label>${t("Faces")} <small>(${t("até 3, lado a lado")})</small></label>
+    ${faces.map((f, i) => `<div class="le-facecfg">
+      <div class="row" style="display:flex;gap:6px;align-items:center"><select data-le-ftype="${i}">${Object.entries(FACES).map(([k, [, l]]) => `<option value="${k}" ${f.type === k ? "selected" : ""}>${esc(t(l))}</option>`).join("")}</select>
+        <button class="mini" data-le-fmove="${i}:-1" ${i === 0 ? "disabled" : ""}><ha-icon icon="mdi:chevron-left"></ha-icon></button>
+        <button class="mini" data-le-fmove="${i}:1" ${i === faces.length - 1 ? "disabled" : ""}><ha-icon icon="mdi:chevron-right"></ha-icon></button>
+        <button class="mini" data-le-fdel="${i}"><ha-icon icon="mdi:close"></ha-icon></button></div>
+      ${f.type === "clock_analog" ? `<select data-le-fstyle="${i}">${ANALOG_STYLES.map(([k, l]) => `<option value="${k}" ${(f.style || "classic") === k ? "selected" : ""}>${esc(t(l))}</option>`).join("")}</select>` : ""}
+      ${f.type === "clock_analog" || f.type === "clock_digital" ? `<div class="opt" style="padding:6px 0"><small>${t("Segundos")}</small><div class="tg ${(f.type === "clock_analog" ? f.seconds !== false : !!f.seconds) ? "on" : ""}" data-le-fsec="${i}"><i></i></div></div>` : ""}
+      ${f.type === "sensor" ? `<select data-le-fent="${i}"><option value="">${t("Escolher…")}</option>${sensors.map((e) => `<option value="${esc(e)}" ${f.entity === e ? "selected" : ""}>${esc(p._name(e))}</option>`).join("")}</select>
+        <input class="search" data-le-flabel="${i}" value="${esc(f.label || "")}" placeholder="${t("Legenda (opcional)")}" maxlength="40" style="height:40px;margin-top:6px">` : ""}
+    </div>`).join("")}
+    ${faces.length < 3 ? `<select data-le-fadd><option value="">${t("Acrescentar face…")}</option>${Object.entries(FACES).map(([k, [, l]]) => `<option value="${k}">${esc(t(l))}</option>`).join("")}</select>` : ""}
+    <label>${t("Cor")}</label><div class="swr">${ACCENTS.map((c) => `<div class="swc ${c === sec.color ? "act" : ""}" data-le-acolor="${c}" style="background:${c}"></div>`).join("")}</div>
+    <div class="opts" style="margin-top:12px">
+      <div class="opt"><div><b>${t("Modo noturno")}</b><small>${t("Vermelho escuro e pouco brilho, para o quarto à noite.")}</small></div><div class="tg ${sec.night ? "on" : ""}" data-le-anight><i></i></div></div>
+      <div class="opt"><div><b>${t("Na dock")}</b><small>${t("Um botão na dock abre este ecrã. Para o usar como screensaver escolhe-o nas definições da app (Screensaver).")}</small></div><div class="tg ${le.doc.dock.includes(key) ? "on" : ""}" data-le-adock><i></i></div></div>
+    </div>
+    <button class="pill" data-le-act="delambient" style="margin-top:14px"><ha-icon icon="mdi:delete-outline"></ha-icon>${t("Apagar este ecrã")}</button>
+  </div>`;
 }
 
 function addPanel(p, rooms) {
   const le = p._le, page = le.doc.pages[le.page];
   if (!page) return "";
+  if (le.page.startsWith("ambient/") && ambientSec(page)) return ambientPanel(p, le.page);
   const have = new Set(page.sections.map((s) => s.type));
   const secOpts = Object.entries(SECTIONS).filter(([k]) => !have.has(k) || k === "grid").map(([k, [, label]]) => `<option value="${k}">${esc(t(label))}</option>`).join("");
   const gi = le.sel ? le.sel[0] : page.sections.findIndex((s) => s.type === "grid");
@@ -245,7 +318,8 @@ export function editorView(p) {
     ? (d.preview ? t("Variante \"{n}\": os tablets que a usam mostram o rascunho", { n: le.target }) : d.published ? t("Variante \"{n}\": os tablets que a usam mostram-na", { n: le.target }) : t("Variante \"{n}\": ainda por publicar (os tablets que a usam mostram o layout principal)", { n: le.target }))
     : src === "preview" ? t("Os tablets estão a mostrar o rascunho") : src === "published" ? t("Os tablets mostram o layout publicado") : t("Os tablets mostram o layout automático (das definições)");
   const pageName = FIXED_PAGES.find(([k]) => k === le.page)?.[2];
-  const roomName = le.page.startsWith("room/") ? (rooms[le.page.slice(5)] ? p._roomName(rooms[le.page.slice(5)]) : le.page) : null;
+  const roomName = le.page.startsWith("room/") ? (rooms[le.page.slice(5)] ? p._roomName(rooms[le.page.slice(5)]) : le.page)
+    : le.page.startsWith("ambient/") ? `${t("Ecrã ambiente")}: ${le.doc.pages[le.page]?.title || le.page.slice(8)}` : null;
   return `<div class="set le">
     <div class="set-hd"><div><div class="eyebrow">Pine3 Wall</div><div class="t">${t("Editor de layout")}</div>
       <div class="s">${esc(srcText)}${le.dirty ? ` · <b>${t("alterações por guardar")}</b>` : d.draft ? ` · ${t("há um rascunho guardado")}` : ""}${le.msg ? ` · ${esc(le.msg)}` : ""}</div></div>
@@ -310,6 +384,21 @@ export function bindEditor(p) {
       if (!confirm(t("Apagar o rascunho?"))) return;
       if (await call(p, "discard_draft", {}, t("Rascunho apagado"))) { le.doc = clone(le.data.published || le.data.auto); le.dirty = false; }
       le.menu = false; p._render(); return;
+    }
+    if (a === "newambient") {
+      const name = (prompt(t("Nome do ecrã (ex.: Noite, Cozinha):")) || "").trim().slice(0, 40);
+      if (!name) return;
+      let id = name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "") || "ecra";
+      while (le.doc.pages[`ambient/${id}`]) id += "_2";
+      const key = `ambient/${id}`;
+      le.doc.pages[key] = { title: name, sections: [{ type: "ambient", color: "#f6b83f", night: false, faces: [{ type: "clock_analog", style: "classic" }, { type: "weather" }] }] };
+      le.page = key; le.sel = null; changed(p); return;
+    }
+    if (a === "delambient") {
+      if (!confirm(t("Apagar este ecrã ambiente?"))) return;
+      delete le.doc.pages[le.page];
+      le.doc.dock = le.doc.dock.filter((k) => k !== le.page);
+      le.page = "home"; changed(p); return;
     }
     if (a === "deltarget") {
       if (!confirm(t("Apagar a variante \"{n}\"? Os tablets que a usam voltam ao layout principal.", { n: le.target }))) return;
@@ -405,6 +494,26 @@ export function bindEditor(p) {
   }, "change");
   on("[data-le-template]", (el) => { page().template = el.value; changed(p); }, "change");
 
+  // ambient screens
+  const amb = () => ambientSec(page());
+  const faceAt = (el, attr) => amb().faces[Number(el.dataset[attr])];
+  root.querySelectorAll("[data-le-atitle]").forEach((el) => el.addEventListener("change", () => { const v = el.value.trim(); if (v) { page().title = v; changed(p); } }));
+  on("[data-le-ftype]", (el) => { const f = faceAt(el, "leFtype"); for (const k of Object.keys(f)) delete f[k]; f.type = el.value; changed(p); }, "change");
+  on("[data-le-fstyle]", (el) => { faceAt(el, "leFstyle").style = el.value; changed(p); }, "change");
+  on("[data-le-fsec]", (el) => { const f = faceAt(el, "leFsec"); f.seconds = f.type === "clock_analog" ? f.seconds === false : !f.seconds; changed(p); });
+  on("[data-le-fent]", (el) => { const f = faceAt(el, "leFent"); if (el.value) f.entity = el.value; else delete f.entity; changed(p); }, "change");
+  root.querySelectorAll("[data-le-flabel]").forEach((el) => el.addEventListener("change", () => { const f = faceAt(el, "leFlabel"), v = el.value.trim(); if (v) f.label = v; else delete f.label; changed(p); }));
+  on("[data-le-fmove]", (el) => {
+    const [i, dir] = pair(el.dataset.leFmove), fs = amb().faces, j = i + dir;
+    if (j < 0 || j >= fs.length) return;
+    [fs[i], fs[j]] = [fs[j], fs[i]]; changed(p);
+  });
+  on("[data-le-fdel]", (el) => { amb().faces.splice(Number(el.dataset.leFdel), 1); changed(p); });
+  on("[data-le-fadd]", (el) => { if (!el.value) return; const s = amb(); (s.faces ||= []).push({ type: el.value }); s.faces = s.faces.slice(0, 3); changed(p); }, "change");
+  on("[data-le-acolor]", (el) => { amb().color = el.dataset.leAcolor; changed(p); });
+  on("[data-le-anight]", () => { const s = amb(); s.night = !s.night; changed(p); });
+  on("[data-le-adock]", () => { const k = le.page, dock = le.doc.dock; le.doc.dock = dock.includes(k) ? dock.filter((x) => x !== k) : [...dock, k]; changed(p); });
+
   on("[data-le-dock]", (el) => {
     const k = el.dataset.leDock, dock = le.doc.dock;
     le.doc.dock = dock.includes(k) ? dock.filter((x) => x !== k) : [...dock, k];
@@ -459,5 +568,13 @@ export const cssEditor = `
 .le-ph{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:110px;border-radius:20px;padding:16px;text-align:center}
 .le-ph small{color:var(--muted)}
 .le-side .panel{margin-bottom:16px}
+.le-amb{display:flex;align-items:stretch;justify-content:space-around;gap:18px;aspect-ratio:16/10;border-radius:24px;padding:28px;overflow:hidden}
+.le-face{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center}
+.le-af{width:min(100%,260px);height:auto}
+.le-at{font-family:var(--display);font-weight:300;font-size:clamp(40px,6vw,96px);line-height:1}
+.le-facecfg{border-radius:14px;padding:10px;background:rgba(255,255,255,.05);margin-bottom:8px;display:flex;flex-direction:column;gap:6px}
+.le-facecfg select,.le-add select{all:unset;box-sizing:border-box;height:40px;padding:0 12px;border-radius:12px;background:rgba(255,255,255,.08);border:1px solid var(--line);color:inherit;font-size:14px;width:100%;cursor:pointer}
+.le-facecfg .row select{flex:1}
+.le-pages > button:last-child{opacity:.8}
 @media (max-width:1200px){.le-body{grid-template-columns:180px minmax(0,1fr)}.le-side{grid-column:1/-1}}
 `;

@@ -51,7 +51,7 @@
     },
     "pages": {
       "type": "object",
-      "description": "Page key -> page. Fixed keys (home, rooms, house, scenes, climate, security) and one 'room/<room id>' per room.",
+      "description": "Page key -> page. Fixed keys (home, rooms, house, scenes, climate, security) and one 'room/<room id>' per room. Ambient screens use 'ambient/<id>' (module ambient).",
       "required": [
         "home"
       ],
@@ -97,6 +97,10 @@
           "items": {
             "$ref": "#/$defs/section"
           }
+        },
+        "title": {
+          "type": "string",
+          "description": "Name of the page (ambient screens: shown in the dock and the screensaver choice)."
         }
       }
     },
@@ -128,6 +132,20 @@
           "items": {
             "$ref": "#/$defs/card"
           }
+        },
+        "faces": {
+          "type": "array",
+          "maxItems": 3,
+          "items": {
+            "$ref": "#/$defs/face"
+          }
+        },
+        "color": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "night": {
+          "type": "boolean"
         }
       }
     },
@@ -153,6 +171,33 @@
           "type": "string"
         },
         "summary": {
+          "type": "string"
+        }
+      }
+    },
+    "face": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "style": {
+          "enum": [
+            "classic",
+            "minimal",
+            "bold"
+          ]
+        },
+        "seconds": {
+          "type": "boolean"
+        },
+        "entity": {
+          "type": "string"
+        },
+        "label": {
           "type": "string"
         }
       }

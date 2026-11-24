@@ -4,24 +4,183 @@
     "home": {
       "version": 1,
       "description": "The house: rooms, devices, scenes, weather and the home screen.",
-      "templates": ["classic", "top", "columns", "sidebar"],
+      "templates": [
+        "classic",
+        "top",
+        "columns",
+        "sidebar"
+      ],
       "sections": {
-        "clock": {"platforms": ["android", "web"], "description": "Date and time."},
-        "people": {"platforms": ["android", "web"], "description": "Who is home, next to the date."},
-        "status": {"platforms": ["android", "web"], "description": "Home status: lights and other devices that are on."},
-        "weather": {"platforms": ["android", "web"], "description": "Weather card (or pill, depending on the template)."},
-        "scenes": {"platforms": ["android", "web"], "description": "A row of scene buttons.", "options": {"items": "entity ids"}},
-        "grid": {"platforms": ["android", "web"], "description": "Cards in a grid (or list).", "options": {"cards": "cards", "group": "'category': group device cards by kind"}},
-        "room_header": {"platforms": ["android", "web"], "description": "Room name, climate, what is on, lights on/off and category chips.", "options": {"room": "room id"}},
-        "house3d": {"platforms": ["android", "web"], "description": "The 3D home."},
-        "scene_list": {"platforms": ["android", "web"], "description": "Every scene and script."},
-        "climate_list": {"platforms": ["android", "web"], "description": "Every air conditioner and thermostat, and each room's temperature."},
-        "security_list": {"platforms": ["android", "web"], "description": "Doors, windows, locks and cameras."}
+        "clock": {
+          "platforms": [
+            "android",
+            "web"
+          ],
+          "description": "Date and time."
+        },
+        "people": {
+          "platforms": [
+            "android",
+            "web"
+          ],
+          "description": "Who is home, next to the date."
+        },
+        "status": {
+          "platforms": [
+            "android",
+            "web"
+          ],
+          "description": "Home status: lights and other devices that are on."
+        },
+        "weather": {
+          "platforms": [
+            "android",
+            "web"
+          ],
+          "description": "Weather card (or pill, depending on the template)."
+        },
+        "scenes": {
+          "platforms": [
+            "android",
+            "web"
+          ],
+          "description": "A row of scene buttons.",
+          "options": {
+            "items": "entity ids"
+          }
+        },
+        "grid": {
+          "platforms": [
+            "android",
+            "web"
+          ],
+          "description": "Cards in a grid (or list).",
+          "options": {
+            "cards": "cards",
+            "group": "'category': group device cards by kind"
+          }
+        },
+        "room_header": {
+          "platforms": [
+            "android",
+            "web"
+          ],
+          "description": "Room name, climate, what is on, lights on/off and category chips.",
+          "options": {
+            "room": "room id"
+          }
+        },
+        "house3d": {
+          "platforms": [
+            "android",
+            "web"
+          ],
+          "description": "The 3D home."
+        },
+        "scene_list": {
+          "platforms": [
+            "android",
+            "web"
+          ],
+          "description": "Every scene and script."
+        },
+        "climate_list": {
+          "platforms": [
+            "android",
+            "web"
+          ],
+          "description": "Every air conditioner and thermostat, and each room's temperature."
+        },
+        "security_list": {
+          "platforms": [
+            "android",
+            "web"
+          ],
+          "description": "Doors, windows, locks and cameras."
+        }
       },
       "cards": {
-        "room": {"platforms": ["android", "web"], "options": {"room": "room id", "size": "normal | big"}},
-        "device": {"platforms": ["android", "web"], "options": {"entity": "primary entity of the device", "size": "normal | big"}},
-        "summary": {"platforms": ["android", "web"], "options": {"summary": "climate | security | vacuum | media", "entity": "the vacuum, for summary 'vacuum'"}}
+        "room": {
+          "platforms": [
+            "android",
+            "web"
+          ],
+          "options": {
+            "room": "room id",
+            "size": "normal | big"
+          }
+        },
+        "device": {
+          "platforms": [
+            "android",
+            "web"
+          ],
+          "options": {
+            "entity": "primary entity of the device",
+            "size": "normal | big"
+          }
+        },
+        "summary": {
+          "platforms": [
+            "android",
+            "web"
+          ],
+          "options": {
+            "summary": "climate | security | vacuum | media",
+            "entity": "the vacuum, for summary 'vacuum'"
+          }
+        }
+      }
+    },
+    "ambient": {
+      "version": 1,
+      "description": "Composed screens to look at from afar (StandBy-like): 1 to 3 faces side by side, also usable as the screensaver.",
+      "pages": "ambient/<id>: a page with one 'ambient' section; it can go in the dock.",
+      "sections": {
+        "ambient": {
+          "platforms": [
+            "android",
+            "web"
+          ],
+          "description": "A composed screen.",
+          "options": {
+            "faces": "1 to 3 faces",
+            "color": "accent colour #rrggbb",
+            "night": "dim red night mode"
+          }
+        }
+      },
+      "cards": {},
+      "faces": {
+        "clock_analog": {
+          "description": "Analog clock.",
+          "options": {
+            "style": "classic | minimal | bold",
+            "seconds": "show the second hand (default true)"
+          }
+        },
+        "clock_digital": {
+          "description": "Big digital clock with the date.",
+          "options": {
+            "seconds": "show seconds (default false)"
+          }
+        },
+        "date": {
+          "description": "Weekday, day and month."
+        },
+        "weather": {
+          "description": "Now: temperature, condition, high and low."
+        },
+        "sensor": {
+          "description": "One reading in big type.",
+          "options": {
+            "entity": "sensor/binary_sensor entity id",
+            "label": "optional label"
+          }
+        },
+        "people": {
+          "description": "Who is home (the family's colours)."
+        }
       }
     }
   }
