@@ -76,7 +76,14 @@ class MainActivity : Activity(), Nav {
         override fun onHome() = rebuild()
         override fun onStatus() = updateBanner()
         override fun onBell(id: String, type: String, attrs: org.json.JSONObject) = bellEvent(id, type, attrs)
-        override fun onCommand(cmd: org.json.JSONObject) = panelCommand(cmd)
+        override fun onCommand(cmd: org.json.JSONObject) {
+            // sem o serviço de movimento (ex.: sem permissão da câmara) é o painel que liga o ecrã
+            val c = cmd.optString("command")
+            val wakes = c == "wake" || c == "show_page" || c == "show_camera" || (c == "notify" && cmd.optBoolean("wake", true)) ||
+                (c == "screensaver" && !cmd.optBoolean("on"))
+            if (wakes && !MotionService.running) MotionService.wakeScreen(this@MainActivity)
+            panelCommand(cmd)
+        }
     }
 
     private var bell: BellDialog? = null
@@ -165,7 +172,9 @@ class MainActivity : Activity(), Nav {
     private fun panelCommand(cmd: org.json.JSONObject) {
         if (!resumed) return // fica em Ha.pendingCommand; corre no onResume
         Ha.pendingCommand = null
+        if (cmd.optString("command") != "screensaver") lastActivity = System.currentTimeMillis()
         when (cmd.optString("command")) {
+            "wake" -> hideSaver()
             "show_page" -> {
                 hideSaver()
                 val page = cmd.optString("page")

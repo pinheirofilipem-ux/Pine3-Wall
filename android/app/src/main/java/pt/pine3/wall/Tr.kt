@@ -30,7 +30,7 @@ object Tr {
         "Luzes" to "Lights", "Clima" to "Climate", "Cortinas e estores" to "Blinds and shutters", "Multimédia" to "Media",
         "Segurança" to "Security", "Tomadas e interruptores" to "Plugs and switches", "Ações" to "Actions", "Sensores" to "Sensors",
         // estados
-        "Ligado" to "On", "Desligado" to "Off", "Aberto" to "Open", "Fechado" to "Closed", "A abrir" to "Opening", "A fechar" to "Closing",
+        "Ligado" to "On", "Ligada" to "On", "Desligada" to "Off", "Toca para desligar" to "Tap to turn off", "Toca para ligar" to "Tap to turn on", "Outra cor" to "Other colour", "Volume" to "Volume", "Desligado" to "Off", "Aberto" to "Open", "Fechado" to "Closed", "A abrir" to "Opening", "A fechar" to "Closing",
         "Trancado" to "Locked", "Destrancado" to "Unlocked", "A tocar" to "Playing", "Em pausa" to "Paused", "Inativo" to "Idle",
         "Em espera" to "Standby", "Indisponível" to "Unavailable", "Desconhecido" to "Unknown", "Aquecer" to "Heat", "Arrefecer" to "Cool",
         "Automático" to "Auto", "Aquecer/Arrefecer" to "Heat/Cool", "Desumidificar" to "Dry", "Ventilação" to "Fan only",

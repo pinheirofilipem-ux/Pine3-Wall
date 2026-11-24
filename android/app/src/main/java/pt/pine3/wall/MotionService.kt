@@ -37,6 +37,17 @@ class MotionService : Service() {
             try { ctx.startForegroundService(Intent(ctx, MotionService::class.java)) } catch (_: Exception) {}
         }
 
+        val running get() = instance != null
+
+        /** Liga o ecrã e traz o painel para a frente sem o serviço (sem permissão da câmara, por exemplo). */
+        @Suppress("DEPRECATION")
+        fun wakeScreen(ctx: Context) {
+            val pm = ctx.getSystemService(Context.POWER_SERVICE) as PowerManager
+            if (pm.isInteractive && !PanelState.sleeping) return
+            PanelState.set(false)
+            pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP or PowerManager.ON_AFTER_RELEASE, "pine3:wake").acquire(5000)
+        }
+
         /** Toque ou atividade do utilizador. */
         fun poke() { PanelState.lastTouch = System.currentTimeMillis(); instance?.main?.post { instance?.onActivity() } }
 
@@ -167,7 +178,9 @@ class MotionService : Service() {
     /** Uma regra do HA disparou: acorda e mantém o ecrã ligado pelo menos estes segundos. */
     private fun holdAwake(seconds: Int) {
         keepUntil = SystemClock.elapsedRealtime() + seconds * 1000L
-        if (PanelState.sleeping) wake()
+        // também quando foi o próprio Android a apagar o ecrã (tempo limite do sistema), como no movimento
+        val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
+        if (PanelState.sleeping || !pm.isInteractive) wake()
         scheduleSleep()
     }
 
