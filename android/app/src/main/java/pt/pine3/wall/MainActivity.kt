@@ -32,6 +32,7 @@ class MainActivity : Activity(), Nav {
             Triple("home", "mdi:home-outline", "Casa"), Triple("rooms", "mdi:view-grid-outline", "Divisões"),
             Triple("house", "mdi:cube-outline", "Casa 3D"), Triple("scenes", "mdi:creation-outline", "Cenas"),
             Triple("climate", "mdi:thermometer", "Clima"), Triple("security", "mdi:shield-outline", "Segurança"),
+            Triple("calendar", "mdi:calendar-month-outline", "Agenda"),
         )
     }
 
@@ -76,7 +77,14 @@ class MainActivity : Activity(), Nav {
         override fun onHome() = rebuild()
         override fun onStatus() = updateBanner()
         override fun onBell(id: String, type: String, attrs: org.json.JSONObject) = bellEvent(id, type, attrs)
-        override fun onCommand(cmd: org.json.JSONObject) = panelCommand(cmd)
+        override fun onCommand(cmd: org.json.JSONObject) {
+            // sem o serviço de movimento (ex.: sem permissão da câmara) é o painel que liga o ecrã
+            val c = cmd.optString("command")
+            val wakes = c == "wake" || c == "show_page" || c == "show_camera" || (c == "notify" && cmd.optBoolean("wake", true)) ||
+                (c == "screensaver" && !cmd.optBoolean("on"))
+            if (wakes && !MotionService.running) MotionService.wakeScreen(this@MainActivity)
+            panelCommand(cmd)
+        }
     }
 
     private var bell: BellDialog? = null
@@ -165,7 +173,9 @@ class MainActivity : Activity(), Nav {
     private fun panelCommand(cmd: org.json.JSONObject) {
         if (!resumed) return // fica em Ha.pendingCommand; corre no onResume
         Ha.pendingCommand = null
+        if (cmd.optString("command") != "screensaver") lastActivity = System.currentTimeMillis()
         when (cmd.optString("command")) {
+            "wake" -> hideSaver()
             "show_page" -> {
                 hideSaver()
                 val page = cmd.optString("page")
@@ -379,6 +389,7 @@ class MainActivity : Activity(), Nav {
             tab == "climate" -> ClimatePage(kit, home, this)
             tab == "security" -> SecurityPage(kit, home, this)
             tab.startsWith("ambient/") -> AmbientPage(kit, home, tab)
+            tab == "calendar" -> AgendaPage(kit, home)
             else -> HomePage(kit, home, this)
         }
         val animate = animationsOn && shownKey.isNotEmpty() && shownKey != key

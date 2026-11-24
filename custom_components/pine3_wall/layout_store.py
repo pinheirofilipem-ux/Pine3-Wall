@@ -130,6 +130,11 @@ def resolve(doc: dict[str, Any], home: dict[str, Any], settings: dict[str, Any])
             if "cards" in section:
                 section["cards"] = [c for c in section["cards"] if alive(c)]
 
+    # fixed pages added by a newer version (e.g. "calendar"): they come in as in the automatic layout
+    for key, page in auto["pages"].items():
+        if not key.startswith("room/") and key not in pages:
+            pages[key] = copy.deepcopy(page)
+
     for rid, room in rooms.items():
         page_key = f"room/{rid}"
         if page_key not in pages:

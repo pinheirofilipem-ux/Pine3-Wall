@@ -121,6 +121,35 @@ class LayoutTest {
         assertTrue(ModuleRegistry.knowsSection("ambient"))
     }
 
+    @Test fun appKnowsTheCalendarModule() {
+        val m = json("schema/catalog.json").getJSONObject("modules").getJSONObject("calendar")
+        assertEquals(m.getJSONObject("sections").keys().asSequence().toSet(), CalendarModule.sectionTypes)
+        assertEquals(m.getJSONObject("cards").keys().asSequence().toSet(), CalendarModule.cardTypes)
+        assertTrue(ModuleRegistry.knowsCard("upcoming") && ModuleRegistry.knowsSection("agenda"))
+    }
+
+    @Test fun parsesTheFamilyCalendar() {
+        val cal = CalendarData.parse(JSONObject("""{"entities":["calendar.familia"],"days":14,"color":"#4aa8ff","events":[
+            {"id":"b","title":"Natação","start":"2026-11-24T17:30","end":"2026-11-24T18:30","all_day":false,"people":["person.pedro"],"calendar":"calendar.familia","location":"Piscina"},
+            {"id":"d","title":"Noite","start":"2026-11-24T22:00","end":"2026-11-25T00:00","all_day":false,"people":[],"calendar":"calendar.t"},
+            {"id":"c","title":"","start":"2026-11-24T23:00","end":"2026-11-25T01:00","all_day":false,"people":[],"calendar":"calendar.t","private":true},
+            {"id":"a","title":"Férias","start":"2026-11-26","end":"2026-11-29","all_day":true,"people":[],"calendar":"calendar.familia"}]}"""))
+        assertEquals("#4aa8ff", cal.color)
+        assertEquals(listOf("b", "d", "c"), cal.on("2026-11-24").map { it.id })
+        assertEquals(listOf("c"), cal.on("2026-11-25").map { it.id }) // "d" acaba à meia-noite
+        assertEquals(listOf("a"), cal.on("2026-11-28").map { it.id })
+        assertTrue(cal.on("2026-11-29").isEmpty()) // o fim de um evento de dia inteiro é exclusivo
+        assertTrue(cal.events[2].private)
+        assertEquals("17:30", cal.events[0].time)
+        // às 18:00 de dia 24 a Natação ainda não acabou (acaba às 18:30)
+        val now = java.time.LocalDateTime.of(2026, 11, 24, 18, 0)
+        assertEquals(listOf("b", "d", "c"), cal.upcoming(3, now = now).map { it.id })
+        assertEquals(listOf("a"), cal.upcoming(5, person = "person.ana", now = java.time.LocalDateTime.of(2026, 11, 25, 9, 0)).map { it.id })
+        val card = LCard.parse(JSONObject("""{"type":"upcoming","person":"person.ana","count":3}"""))
+        assertEquals("@upcoming:person.ana", card.key)
+        assertEquals(3, card.count)
+    }
+
     @Test fun parsesAnAmbientScreen() {
         val doc = LayoutDoc.parse(JSONObject("""{"dock":["home","ambient/noite"],"pages":{"home":{"sections":[]},
             "ambient/noite":{"title":"Noite","sections":[{"type":"ambient","night":true,"color":"#ff0000",

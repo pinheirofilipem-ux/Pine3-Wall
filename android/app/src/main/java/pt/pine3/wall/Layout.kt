@@ -49,13 +49,14 @@ class LSection(val type: String, val items: List<String>, val room: String?, val
     }
 }
 
-class LCard(val type: String, val size: String, val room: String?, val entity: String?, val summary: String?) {
+class LCard(val type: String, val size: String, val room: String?, val entity: String?, val summary: String?, val person: String? = null, val count: Int = 0) {
     val big get() = size == "big"
     /** A mesma chave que o modo de edição usa para ordenar (id da divisão, do dispositivo, "@climate", "@vacuum:<id>"). */
     val key: String get() = when (type) {
         "room" -> room.orEmpty()
         "device" -> entity.orEmpty()
         "summary" -> if (summary == "vacuum") "@vacuum:${entity.orEmpty()}" else "@${summary.orEmpty()}"
+        "upcoming" -> "@upcoming:${person.orEmpty()}"
         else -> "?$type"
     }
 
@@ -63,6 +64,7 @@ class LCard(val type: String, val size: String, val room: String?, val entity: S
         fun parse(o: JSONObject) = LCard(
             o.optString("type"), o.optString("size", "normal"), o.optString("room", "").ifBlank { null },
             o.optString("entity", "").ifBlank { null }, o.optString("summary", "").ifBlank { null },
+            o.optString("person", "").ifBlank { null }, o.optInt("count", 0),
         )
     }
 }

@@ -16,6 +16,7 @@ from homeassistant.helpers.storage import Store
 
 from .const import API_VERSION, DOMAIN, EVENT_UPDATED, MIN_APP_VERSION, VERSION
 from .discovery import build_home
+from .family_calendar import DEFAULT_CALENDAR, FamilyCalendar, assign
 from .layout import DOCK_ITEMS
 from .layout_store import MAIN, TARGET_NAME, LayoutStore, validate_doc
 from .panels import COMMANDS, Panels
@@ -56,6 +57,7 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "cam_doors": {},
     "people": {},
     "wall_height": 30,
+    "calendar": DEFAULT_CALENDAR,
     "settings_version": 2,
 }
 DEVICE_TYPES = [
@@ -85,7 +87,8 @@ async def async_setup_api(hass: HomeAssistant) -> None:
     await layouts.async_load()
     panels = Panels(hass)
     await panels.async_load()
-    hass.data[DOMAIN] = {"store": store, "settings": settings, "layouts": layouts, "panels": panels, "unsubs": []}
+    calendar = FamilyCalendar(hass, settings, lambda: build_people(hass, hass.data[DOMAIN]["settings"]))
+    hass.data[DOMAIN] = {"store": store, "settings": settings, "layouts": layouts, "panels": panels, "calendar": calendar, "unsubs": []}
 
     websocket_api.async_register_command(hass, ws_home)
     websocket_api.async_register_command(hass, ws_settings)
@@ -95,6 +98,7 @@ async def async_setup_api(hass: HomeAssistant) -> None:
         ws_layout_get, ws_layout_save_draft, ws_layout_discard, ws_layout_publish, ws_layout_reset, ws_layout_restore,
         ws_layout_preview, ws_layout_edit, ws_layout_create, ws_layout_delete,
         ws_panel_connect, ws_panel_state, ws_panel_list, ws_panel_update, ws_panel_remove, ws_panel_command,
+        ws_calendar_assign, ws_calendar_refresh,
     ):
         websocket_api.async_register_command(hass, cmd)
 
@@ -113,6 +117,9 @@ async def async_setup_api(hass: HomeAssistant) -> None:
 
     for ev in REGISTRY_EVENTS:
         hass.data[DOMAIN]["unsubs"].append(hass.bus.async_listen(ev, _changed))
+    hass.data[DOMAIN]["unsubs"].append(calendar.async_stop)
+    # the calendar entities may not exist yet while HA starts: read in the background
+    hass.async_create_background_task(calendar.async_start(), f"{DOMAIN}_calendar")
 
 
 @callback
@@ -139,6 +146,7 @@ def _model(hass: HomeAssistant, panel_id: str | None = None) -> dict[str, Any]:
         "layout": layout,
         "layout_source": source,
         "people": build_people(hass, settings),
+        **({"calendar": cal} if (cal := hass.data[DOMAIN]["calendar"].model()) else {}),
         "version": VERSION,
         "api_version": API_VERSION,
         "min_app_version": MIN_APP_VERSION,
@@ -229,6 +237,13 @@ def ws_subscribe(hass: HomeAssistant, connection: websocket_api.ActiveConnection
                 vol.Optional("hidden"): bool,
             }
         },
+        # module calendar: the family calendar(s), those shown only as "Busy", how many days ahead and the family colour
+        vol.Optional("calendar"): {
+            vol.Optional("entities"): vol.All([vol.Match(r"^calendar\.[a-z0-9_]+$")], vol.Length(max=5)),
+            vol.Optional("private"): [vol.Match(r"^calendar\.[a-z0-9_]+$")],
+            vol.Optional("days"): vol.All(int, vol.Range(min=1, max=62)),
+            vol.Optional("color"): COLOR,
+        },
         vol.Optional("settings_version"): int,
     }
 )
@@ -241,6 +256,29 @@ async def ws_settings(hass: HomeAssistant, connection: websocket_api.ActiveConne
     await data["store"].async_save(data["settings"])
     hass.bus.async_fire(EVENT_UPDATED)
     connection.send_result(msg["id"], data["settings"])
+    if "calendar" in msg or "people" in msg:  # new calendars, or names/aliases that change whose an event is
+        hass.async_create_task(data["calendar"].async_settings_changed())
+
+
+@websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/calendar/assign", vol.Required("titles"): vol.All([str], vol.Length(max=50))})
+@callback
+def ws_calendar_assign(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
+    """Whose an event would be, for the settings' preview of the title rule."""
+    people = build_people(hass, hass.data[DOMAIN]["settings"])
+    out = []
+    for title in msg["titles"]:
+        who, clean = assign(title, people)
+        out.append({"people": who, "title": clean})
+    connection.send_result(msg["id"], out)
+
+
+@websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/calendar/refresh"})
+@websocket_api.async_response
+async def ws_calendar_refresh(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
+    """Reads the calendar again now (settings' "Atualizar")."""
+    cal = hass.data[DOMAIN]["calendar"]
+    await cal.async_refresh()
+    connection.send_result(msg["id"], cal.model())
 
 
 # IPMA (Portuguese weather service): the HA integration exposes only the first warning of an area,

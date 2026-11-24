@@ -3,25 +3,30 @@
 
 import { t } from "./i18n.js";
 import { esc, dom, ACCENTS } from "./const.js";
+import { upcomingCard, faceHtml, agendaView } from "./calendar.js";
 
 const clone = (o) => JSON.parse(JSON.stringify(o));
 
 const FIXED_PAGES = [
   ["home", "mdi:home-outline", "Início"], ["rooms", "mdi:view-grid-outline", "Divisões"], ["house", "mdi:cube-outline", "Casa 3D"],
   ["scenes", "mdi:creation-outline", "Cenas"], ["climate", "mdi:thermometer", "Clima"], ["security", "mdi:shield-outline", "Segurança"],
+  ["calendar", "mdi:calendar-month-outline", "Agenda"],
 ];
-const DOCKABLE = ["home", "rooms", "house", "scenes", "climate", "security"];
+const DOCKABLE = ["home", "rooms", "house", "scenes", "climate", "security", "calendar"];
+const AGENDA_VIEWS = [["day", "Dia"], ["week", "Semana"], ["month", "Mês"]];
 const TEMPLATES = [["top", "Relógio grande"], ["columns", "Duas colunas"], ["sidebar", "Barra lateral"], ["classic", "Clássica"]];
 const SECTIONS = {
   clock: ["mdi:clock-outline", "Relógio e data"], people: ["mdi:account-group-outline", "Pessoas"], status: ["mdi:home-lightbulb-outline", "Estado da casa"],
   weather: ["mdi:weather-partly-cloudy", "Tempo"], scenes: ["mdi:creation-outline", "Cenas"], grid: ["mdi:view-grid-outline", "Grelha de cartões"],
   room_header: ["mdi:format-header-1", "Cabeçalho da divisão"], house3d: ["mdi:cube-outline", "Casa 3D"], scene_list: ["mdi:format-list-bulleted", "Todas as cenas"],
   climate_list: ["mdi:thermometer", "Clima de toda a casa"], security_list: ["mdi:shield-outline", "Portas, janelas e câmaras"],
+  agenda: ["mdi:calendar-month-outline", "Agenda"],
 };
 // module ambient: composed screens ("ambient/<id>" pages with one "ambient" section of 1-3 faces)
 const FACES = {
   clock_analog: ["mdi:clock-outline", "Relógio analógico"], clock_digital: ["mdi:clock-digital", "Relógio digital"], date: ["mdi:calendar-today", "Data"],
   weather: ["mdi:weather-partly-cloudy", "Tempo"], sensor: ["mdi:gauge", "Sensor"], people: ["mdi:account-group-outline", "Pessoas"],
+  next_event: ["mdi:calendar-arrow-right", "Próximo evento"], agenda_today: ["mdi:calendar-today-outline", "Agenda de hoje"],
 };
 const ANALOG_STYLES = [["classic", "Clássico"], ["minimal", "Minimalista"], ["bold", "Forte"]];
 const ambientSec = (page) => page?.sections.find((s) => s.type === "ambient");
@@ -121,6 +126,7 @@ function cardHtml(p, spec, rooms) {
     }
     if (spec.type === "device") return p._s(spec.entity) ? p._tile(spec.entity) : `<div class="tile glass">${placeholder("mdi:help-circle-outline", "Sem estado", spec.entity)}</div>`;
     if (spec.type === "summary") return summaryCard(spec);
+    if (spec.type === "upcoming") return upcomingCard(p, spec).replace(' data-nav="calendar"', "");
   } catch (e) { console.warn("Pine3 Wall editor card", spec, e); }
   return `<div class="tile glass">${placeholder("mdi:puzzle-outline", "Cartão de outro módulo", spec.type)}</div>`;
 }
@@ -163,6 +169,14 @@ function sectionBody(p, page, sec, si, rooms) {
       const note = sec.group === "category" ? `<small class="le-note">${t("No tablet os cartões são agrupados por categoria (luzes, clima…), por esta ordem dentro de cada uma.")}</small>` : "";
       return `${note}<div class="${cls}">${cards || `<small>${t("Grelha vazia: acrescenta cartões à direita.")}</small>`}</div>`;
     }
+    case "agenda": {
+      // the real agenda, opened on the view chosen for this page
+      const keep = [p._calView, p._calDay, p._calEv];
+      p._calView = sec.view || "day"; p._calDay = null; p._calEv = null;
+      const html = agendaView(p).replace(/data-cal(view|step|day|ev|settings)=/g, "data-x$1=");
+      [p._calView, p._calDay, p._calEv] = keep;
+      return `<div class="le-agenda">${html}</div>`;
+    }
     default: {
       const [icon, label] = SECTIONS[sec.type] || ["mdi:puzzle-outline", sec.type];
       return placeholder(icon, label, t("Desenhado no tablet"));
@@ -195,6 +209,9 @@ function ambientPreview(p, sec) {
         const s = f.entity && p._s(f.entity);
         return `<div class="le-at" style="color:${fg}">${s ? esc(s.state + (s.attributes.unit_of_measurement ? " " + s.attributes.unit_of_measurement : "")) : "–"}</div><small style="color:${acc}">${esc(f.label || (f.entity ? p._name(f.entity) : t("Escolhe um sensor")))}</small>`;
       }
+      case "next_event":
+      case "agenda_today":
+        return faceHtml(p, f.type, fg, dim, acc);
       case "people":
         return `<div class="people">${(p._model?.people || []).filter((x) => !x.hidden).map((x) => `<div class="av" style="background-color:${night ? fg : x.color};opacity:${p._s(x.id)?.state === "home" ? 1 : 0.35}">${esc((x.alias || "?")[0])}</div>`).join("")}</div>`;
       default:
@@ -280,11 +297,15 @@ function addPanel(p, rooms) {
     const vacs = Object.keys(p._hass.states).filter((i) => dom(i) === "vacuum");
     const sumOpts = [...["climate", "security", "media"].filter((k) => !inGrid.has(`summary:${k}`)).map((k) => `<option value="summary:${k}">${esc(t(SUMMARIES[k][1]))}</option>`),
       ...vacs.map((v) => `<option value="summary:vacuum:${esc(v)}">${esc(t("Aspirador"))}: ${esc(p._name(v))}</option>`)].join("");
-    cardOpts = `<option value="">${t("Escolher…")}</option>${roomOpts ? `<optgroup label="${t("Divisões")}">${roomOpts}</optgroup>` : ""}${devOpts}${sumOpts ? `<optgroup label="${t("Resumos")}">${sumOpts}</optgroup>` : ""}`;
+    const fam = (p._model?.people || []).filter((x) => !x.hidden);
+    const calOpts = [`<option value="upcoming:">${esc(t("Próximos eventos"))}</option>`,
+      ...fam.map((x) => `<option value="upcoming:${esc(x.id)}">${esc(t("Próximos: {n}", { n: x.alias }))}</option>`)].join("");
+    cardOpts = `<option value="">${t("Escolher…")}</option>${roomOpts ? `<optgroup label="${t("Divisões")}">${roomOpts}</optgroup>` : ""}${devOpts}${sumOpts ? `<optgroup label="${t("Resumos")}">${sumOpts}</optgroup>` : ""}<optgroup label="${t("Calendário")}">${calOpts}</optgroup>`;
   }
   return `<div class="panel glass le-add"><h3 style="margin-top:0">${t("Acrescentar")}</h3>
     <label>${t("Secção")}</label><select data-le-addsec><option value="">${t("Escolher…")}</option>${secOpts}</select>
     ${grid ? `<label>${t("Cartão na grelha")}${le.sel ? "" : ` <small>(${t("a primeira")})</small>`}</label><select data-le-addcard>${cardOpts}</select>` : `<p>${t("Acrescenta uma grelha para poder pôr cartões.")}</p>`}
+    ${page.sections.some((s) => s.type === "agenda") ? `<label>${t("A agenda abre em")}</label><select data-le-calview>${AGENDA_VIEWS.map(([k, l]) => `<option value="${k}" ${(page.sections.find((s) => s.type === "agenda").view || "day") === k ? "selected" : ""}>${esc(t(l))}</option>`).join("")}</select>` : ""}
     ${le.page === "home" ? `<label>${t("Disposição do início")}</label><select data-le-template>${TEMPLATES.map(([k, l]) => `<option value="${k}" ${page.template === k ? "selected" : ""}>${esc(t(l))}</option>`).join("")}</select>` : ""}
   </div>`;
 }
@@ -487,7 +508,8 @@ export function bindEditor(p) {
     if (!grid) return;
     // values: "room:<id>", "device:<entity>", "summary:<kind>" or "summary:vacuum:<entity>"
     const kind = v.slice(0, v.indexOf(":")), rest = v.slice(v.indexOf(":") + 1);
-    const card = kind === "room" ? { type: "room", room: rest, size: "normal" }
+    const card = kind === "upcoming" ? { type: "upcoming", size: "normal", ...(rest ? { person: rest } : {}) }
+      : kind === "room" ? { type: "room", room: rest, size: "normal" }
       : kind === "device" ? { type: "device", entity: rest, size: "normal" }
       : rest.startsWith("vacuum:") ? { type: "summary", summary: "vacuum", entity: rest.slice(7) } : { type: "summary", summary: rest };
     (grid.cards ||= []).push(card); changed(p);
@@ -509,6 +531,7 @@ export function bindEditor(p) {
     [fs[i], fs[j]] = [fs[j], fs[i]]; changed(p);
   });
   on("[data-le-fdel]", (el) => { amb().faces.splice(Number(el.dataset.leFdel), 1); changed(p); });
+  on("[data-le-calview]", (el) => { const s = page().sections.find((x) => x.type === "agenda"); if (s) { s.view = el.value; changed(p); } }, "change");
   on("[data-le-fadd]", (el) => { if (!el.value) return; const s = amb(); (s.faces ||= []).push({ type: el.value }); s.faces = s.faces.slice(0, 3); changed(p); }, "change");
   on("[data-le-acolor]", (el) => { amb().color = el.dataset.leAcolor; changed(p); });
   on("[data-le-anight]", () => { const s = amb(); s.night = !s.night; changed(p); });

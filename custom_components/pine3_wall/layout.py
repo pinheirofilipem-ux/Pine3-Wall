@@ -11,7 +11,7 @@ from typing import Any
 
 LAYOUT_SCHEMA_VERSION = 1
 SUMMARY_CARDS = ("climate", "security", "vacuum", "media")
-DOCK_ITEMS = ("home", "rooms", "house", "scenes", "climate", "security")
+DOCK_ITEMS = ("home", "rooms", "house", "scenes", "climate", "security", "calendar")
 
 
 def _visible_devices(home: dict[str, Any]) -> list[dict[str, Any]]:
@@ -86,6 +86,8 @@ def build_layout(home: dict[str, Any], settings: dict[str, Any]) -> dict[str, An
         "scenes": {"sections": [{"type": "scene_list"}]},
         "climate": {"sections": [{"type": "climate_list"}]},
         "security": {"sections": [{"type": "security_list"}]},
+        # module calendar: the family agenda (Today by person, Week, Month)
+        "calendar": {"title": "Agenda", "sections": [{"type": "agenda", "view": "day"}]},
     }
     for room in home["rooms"]:
         pages[f"room/{room['id']}"] = _room_page(room, settings)
