@@ -1584,6 +1584,14 @@ class Pine3WallPanel extends HTMLElement {
     const refocus = this._entFocus;
     // keep scroll positions of inner scrollers across the redraw
     const root = this.shadowRoot;
+    // the field being typed in (a new chore, a name, a calendar title…) keeps its text, cursor and focus: the panel
+    // redraws on every state change in Home Assistant, which would otherwise wipe it while typing
+    const act = root.activeElement;
+    let typing = null;
+    if (act && (act.tagName === "INPUT" || act.tagName === "TEXTAREA") && !act.hasAttribute("data-entq")) {
+      const at = [...act.attributes].find((x) => x.name.startsWith("data-"));
+      if (at) typing = { sel: `[${at.name}="${CSS.escape(at.value)}"]`, value: act.value, start: act.selectionStart, end: act.selectionEnd };
+    }
     const scrolls = [".sheet", ".sh-main", ".sh-side", ".scenes", ".fhs", ".set-nav"].map((sel) => [sel, [...root.querySelectorAll(sel)].map((e) => [e.scrollTop, e.scrollLeft])]);
     if (!this._modal && !this._saver) this._ovShown = null;
     this._collectWatch(rooms);
@@ -1628,6 +1636,10 @@ class Pine3WallPanel extends HTMLElement {
     if (this._view === "settings") this._bindSettings();
     else if (this._view === "layout") bindEditor(this);
     else this._bind(rooms);
+    if (typing) {
+      const f = root.querySelector(typing.sel);
+      if (f) { f.value = typing.value; f.focus(); try { f.setSelectionRange(typing.start, typing.end); } catch { /* not a text field */ } }
+    }
     if (refocus) {
       const q = this.shadowRoot.querySelector("[data-entq]");
       if (q) { q.focus(); q.setSelectionRange(q.value.length, q.value.length); this._entFocus = true; }
