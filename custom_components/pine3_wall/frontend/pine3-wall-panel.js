@@ -11,6 +11,7 @@ import { Weather } from "./weather.js";
 import { toLight, currentTheme, isLight } from "./theme.js";
 import { houseView, bindHouse, css3d } from "./house3d.js";
 import { planView, bindPlan, cssPlan } from "./plan2d.js";
+import { openEditor, editorView, bindEditor, cssEditor } from "./editor.js";
 
 // the version of this file, from its URL (/pine3_wall/<version>/…): differs from the integration's when the browser kept an old copy
 const FRONT_VERSION = (import.meta.url.match(/\/(\d+\.\d+\.\d+)\//) || [])[1] || null;
@@ -305,7 +306,7 @@ class Pine3WallPanel extends HTMLElement {
   _call(d, svc, data) { return this._hass.callService(d, svc, data); }
   /** Dock buttons: rebuilt only when the items or the language change; otherwise just the active one moves. */
   _updateDock(cfg) {
-    const nav = this._dockEl, show = this._view !== "settings" && !this._edit;
+    const nav = this._dockEl, show = this._view !== "settings" && this._view !== "layout" && !this._edit;
     const items = DOCK_ITEMS.filter(([k]) => k === "home" || cfg.dock.includes(k));
     const key = items.map(([k]) => k).join() + lang();
     if (nav._key !== key) {
@@ -994,7 +995,7 @@ class Pine3WallPanel extends HTMLElement {
     const navItems = [
       ["look", "mdi:palette-outline", t("Aparência")], ["home", "mdi:home-outline", t("Início")], ["people", "mdi:account-group-outline", t("Pessoas")], ["rooms", "mdi:view-grid-outline", t("Divisões")],
       ["entities", "mdi:format-list-checks", t("Entidades")], ["plan", "mdi:floor-plan", t("Planta 3D")],
-      ["nav", "mdi:dock-bottom", t("Navegação")], ["system", "mdi:cog-outline", t("Sistema")],
+      ["nav", "mdi:dock-bottom", t("Navegação")], ["layout", "mdi:view-dashboard-edit-outline", t("Layout")], ["system", "mdi:cog-outline", t("Sistema")],
     ];
     let main = "";
     if (sec === "look") {
@@ -1084,6 +1085,13 @@ class Pine3WallPanel extends HTMLElement {
       main = this._entitiesSection(d);
     } else if (sec === "plan") {
       main = planView(this, d, this._planRooms());
+    } else if (sec === "layout") {
+      const src = this._model?.layout_source;
+      main = `<div class="panel glass"><h3 style="margin-top:0">${t("Layout dos tablets")}</h3>
+        <p>${t("O que cada ecrã do tablet mostra: páginas, secções, cartões, tamanhos e a dock. Sem layout publicado, é feito automaticamente a partir destas definições.")}</p>
+        <p><b>${src === "published" ? t("Os tablets mostram o layout publicado no editor.") : src === "preview" ? t("Os tablets estão a mostrar o rascunho do editor.") : t("Os tablets mostram o layout automático.")}</b>
+        ${src && src !== "auto" ? `<br><small>${t("Com um layout publicado, a ordem, os escondidos e o tamanho duplo das divisões e dos cartões vêm dele (o modo de edição do tablet grava nele). Divisões, Início e Navegação aqui só mudam o layout automático.")}</small>` : ""}</p>
+        <button class="pill solid" data-openeditor><ha-icon icon="mdi:view-dashboard-edit-outline"></ha-icon>${t("Abrir o editor")}</button></div>`;
     } else if (sec === "nav") {
       main = `<div class="panel glass"><h3 style="margin-top:0">${t("Dock")}</h3><p>${t("Botões da barra de navegação. A Casa está sempre presente.")}</p><div class="opts">
         ${DOCK_ITEMS.filter(([k]) => k !== "home").map(([k, , label, sub]) => this._toggle("dock:" + k, d.dock.includes(k), t(label), t(sub))).join("")}
@@ -1233,6 +1241,7 @@ class Pine3WallPanel extends HTMLElement {
       if (v) p.alias = v; else delete p.alias;
       upd();
     }));
+    on("[data-openeditor]", () => { this._draft = null; openEditor(this); });
     on("[data-unhide]", (el) => { d.hidden = d.hidden.filter((x) => x !== el.dataset.unhide); upd(); });
     on("[data-reset]", () => { const keepLang = d.language; Object.assign(d, clone(DEFAULTS)); d.language = keepLang; d.room_order = (this._model?.rooms || []).map((r) => r.id); upd(); });
     on("[data-rebuild]", async () => { if (this._model) { this._model = await this._hass.callWS({ type: "pine3_wall/home" }); this._toast = t("Casa reconstruída"); upd(); setTimeout(() => { this._toast = null; upd(); }, 1500); } });
@@ -1380,6 +1389,7 @@ class Pine3WallPanel extends HTMLElement {
     if (this._pop && this._popAnchor === this._moreEl) return this._closePop();
     const items = [];
     if (["home", "rooms", "room"].includes(this._view)) items.push(["mdi:pencil-outline", t("Editar ecrã"), () => this._startEdit()]);
+    items.push(["mdi:view-dashboard-edit-outline", t("Editor de layout"), () => openEditor(this)]);
     items.push(["mdi:cog-outline", t("Definições"), () => this._openSettings()]);
     this._popMenu(this._moreEl, "", items);
   }
@@ -1485,6 +1495,7 @@ class Pine3WallPanel extends HTMLElement {
     this.setAttribute("lang", lang());
     let body;
     if (this._view === "settings" && this._draft) body = this._settingsView();
+    else if (this._view === "layout") body = editorView(this);
     else if (this._view === "room") body = this._roomView(room);
     else if (this._view === "scenes") body = this._scenesView(rooms);
     else if (this._view === "rooms") body = this._roomsView(rooms);
@@ -1528,7 +1539,7 @@ class Pine3WallPanel extends HTMLElement {
     const light = isLight(themeKey);
     this.classList.toggle("light", light);
     if (this._styleLight !== light) {
-      const all = `${css}${css3d}${cssPlan}`;
+      const all = `${css}${css3d}${cssPlan}${cssEditor}`;
       this._styleEl.textContent = light ? (this._lightCss ||= toLight(all)) : all;
       this._styleLight = light;
     }
@@ -1538,13 +1549,14 @@ class Pine3WallPanel extends HTMLElement {
       <div class="wrap ${vin} ${this._view === "room" ? "roomv" : ""} ${cfg.layout === "list" ? "as-list" : ""} ${this._edit ? "editing" : ""}">${header}${body}</div>${editBar}${this._saver ? this._saverView(rooms) : this._modalView()}`;
     for (const [sel, pos] of scrolls) root.querySelectorAll(sel).forEach((e, k) => { if (pos[k]) { e.scrollTop = pos[k][0]; e.scrollLeft = pos[k][1]; } });
     this._updateDock(cfg);
-    this._moreEl.hidden = this._view === "settings" || !!this._edit;
+    this._moreEl.hidden = this._view === "settings" || this._view === "layout" || !!this._edit;
     this._moreEl.title = t("Menu");
     this._packSections();
     this._fitRows();
     this._fitDays();
     this._fillHome();
     if (this._view === "settings") this._bindSettings();
+    else if (this._view === "layout") bindEditor(this);
     else this._bind(rooms);
     if (refocus) {
       const q = this.shadowRoot.querySelector("[data-entq]");

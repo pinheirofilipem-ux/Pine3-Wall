@@ -16,7 +16,8 @@ from homeassistant.helpers.storage import Store
 
 from .const import API_VERSION, DOMAIN, EVENT_UPDATED, MIN_APP_VERSION, VERSION
 from .discovery import build_home
-from .layout import DOCK_ITEMS, build_layout
+from .layout import DOCK_ITEMS
+from .layout_store import LayoutStore, validate_doc
 from .people import build_people
 
 STORAGE_KEY = f"{DOMAIN}.settings"
@@ -79,12 +80,16 @@ async def async_setup_api(hass: HomeAssistant) -> None:
             settings["dock"] = [d for d in DOCK_ITEMS if d in settings["dock"] or d == "house"]
         settings["settings_version"] = 2
         await store.async_save(settings)
-    hass.data[DOMAIN] = {"store": store, "settings": settings, "unsubs": []}
+    layouts = LayoutStore(hass)
+    await layouts.async_load()
+    hass.data[DOMAIN] = {"store": store, "settings": settings, "layouts": layouts, "unsubs": []}
 
     websocket_api.async_register_command(hass, ws_home)
     websocket_api.async_register_command(hass, ws_settings)
     websocket_api.async_register_command(hass, ws_subscribe)
     websocket_api.async_register_command(hass, ws_ipma_warnings)
+    for cmd in (ws_layout_get, ws_layout_save_draft, ws_layout_discard, ws_layout_publish, ws_layout_reset, ws_layout_restore, ws_layout_preview, ws_layout_edit):
+        websocket_api.async_register_command(hass, cmd)
 
     pending: list = []
 
@@ -119,9 +124,11 @@ def ws_home(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg
 def _model(hass: HomeAssistant) -> dict[str, Any]:
     settings = hass.data[DOMAIN]["settings"]
     home = build_home(hass, settings)
+    layout, source = hass.data[DOMAIN]["layouts"].active(home, settings)
     return {
         **home,
-        "layout": build_layout(home, settings),
+        "layout": layout,
+        "layout_source": source,
         "people": build_people(hass, settings),
         "version": VERSION,
         "api_version": API_VERSION,
@@ -256,3 +263,114 @@ async def ws_ipma_warnings(hass: HomeAssistant, connection: websocket_api.Active
         if isinstance(w, dict) and w.get("idAreaAviso") == msg["area"] and w.get("awarenessLevelID") not in (None, "green")
     ]
     connection.send_result(msg["id"], {"warnings": warnings})
+
+
+# ---------------------------------------------------------------- layouts (web editor)
+
+
+def _home_now(hass: HomeAssistant) -> tuple[dict[str, Any], dict[str, Any]]:
+    settings = hass.data[DOMAIN]["settings"]
+    return build_home(hass, settings), settings
+
+
+def _layout_summary(hass: HomeAssistant) -> dict[str, Any]:
+    home, settings = _home_now(hass)
+    return hass.data[DOMAIN]["layouts"].summary(home, settings)
+
+
+async def _layout_changed(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict, notify: bool = True) -> None:
+    await hass.data[DOMAIN]["layouts"].async_save()
+    if notify:
+        hass.bus.async_fire(EVENT_UPDATED)  # the tablets redraw with the new layout
+    connection.send_result(msg["id"], _layout_summary(hass))
+
+
+def _doc(value: Any) -> dict[str, Any]:
+    return validate_doc(value)
+
+
+@websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/layout/get"})
+@callback
+def ws_layout_get(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
+    """Draft, published and automatic layouts, history and preview state."""
+    connection.send_result(msg["id"], _layout_summary(hass))
+
+
+@websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/layout/save_draft", vol.Required("layout"): _doc})
+@websocket_api.async_response
+async def ws_layout_save_draft(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
+    layouts = hass.data[DOMAIN]["layouts"]
+    home, _ = _home_now(hass)
+    layouts.save_draft(msg["layout"], home)
+    # with the preview on, the tablets show the draft as it is edited
+    await _layout_changed(hass, connection, msg, notify=bool(layouts.data.get("preview")))
+
+
+@websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/layout/discard_draft"})
+@websocket_api.async_response
+async def ws_layout_discard(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
+    hass.data[DOMAIN]["layouts"].discard_draft()
+    await _layout_changed(hass, connection, msg)
+
+
+@websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/layout/publish", vol.Optional("layout"): _doc})
+@websocket_api.async_response
+async def ws_layout_publish(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
+    home, _ = _home_now(hass)
+    try:
+        hass.data[DOMAIN]["layouts"].publish(msg.get("layout"), home)
+    except vol.Invalid as err:
+        connection.send_error(msg["id"], "invalid", str(err))
+        return
+    await _layout_changed(hass, connection, msg)
+
+
+@websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/layout/reset"})
+@websocket_api.async_response
+async def ws_layout_reset(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
+    """Back to the automatic layout."""
+    hass.data[DOMAIN]["layouts"].reset()
+    await _layout_changed(hass, connection, msg)
+
+
+@websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/layout/restore", vol.Required("index"): vol.All(int, vol.Range(min=0))})
+@websocket_api.async_response
+async def ws_layout_restore(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
+    """A layout from the history becomes the draft."""
+    layouts = hass.data[DOMAIN]["layouts"]
+    try:
+        layouts.restore(msg["index"])
+    except vol.Invalid as err:
+        connection.send_error(msg["id"], "not_found", str(err))
+        return
+    await _layout_changed(hass, connection, msg, notify=bool(layouts.data.get("preview")))
+
+
+@websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/layout/preview", vol.Required("on"): bool})
+@websocket_api.async_response
+async def ws_layout_preview(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
+    """Show the draft on the tablets while it is edited (without publishing it)."""
+    hass.data[DOMAIN]["layouts"].data["preview"] = msg["on"]
+    await _layout_changed(hass, connection, msg)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): f"{DOMAIN}/layout/edit",
+        vol.Optional("room_order"): [str],
+        vol.Optional("hidden_rooms"): [str],
+        vol.Optional("big_rooms"): [str],
+        vol.Optional("hidden"): [str],
+        vol.Optional("big_devices"): [str],
+        vol.Optional("device_order"): {str: [str]},
+    }
+)
+@websocket_api.async_response
+async def ws_layout_edit(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
+    """The app's edit mode when a layout is published: order, hidden and double size go into that layout."""
+    home, settings = _home_now(hass)
+    edit = {k: msg[k] for k in ("room_order", "hidden_rooms", "big_rooms", "hidden", "big_devices", "device_order") if k in msg}
+    if not hass.data[DOMAIN]["layouts"].edit(home, settings, edit):
+        connection.send_error(msg["id"], "not_published", "the layout is the automatic one: edit the settings")
+        return
+    await _layout_changed(hass, connection, msg)

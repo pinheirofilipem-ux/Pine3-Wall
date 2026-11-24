@@ -79,4 +79,38 @@ class LayoutTest {
         assertFalse(Lay.useLayout)
         Lay.awaitingLayout = false
     }
+
+    /** Um layout publicado: a Sala grande à frente, a Cozinha escondida, uma lâmpada fora da página da Sala. */
+    private fun customHome(): Home {
+        val o = json("schema/examples/home.json")
+        val l = o.getJSONObject("layout").put("generated", false)
+        val grid = l.getJSONObject("pages").getJSONObject("home").getJSONArray("sections").let { a -> (0 until a.length()).map { a.getJSONObject(it) }.first { it.getString("type") == "grid" } }
+        val cards = org.json.JSONArray()
+        cards.put(JSONObject().put("type", "room").put("room", "sala").put("size", "big"))
+        cards.put(JSONObject().put("type", "summary").put("summary", "climate"))
+        grid.put("cards", cards)
+        o.put("layout_source", "published")
+        return Home.parse(o)
+    }
+
+    @Test fun editModeStartsFromAPublishedLayout() {
+        val h = customHome()
+        assertEquals("published", h.layoutSource)
+        val e = Lay.fromLayout(h, h.layout!!)
+        assertTrue(e.custom)
+        assertEquals(listOf("sala", "@climate"), e.roomOrder.take(2))
+        assertTrue("cozinha" in e.hiddenRooms && "sala" !in e.hiddenRooms)
+        assertEquals(listOf("sala"), e.bigRooms)
+        val sala = h.rooms.first { it.id == "sala" }
+        assertEquals(sala.devices.filter { !it.hidden }.map { it.id }.toSet(), e.deviceOrder["sala"]!!.toSet())
+    }
+
+    @Test fun automaticLayoutEditsTheSettings() {
+        Lay.begin(home)
+        assertFalse(Lay.edit!!.custom)
+        Lay.edit = null
+        Lay.begin(customHome())
+        assertTrue(Lay.edit!!.custom)
+        Lay.edit = null
+    }
 }

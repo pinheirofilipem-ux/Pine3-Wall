@@ -19,9 +19,16 @@ vive aqui. Os testes dos dois lados leem estes ficheiros, por isso uma alteraç�
   ela, a app mostra o que atualizar em vez de desenhar uma casa errada. O teste de ligação também o indica.
 
 ## Layout
-Por agora o layout é **gerado** pelas definições (`custom_components/pine3_wall/layout.py`, `"generated": true`): descreve exatamente o
-que a app e o painel já desenham (disposição do início, dock, ordem e tamanho das divisões e dos cartões, escondidos). O editor web
-(Fase 3) vai guardar layouts editados com o mesmo formato. Um tipo de secção ou cartão novo entra primeiro no `catalog.json`.
+O layout que os tablets desenham vem de um de três sítios (campo `layout_source` do modelo):
+- **`auto`**: gerado pelas definições (`custom_components/pine3_wall/layout.py`, `"generated": true`), como sempre;
+- **`published`**: publicado no **editor de layout** do painel web (`layout_store.py`). Fica a par da casa: divisões e dispositivos que
+  deixam de existir saem, os novos entram no fim das grelhas (o layout guarda em `known` o que já conhecia, para o que se tirou de
+  propósito não voltar). O modo de edição da app grava nele (`pine3_wall/layout/edit`) sem mexer nas definições;
+- **`preview`**: o rascunho do editor, mostrado nos tablets enquanto se edita (interruptor "Rascunho nos tablets").
+
+Comandos do editor: `pine3_wall/layout/get`, `save_draft`, `discard_draft`, `publish`, `reset` (voltar ao automático), `restore`
+(do histórico, as últimas 10 publicações), `preview` e `edit`. Os layouts são validados (forma e tamanho) antes de serem guardados.
+Um tipo de secção ou cartão novo entra primeiro no `catalog.json`.
 
 ## Alterar
 - **Modelo da casa**: muda `discovery.py`/`websocket.py`, atualiza `home.schema.json` e regenera o exemplo:

@@ -4,57 +4,157 @@
   "title": "Pine3 Wall layout",
   "description": "What each screen shows, in which order and size. Sent as 'layout' in the home model. Section and card types come from schema/catalog.json; renderers must tolerate types they don't know.",
   "type": "object",
-  "required": ["schema_version", "generated", "options", "dock", "pages"],
+  "required": [
+    "schema_version",
+    "generated",
+    "options",
+    "dock",
+    "pages"
+  ],
   "properties": {
-    "schema_version": {"const": 1},
-    "generated": {"type": "boolean", "description": "true: built automatically from the settings; false: edited in the web editor."},
+    "schema_version": {
+      "const": 1
+    },
+    "generated": {
+      "type": "boolean",
+      "description": "true: built automatically from the settings; false: edited in the web editor."
+    },
     "options": {
       "type": "object",
-      "required": ["display", "clock_24h", "animations"],
+      "required": [
+        "display",
+        "clock_24h",
+        "animations"
+      ],
       "properties": {
-        "display": {"enum": ["grid", "list"]},
-        "clock_24h": {"type": "boolean"},
-        "animations": {"type": "boolean"}
+        "display": {
+          "enum": [
+            "grid",
+            "list"
+          ]
+        },
+        "clock_24h": {
+          "type": "boolean"
+        },
+        "animations": {
+          "type": "boolean"
+        }
       }
     },
-    "dock": {"type": "array", "minItems": 1, "items": {"type": "string"}, "description": "Page keys shown in the dock, in order."},
+    "dock": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      },
+      "description": "Page keys shown in the dock, in order."
+    },
     "pages": {
       "type": "object",
       "description": "Page key -> page. Fixed keys (home, rooms, house, scenes, climate, security) and one 'room/<room id>' per room.",
-      "required": ["home"],
-      "additionalProperties": {"$ref": "#/$defs/page"}
+      "required": [
+        "home"
+      ],
+      "additionalProperties": {
+        "$ref": "#/$defs/page"
+      }
+    },
+    "known": {
+      "type": "object",
+      "description": "Rooms and devices that existed when the layout was published (new ones are added automatically).",
+      "properties": {
+        "rooms": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "devices": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
     }
   },
   "$defs": {
     "page": {
       "type": "object",
-      "required": ["sections"],
+      "required": [
+        "sections"
+      ],
       "properties": {
-        "template": {"type": "string", "description": "How the sections are arranged (module catalog 'templates')."},
-        "room": {"type": "string"},
-        "sections": {"type": "array", "items": {"$ref": "#/$defs/section"}}
+        "template": {
+          "type": "string",
+          "description": "How the sections are arranged (module catalog 'templates')."
+        },
+        "room": {
+          "type": "string"
+        },
+        "sections": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/section"
+          }
+        }
       }
     },
     "section": {
       "type": "object",
-      "required": ["type"],
+      "required": [
+        "type"
+      ],
       "properties": {
-        "type": {"type": "string"},
-        "items": {"type": "array", "items": {"type": "string"}},
-        "room": {"type": "string"},
-        "group": {"enum": ["category"]},
-        "cards": {"type": "array", "items": {"$ref": "#/$defs/card"}}
+        "type": {
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "room": {
+          "type": "string"
+        },
+        "group": {
+          "enum": [
+            "category"
+          ]
+        },
+        "cards": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/card"
+          }
+        }
       }
     },
     "card": {
       "type": "object",
-      "required": ["type"],
+      "required": [
+        "type"
+      ],
       "properties": {
-        "type": {"type": "string"},
-        "size": {"enum": ["normal", "big"]},
-        "room": {"type": "string"},
-        "entity": {"type": "string"},
-        "summary": {"type": "string"}
+        "type": {
+          "type": "string"
+        },
+        "size": {
+          "enum": [
+            "normal",
+            "big"
+          ]
+        },
+        "room": {
+          "type": "string"
+        },
+        "entity": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "string"
+        }
       }
     }
   }

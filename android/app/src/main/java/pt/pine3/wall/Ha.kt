@@ -332,6 +332,7 @@ object Ha {
         try {
             home = Home.parse(o)
             Lay.awaitingLayout = false
+            Lay.pending = null
             Fmt.names = home!!.rooms.flatMap { it.devices }.associate { it.id to it.name }
             log("Modelo da casa: ${home?.rooms?.size ?: 0} divisões")
             homeError = null
