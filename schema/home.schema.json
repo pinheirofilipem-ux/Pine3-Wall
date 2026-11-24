@@ -67,6 +67,14 @@
         "$ref": "#/$defs/person"
       },
       "description": "The family (person.*), sorted by name, with colour, alias and picture (settings 'people')."
+    },
+    "layout_source": {
+      "enum": [
+        "auto",
+        "published",
+        "preview"
+      ],
+      "description": "Where the layout comes from: automatic (settings), published in the web editor, or the draft shown as a preview."
     }
   },
   "$defs": {

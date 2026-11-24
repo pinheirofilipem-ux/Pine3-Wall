@@ -46,6 +46,8 @@ class MainActivity : Activity(), Nav {
     private var animationsOn = true
     private lateinit var blackout: View
     private lateinit var banner: TextView
+    /** "Pré-visualização do rascunho": o tablet está a mostrar o rascunho do editor web, ainda não publicado. */
+    private lateinit var previewBadge: TextView
     private val handler = Handler(Looper.getMainLooper())
 
     private var page: Page? = null
@@ -182,6 +184,12 @@ class MainActivity : Activity(), Nav {
             visibility = View.GONE
         }
         root.addView(banner, FrameLayout.LayoutParams(-2, -2, Gravity.TOP or Gravity.CENTER_HORIZONTAL).apply { topMargin = kit.dp(10) })
+        previewBadge = kit.text(Tr.s("Pré-visualização do rascunho", "Draft preview"), 13f, Color.WHITE, 600).apply {
+            background = kit.rounded(Color.argb(200, 40, 90, 200), 20)
+            setPadding(kit.dp(14), kit.dp(6), kit.dp(14), kit.dp(6))
+            visibility = View.GONE
+        }
+        root.addView(previewBadge, FrameLayout.LayoutParams(-2, -2, Gravity.TOP or Gravity.START).apply { topMargin = kit.dp(16); leftMargin = kit.dp(18) })
 
         gear = kit.roundButton("mdi:dots-vertical", 44, kit.soft, kit.fg) { showMenu() }
         root.addView(gear, FrameLayout.LayoutParams(kit.dp(44), kit.dp(44), Gravity.TOP or Gravity.END).apply { topMargin = kit.dp(16); rightMargin = kit.dp(18) })
@@ -315,7 +323,9 @@ class MainActivity : Activity(), Nav {
             shownHome = null; shownKey = ""
             return
         }
-        val anim = home.settings.optBoolean("animations", true)
+        previewBadge.visibility = if (home.layoutSource == "preview") View.VISIBLE else View.GONE
+        previewBadge.text = Tr.s("Pré-visualização do rascunho", "Draft preview")
+        val anim = home.layout?.animations ?: home.settings.optBoolean("animations", true)
         Elastic.on = anim
         if (anim != animationsOn) { animationsOn = anim; buildDock() }
         kit.cream = home.color("card_color", kit.cream)
@@ -323,7 +333,7 @@ class MainActivity : Activity(), Nav {
         if (applyLook(home)) { shownKey = "" }
         if (dockKeysSig != dockKeys().joinToString()) { dockKeysSig = dockKeys().joinToString(); buildDock() }
         val room = roomId?.let { id -> home.rooms.firstOrNull { it.id == id } }
-        kit.list = home.settings.optString("layout", "grid") == "list"
+        kit.list = (home.layout?.display ?: home.settings.optString("layout", "grid")) == "list"
         val key = (if (Lay.edit != null) "edit${Lay.version}:" else "") + if (room != null) "room:${room.id}" else "tab:$tab:" + home.settings.optString("home_layout") + home.settings.optString("layout") + home.settings.optString("dock") + home.settings.optBoolean("home_people") + home.settings.optBoolean("show_summary", true) + home.settings.optBoolean("show_status", true) + home.settings.optBoolean("show_scenes", true) + home.settings.optBoolean("show_weather", true) + home.settings.optBoolean("clock_24h", true)
         if (shownHome === home && shownKey == key && page != null) { page?.update(); return }
         val p: Page = when {

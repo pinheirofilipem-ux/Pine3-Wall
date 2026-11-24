@@ -28,6 +28,8 @@ class Home(
     val layout: LayoutDoc? = null,
     /** A família (definições > Pessoas); vazia numa integração anterior à 0.6.0. */
     val people: List<Person> = emptyList(),
+    /** De onde vem o layout: "auto" (definições), "published" (editor web) ou "preview" (o rascunho em pré-visualização). */
+    val layoutSource: String = "auto",
 ) {
     fun color(key: String, fallback: Int): Int = try {
         android.graphics.Color.parseColor(settings.optString(key, "").ifBlank { return fallback })
@@ -82,6 +84,7 @@ class Home(
                 minAppVersion = o.optString("min_app_version", "").ifBlank { null },
                 version = o.optString("version", "").ifBlank { null },
                 layout = o.optJSONObject("layout")?.let { LayoutDoc.parse(it) },
+                layoutSource = o.optString("layout_source", "auto"),
                 people = o.optJSONArray("people")?.let { a ->
                     (0 until a.length()).mapNotNull { a.optJSONObject(it) }.map { p ->
                         Person(p.optString("id"), p.optString("name"), p.optString("alias").ifBlank { p.optString("name") },

@@ -323,7 +323,12 @@ class HomePage(kit: Kit, private val home: Home, private val nav: Nav) : Page(ki
         val order = Lay.roomOrder(home)
         val items = ArrayList<Pair<String, Card>>()
         Lay.rooms(home).forEach { r -> items += r.id to RoomCard(kit, r, dense) { nav.openRoom(r) }.also { c -> c.key = r.id; c.setupEdit(kit, "room", r.id, Lay.isBigRoom(home, r.id)) } }
-        if (s.optBoolean("show_summary", true)) {
+        // Com um layout publicado, os cartões de resumo são os que ele tem; com o automático, os das definições.
+        val customSummaries = if (home.layout?.generated == false) page?.section("grid")?.cards?.filter { it.type == "summary" } else null
+        if (customSummaries != null) {
+            val ctx = CardContext(kit, home, nav, dense)
+            customSummaries.forEach { spec -> ModuleRegistry.card(ctx, spec)?.let { items += spec.key to it } }
+        } else if (s.optBoolean("show_summary", true)) {
             items += "@climate" to SummaryCard(kit, "climate", null, home, nav, dense)
             items += "@security" to SummaryCard(kit, "security", null, home, nav, dense)
             devices(home).filter { it.kind == "vacuum" }.forEach { items += "@vacuum:${it.id}" to SummaryCard(kit, "vacuum", it.id, home, nav, dense) }
