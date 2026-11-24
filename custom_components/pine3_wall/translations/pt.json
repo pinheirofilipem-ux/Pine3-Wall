@@ -44,6 +44,10 @@
       "name": "Acordar o tablet",
       "description": "Liga o ecrã e mantém-no ligado.",
       "fields": {
+        "device_id": {
+          "name": "Tablets",
+          "description": "Os tablets (nenhum: todos os tablets ligados)."
+        },
         "seconds": {
           "name": "Segundos",
           "description": "Quanto tempo o ecrã fica ligado."
@@ -54,9 +58,13 @@
       "name": "Mostrar uma página",
       "description": "Abre uma página no tablet.",
       "fields": {
+        "device_id": {
+          "name": "Tablets",
+          "description": "Os tablets (nenhum: todos os tablets ligados)."
+        },
         "page": {
           "name": "Página",
-          "description": "home, rooms, house, scenes, climate, security ou room/<id da divisão>."
+          "description": "home, rooms, house, scenes, climate, security, ou room/ seguido do id da divisão (ex.: room/sala)."
         }
       }
     },
@@ -64,6 +72,10 @@
       "name": "Mostrar uma câmara",
       "description": "Abre o vídeo de uma câmara no tablet (e acorda-o).",
       "fields": {
+        "device_id": {
+          "name": "Tablets",
+          "description": "Os tablets (nenhum: todos os tablets ligados)."
+        },
         "entity_id": {
           "name": "Câmara",
           "description": "A câmara a mostrar."
@@ -78,6 +90,10 @@
       "name": "Mostrar uma mensagem",
       "description": "Mostra uma mensagem no tablet.",
       "fields": {
+        "device_id": {
+          "name": "Tablets",
+          "description": "Os tablets (nenhum: todos os tablets ligados)."
+        },
         "title": {
           "name": "Título",
           "description": "Título opcional."
@@ -100,6 +116,10 @@
       "name": "Screensaver",
       "description": "Liga ou desliga o screensaver no tablet.",
       "fields": {
+        "device_id": {
+          "name": "Tablets",
+          "description": "Os tablets (nenhum: todos os tablets ligados)."
+        },
         "on": {
           "name": "Ligar",
           "description": "Ligar (on) ou desligar (off) o screensaver."

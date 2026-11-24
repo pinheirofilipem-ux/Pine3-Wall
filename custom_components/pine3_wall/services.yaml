@@ -1,8 +1,10 @@
 wake:
-  target:
-    device:
-      integration: pine3_wall
   fields:
+    device_id:
+      selector:
+        device:
+          integration: pine3_wall
+          multiple: true
     seconds:
       default: 60
       selector:
@@ -11,20 +13,24 @@ wake:
           max: 3600
           unit_of_measurement: s
 show_page:
-  target:
-    device:
-      integration: pine3_wall
   fields:
+    device_id:
+      selector:
+        device:
+          integration: pine3_wall
+          multiple: true
     page:
       required: true
       example: "room/sala"
       selector:
         text:
 show_camera:
-  target:
-    device:
-      integration: pine3_wall
   fields:
+    device_id:
+      selector:
+        device:
+          integration: pine3_wall
+          multiple: true
     entity_id:
       required: true
       selector:
@@ -38,10 +44,12 @@ show_camera:
           max: 3600
           unit_of_measurement: s
 notify:
-  target:
-    device:
-      integration: pine3_wall
   fields:
+    device_id:
+      selector:
+        device:
+          integration: pine3_wall
+          multiple: true
     title:
       selector:
         text:
@@ -62,10 +70,12 @@ notify:
       selector:
         boolean:
 screensaver:
-  target:
-    device:
-      integration: pine3_wall
   fields:
+    device_id:
+      selector:
+        device:
+          integration: pine3_wall
+          multiple: true
     "on":
       required: true
       selector:
