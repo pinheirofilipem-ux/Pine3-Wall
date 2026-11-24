@@ -94,6 +94,7 @@ export const DOCK_ITEMS = [
   ["climate", "mdi:thermometer", "Clima", "Ar condicionado, termóstatos e temperatura por divisão."],
   ["security", "mdi:shield-outline", "Segurança", "Portas, janelas, fechaduras e câmaras."],
   ["calendar", "mdi:calendar-month-outline", "Agenda", "O calendário da família: hoje por pessoa, semana e mês."],
+  ["chores", "mdi:broom", "Tarefas", "Quem faz o quê em cada dia da semana."],
 ];
 export const DEFAULTS = {
   theme: "ameixa", card_color: "#f5efe1", accent_color: "#f6b83f", clock_24h: true,
@@ -102,6 +103,7 @@ export const DEFAULTS = {
   language: "pt", layout: "grid", home_layout: "top", appearance: "fixed", theme_day: "linho", theme_night: "ameixa", weather_entity: "", screensaver: 0, animations: true,
   big_rooms: [], big_devices: [], device_order: {}, house_size: {}, house_layout: {}, shown: [], placements: {}, cam_doors: {}, wall_height: 30, people: {},
   calendar: { entities: [], private: [], days: 14 },
+  chores: { tasks: [], schedule: {} },
 };
 
 

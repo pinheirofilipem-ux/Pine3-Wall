@@ -32,6 +32,8 @@ class Home(
     val layoutSource: String = "auto",
     /** Módulo calendar: os eventos do calendário da família; null se não houver calendário escolhido (ou integração < 0.10.0). */
     val calendar: CalendarData? = null,
+    /** Módulo chores: as tarefas e quem as faz em cada dia; null sem tarefas (ou integração < 0.11.0). */
+    val chores: ChoresData? = null,
 ) {
     fun color(key: String, fallback: Int): Int = try {
         android.graphics.Color.parseColor(settings.optString(key, "").ifBlank { return fallback })
@@ -88,6 +90,7 @@ class Home(
                 layout = o.optJSONObject("layout")?.let { LayoutDoc.parse(it) },
                 layoutSource = o.optString("layout_source", "auto"),
                 calendar = o.optJSONObject("calendar")?.let { CalendarData.parse(it) },
+                chores = o.optJSONObject("chores")?.let { ChoresData.parse(it) },
                 people = o.optJSONArray("people")?.let { a ->
                     (0 until a.length()).mapNotNull { a.optJSONObject(it) }.map { p ->
                         Person(p.optString("id"), p.optString("name"), p.optString("alias").ifBlank { p.optString("name") },

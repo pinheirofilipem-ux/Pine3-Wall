@@ -4,15 +4,16 @@
 import { t } from "./i18n.js";
 import { esc, dom, ACCENTS } from "./const.js";
 import { upcomingCard, faceHtml, agendaView } from "./calendar.js";
+import { choresCard, choresView, faceHtml as choresFace } from "./chores.js";
 
 const clone = (o) => JSON.parse(JSON.stringify(o));
 
 const FIXED_PAGES = [
   ["home", "mdi:home-outline", "Início"], ["rooms", "mdi:view-grid-outline", "Divisões"], ["house", "mdi:cube-outline", "Casa 3D"],
   ["scenes", "mdi:creation-outline", "Cenas"], ["climate", "mdi:thermometer", "Clima"], ["security", "mdi:shield-outline", "Segurança"],
-  ["calendar", "mdi:calendar-month-outline", "Agenda"],
+  ["calendar", "mdi:calendar-month-outline", "Agenda"], ["chores", "mdi:broom", "Tarefas"],
 ];
-const DOCKABLE = ["home", "rooms", "house", "scenes", "climate", "security", "calendar"];
+const DOCKABLE = ["home", "rooms", "house", "scenes", "climate", "security", "calendar", "chores"];
 const AGENDA_VIEWS = [["day", "Dia"], ["week", "Semana"], ["month", "Mês"]];
 const TEMPLATES = [["top", "Relógio grande"], ["columns", "Duas colunas"], ["sidebar", "Barra lateral"], ["classic", "Clássica"]];
 const SECTIONS = {
@@ -20,13 +21,14 @@ const SECTIONS = {
   weather: ["mdi:weather-partly-cloudy", "Tempo"], scenes: ["mdi:creation-outline", "Cenas"], grid: ["mdi:view-grid-outline", "Grelha de cartões"],
   room_header: ["mdi:format-header-1", "Cabeçalho da divisão"], house3d: ["mdi:cube-outline", "Casa 3D"], scene_list: ["mdi:format-list-bulleted", "Todas as cenas"],
   climate_list: ["mdi:thermometer", "Clima de toda a casa"], security_list: ["mdi:shield-outline", "Portas, janelas e câmaras"],
-  agenda: ["mdi:calendar-month-outline", "Agenda"],
+  agenda: ["mdi:calendar-month-outline", "Agenda"], chores_week: ["mdi:broom", "Tarefas da semana"],
 };
 // module ambient: composed screens ("ambient/<id>" pages with one "ambient" section of 1-3 faces)
 const FACES = {
   clock_analog: ["mdi:clock-outline", "Relógio analógico"], clock_digital: ["mdi:clock-digital", "Relógio digital"], date: ["mdi:calendar-today", "Data"],
   weather: ["mdi:weather-partly-cloudy", "Tempo"], sensor: ["mdi:gauge", "Sensor"], people: ["mdi:account-group-outline", "Pessoas"],
   next_event: ["mdi:calendar-arrow-right", "Próximo evento"], agenda_today: ["mdi:calendar-today-outline", "Agenda de hoje"],
+  chores_today: ["mdi:broom", "Tarefas de hoje"],
 };
 const ANALOG_STYLES = [["classic", "Clássico"], ["minimal", "Minimalista"], ["bold", "Forte"]];
 const ambientSec = (page) => page?.sections.find((s) => s.type === "ambient");
@@ -127,6 +129,7 @@ function cardHtml(p, spec, rooms) {
     if (spec.type === "device") return p._s(spec.entity) ? p._tile(spec.entity) : `<div class="tile glass">${placeholder("mdi:help-circle-outline", "Sem estado", spec.entity)}</div>`;
     if (spec.type === "summary") return summaryCard(spec);
     if (spec.type === "upcoming") return upcomingCard(p, spec).replace(' data-nav="calendar"', "");
+    if (spec.type === "chores_today") return choresCard(p, spec).replace(' data-nav="chores"', "");
   } catch (e) { console.warn("Pine3 Wall editor card", spec, e); }
   return `<div class="tile glass">${placeholder("mdi:puzzle-outline", "Cartão de outro módulo", spec.type)}</div>`;
 }
@@ -169,6 +172,8 @@ function sectionBody(p, page, sec, si, rooms) {
       const note = sec.group === "category" ? `<small class="le-note">${t("No tablet os cartões são agrupados por categoria (luzes, clima…), por esta ordem dentro de cada uma.")}</small>` : "";
       return `${note}<div class="${cls}">${cards || `<small>${t("Grelha vazia: acrescenta cartões à direita.")}</small>`}</div>`;
     }
+    case "chores_week":
+      return `<div class="le-agenda">${choresView(p).replace(/data-chsettings/g, "data-xchsettings")}</div>`;
     case "agenda": {
       // the real agenda, opened on the view chosen for this page
       const keep = [p._calView, p._calDay, p._calEv];
@@ -212,6 +217,8 @@ function ambientPreview(p, sec) {
       case "next_event":
       case "agenda_today":
         return faceHtml(p, f.type, fg, dim, acc);
+      case "chores_today":
+        return choresFace(p, fg, dim, acc);
       case "people":
         return `<div class="people">${(p._model?.people || []).filter((x) => !x.hidden).map((x) => `<div class="av" style="background-color:${night ? fg : x.color};opacity:${p._s(x.id)?.state === "home" ? 1 : 0.35}">${esc((x.alias || "?")[0])}</div>`).join("")}</div>`;
       default:
@@ -300,7 +307,9 @@ function addPanel(p, rooms) {
     const fam = (p._model?.people || []).filter((x) => !x.hidden);
     const calOpts = [`<option value="upcoming:">${esc(t("Próximos eventos"))}</option>`,
       ...fam.map((x) => `<option value="upcoming:${esc(x.id)}">${esc(t("Próximos: {n}", { n: x.alias }))}</option>`)].join("");
-    cardOpts = `<option value="">${t("Escolher…")}</option>${roomOpts ? `<optgroup label="${t("Divisões")}">${roomOpts}</optgroup>` : ""}${devOpts}${sumOpts ? `<optgroup label="${t("Resumos")}">${sumOpts}</optgroup>` : ""}<optgroup label="${t("Calendário")}">${calOpts}</optgroup>`;
+    const chOpts = [`<option value="chores_today:">${esc(t("Tarefas de hoje"))}</option>`,
+      ...fam.map((x) => `<option value="chores_today:${esc(x.id)}">${esc(t("Tarefas: {n}", { n: x.alias }))}</option>`)].join("");
+    cardOpts = `<option value="">${t("Escolher…")}</option>${roomOpts ? `<optgroup label="${t("Divisões")}">${roomOpts}</optgroup>` : ""}${devOpts}${sumOpts ? `<optgroup label="${t("Resumos")}">${sumOpts}</optgroup>` : ""}<optgroup label="${t("Calendário")}">${calOpts}</optgroup><optgroup label="${t("Tarefas")}">${chOpts}</optgroup>`;
   }
   return `<div class="panel glass le-add"><h3 style="margin-top:0">${t("Acrescentar")}</h3>
     <label>${t("Secção")}</label><select data-le-addsec><option value="">${t("Escolher…")}</option>${secOpts}</select>
@@ -508,7 +517,7 @@ export function bindEditor(p) {
     if (!grid) return;
     // values: "room:<id>", "device:<entity>", "summary:<kind>" or "summary:vacuum:<entity>"
     const kind = v.slice(0, v.indexOf(":")), rest = v.slice(v.indexOf(":") + 1);
-    const card = kind === "upcoming" ? { type: "upcoming", size: "normal", ...(rest ? { person: rest } : {}) }
+    const card = kind === "upcoming" || kind === "chores_today" ? { type: kind, size: "normal", ...(rest ? { person: rest } : {}) }
       : kind === "room" ? { type: "room", room: rest, size: "normal" }
       : kind === "device" ? { type: "device", entity: rest, size: "normal" }
       : rest.startsWith("vacuum:") ? { type: "summary", summary: "vacuum", entity: rest.slice(7) } : { type: "summary", summary: rest };

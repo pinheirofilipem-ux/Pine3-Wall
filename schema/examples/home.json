@@ -309,6 +309,10 @@
       "private": [],
       "days": 14
     },
+    "chores": {
+      "tasks": [],
+      "schedule": {}
+    },
     "settings_version": 2
   },
   "layout": {
@@ -436,6 +440,14 @@
           {
             "type": "agenda",
             "view": "day"
+          }
+        ]
+      },
+      "chores": {
+        "title": "Tarefas",
+        "sections": [
+          {
+            "type": "chores_week"
           }
         ]
       },

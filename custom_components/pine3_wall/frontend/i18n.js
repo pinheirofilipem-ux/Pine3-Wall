@@ -18,6 +18,26 @@ export function tp(n, one, many, vars) { return t(n === 1 ? one : many, { n, ...
 export function num(n) { return LANG === "en" ? String(n) : String(n).replace(".", ","); }
 
 export const EN = {
+  // module chores
+  "Sem tarefas hoje.": "No chores today.",
+  "Tarefas: {n}": "Chores: {n}",
+  "Tarefas de hoje": "Today's chores",
+  "Define as tarefas nas Definições → Tarefas.": "Set the chores in Settings → Chores.",
+  "Tarefas": "Chores",
+  "Ainda não há tarefas. Em Definições → Tarefas cria as tarefas da casa e escolhe quem faz cada uma em cada dia da semana.": "No chores yet. In Settings → Chores create the house chores and choose who does each one on each day of the week.",
+  "Sem tarefas": "No chores",
+  "Ícone": "Icon",
+  "Tarefas da casa": "House chores",
+  "As tarefas e quem as faz em cada dia da semana. Aparecem no tablet (cartão \"Tarefas de hoje\", página Tarefas e ecrã ambiente) e cada pessoa tem um sensor no Home Assistant com as tarefas de hoje. Não há \"feito\": é só a lista do que está combinado.": "The chores and who does them on each day of the week. They show on the tablet (the \"Today's chores\" card, the Chores page and ambient screens) and each person gets a Home Assistant sensor with today's chores. There is no \"done\": it's just the list of what was agreed.",
+  "Ainda não há tarefas.": "No chores yet.",
+  "Nova tarefa (ex.: Pôr a mesa)": "New chore (e.g. Set the table)",
+  "Quem faz o quê": "Who does what",
+  "Toca nas iniciais para escolher quem faz cada tarefa em cada dia.": "Tap the initials to choose who does each chore on each day.",
+  "Apagar a tarefa \"{n}\"?": "Delete the chore \"{n}\"?",
+  "Manhã": "Morning",
+  "Tarde": "Afternoon",
+  "Tarefas da semana": "The week's chores",
+  "Quem faz o quê em cada dia da semana.": "Who does what on each day of the week.",
   // module calendar
   "(sem título)": "(no title)",
   "Dia": "Day",

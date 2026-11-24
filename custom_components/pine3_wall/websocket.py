@@ -15,6 +15,7 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.storage import Store
 
 from .const import API_VERSION, DOMAIN, EVENT_UPDATED, MIN_APP_VERSION, VERSION
+from .chores import CHORES_SCHEMA, DEFAULT_CHORES, model as chores_model
 from .discovery import build_home
 from .family_calendar import DEFAULT_CALENDAR, FamilyCalendar, assign
 from .layout import DOCK_ITEMS
@@ -58,6 +59,7 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "people": {},
     "wall_height": 30,
     "calendar": DEFAULT_CALENDAR,
+    "chores": DEFAULT_CHORES,
     "settings_version": 2,
 }
 DEVICE_TYPES = [
@@ -147,6 +149,7 @@ def _model(hass: HomeAssistant, panel_id: str | None = None) -> dict[str, Any]:
         "layout_source": source,
         "people": build_people(hass, settings),
         **({"calendar": cal} if (cal := hass.data[DOMAIN]["calendar"].model()) else {}),
+        **({"chores": ch} if (ch := chores_model(settings.get("chores"))) else {}),
         "version": VERSION,
         "api_version": API_VERSION,
         "min_app_version": MIN_APP_VERSION,
@@ -244,6 +247,8 @@ def ws_subscribe(hass: HomeAssistant, connection: websocket_api.ActiveConnection
             vol.Optional("days"): vol.All(int, vol.Range(min=1, max=62)),
             vol.Optional("color"): COLOR,
         },
+        # module chores: the tasks and the weekly grid task x weekday -> people
+        vol.Optional("chores"): CHORES_SCHEMA,
         vol.Optional("settings_version"): int,
     }
 )
