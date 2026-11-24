@@ -27,7 +27,18 @@ object Ha {
         fun onStatus() {}
         /** Tocaram à campainha (event.* de classe doorbell): tipo "ring", "floor_call", "answered", "missed_call". */
         fun onBell(id: String, type: String, attrs: JSONObject) {}
+        /** Um comando dos serviços pine3_wall.* para este tablet (show_page, show_camera, notify, screensaver…). */
+        fun onCommand(cmd: JSONObject) {}
     }
+
+    /** Último comando ainda não mostrado (a atividade pode estar a acordar quando chega). */
+    @Volatile var pendingCommand: Pair<JSONObject, Long>? = null
+    /** O serviço acorda o ecrã para os comandos que o pedem. */
+    @Volatile var onPanelCommand: ((JSONObject) -> Unit)? = null
+    /** O tablet ficou registado no HA (a seguir a cada ligação): o serviço manda o estado todo. */
+    @Volatile var onPanelConnected: (() -> Unit)? = null
+    /** A página no ecrã ("home", "rooms", "room/<id>"…), enviada ao HA quando muda e a cada ligação. */
+    @Volatile var currentPage = ""
 
     class Bell(val id: String, val type: String, val attrs: JSONObject, val at: Long)
     /** Último toque ainda não mostrado (a atividade pode estar a acordar quando o evento chega). */
@@ -67,6 +78,11 @@ object Ha {
     private const val ID_STATES = 2
     private const val ID_HOME = 3
     private const val ID_HOME_SUB = 4
+    private const val ID_PANEL = 5
+
+    @Volatile private var panelId = ""
+    @Volatile private var panelName = ""
+    @Volatile private var appVersion = "0.0.0"
 
     /** Ids do pedido do modelo e da subscrição nesta ligação (mudam quando se volta a pedir: o HA não aceita ids repetidos). */
     @Volatile private var homeId = ID_HOME
@@ -79,6 +95,8 @@ object Ha {
     @Synchronized
     fun configure(ctx: Context) {
         val prefs = Prefs(ctx)
+        panelId = prefs.panelId; panelName = prefs.panelName
+        appVersion = try { ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionName ?: "0.0.0" } catch (_: Exception) { "0.0.0" }
         val url = prefs.wsUrl()
         val token = prefs.haToken
         val newRules = prefs.wakeRules
@@ -179,6 +197,18 @@ object Ha {
         else -> e.message ?: e.javaClass.simpleName
     }
 
+    /** Estado deste tablet para as entidades do HA (movimento, ecrã, bateria, brilho, página). Só os campos dados. */
+    fun reportState(vararg values: Pair<String, Any>) {
+        if (!connected || panelId.isEmpty() || values.isEmpty()) return
+        Thread {
+            try {
+                val msg = JSONObject().put("id", ids.incrementAndGet()).put("type", "pine3_wall/panel/state").put("panel_id", panelId)
+                values.forEach { (k, v) -> msg.put(k, v) }
+                ws?.send(msg.toString())
+            } catch (_: Exception) {}
+        }.start()
+    }
+
     /** Chama um serviço do HA (sem esperar pelo resultado). */
     fun call(domain: String, service: String, entityIds: List<String>, data: JSONObject? = null) {
         if (entityIds.isEmpty()) return
@@ -241,8 +271,11 @@ object Ha {
         socket.send(JSONObject().put("id", ID_EVENTS).put("type", "subscribe_events").put("event_type", "state_changed").toString())
         socket.send(JSONObject().put("id", ID_STATES).put("type", "get_states").toString())
         homeId = ID_HOME; homeSubId = ID_HOME_SUB
-        socket.send(JSONObject().put("id", ID_HOME).put("type", "pine3_wall/home").toString())
-        socket.send(JSONObject().put("id", ID_HOME_SUB).put("type", "pine3_wall/subscribe").toString())
+        // o tablet regista-se (dispositivo no HA) e recebe os comandos dos serviços; o modelo vem com o layout deste tablet
+        socket.send(JSONObject().put("id", ID_PANEL).put("type", "pine3_wall/panel/connect").put("panel_id", panelId).put("name", panelName)
+            .put("model", "${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL}".trim().take(80)).put("app_version", appVersion).toString())
+        socket.send(JSONObject().put("id", ID_HOME).put("type", "pine3_wall/home").put("panel_id", panelId).toString())
+        socket.send(JSONObject().put("id", ID_HOME_SUB).put("type", "pine3_wall/subscribe").put("panel_id", panelId).toString())
 
         var lastRx = System.currentTimeMillis()
         while (running) {
@@ -293,9 +326,18 @@ object Ha {
                         retryHome()
                     }
                 }
+                ID_PANEL -> if (m.optBoolean("success")) { log("Tablet registado no HA"); onPanelConnected?.let { main.post(it) } }
                 else -> if (rid == homeSubId && m.optBoolean("success")) log("Subscrição do modelo ativa")
             }
-            "event" -> if (m.optInt("id") == homeSubId) m.optJSONObject("event")?.let { setHome(it) }
+            "event" -> when (m.optInt("id")) {
+                homeSubId -> m.optJSONObject("event")?.let { setHome(it) }
+                ID_PANEL -> m.optJSONObject("event")?.let { cmd ->
+                    log("Comando: ${cmd.optString("command")}")
+                    if (cmd.optString("command") != "wake") pendingCommand = cmd to System.currentTimeMillis()
+                    main.post { onPanelCommand?.invoke(cmd); listeners.forEach { it.onCommand(cmd) } }
+                }
+                else -> {}
+            }
         }
     }
 
@@ -311,8 +353,9 @@ object Ha {
                 try {
                     val hid = ids.incrementAndGet(); val sid = ids.incrementAndGet()
                     homeId = hid; homeSubId = sid
-                    socket.send(JSONObject().put("id", hid).put("type", "pine3_wall/home").toString())
-                    socket.send(JSONObject().put("id", sid).put("type", "pine3_wall/subscribe").toString())
+                    socket.send(JSONObject().put("id", hid).put("type", "pine3_wall/home").put("panel_id", panelId).toString())
+                    socket.send(JSONObject().put("id", sid).put("type", "pine3_wall/subscribe").put("panel_id", panelId).toString())
+                    socket.send(JSONObject().put("id", ids.incrementAndGet()).put("type", "pine3_wall/panel/connect").put("panel_id", panelId).put("name", panelName).put("app_version", appVersion).toString())
                     log("A pedir de novo o modelo da casa")
                 } catch (_: Exception) {}
             }.start()

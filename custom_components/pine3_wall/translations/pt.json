@@ -1,6 +1,130 @@
 {
   "config": {
-    "step": {"user": {"title": "Pine3 Wall", "description": "Adicionar o painel Pine3 Wall à barra lateral."}},
-    "abort": {"single_instance_allowed": "O Pine3 Wall já está configurado."}
+    "step": {
+      "user": {
+        "title": "Pine3 Wall",
+        "description": "Acrescenta o painel Pine3 Wall à barra lateral."
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "O Pine3 Wall já está configurado."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "online": {
+        "name": "Ligado"
+      },
+      "motion": {
+        "name": "Movimento"
+      },
+      "screen_on": {
+        "name": "Ecrã"
+      }
+    },
+    "sensor": {
+      "battery": {
+        "name": "Bateria"
+      },
+      "brightness": {
+        "name": "Brilho do ecrã"
+      },
+      "page": {
+        "name": "Página"
+      }
+    },
+    "button": {
+      "wake": {
+        "name": "Acordar"
+      }
+    }
+  },
+  "services": {
+    "wake": {
+      "name": "Acordar o tablet",
+      "description": "Liga o ecrã e mantém-no ligado.",
+      "fields": {
+        "device_id": {
+          "name": "Tablets",
+          "description": "Os tablets (nenhum: todos os tablets ligados)."
+        },
+        "seconds": {
+          "name": "Segundos",
+          "description": "Quanto tempo o ecrã fica ligado."
+        }
+      }
+    },
+    "show_page": {
+      "name": "Mostrar uma página",
+      "description": "Abre uma página no tablet.",
+      "fields": {
+        "device_id": {
+          "name": "Tablets",
+          "description": "Os tablets (nenhum: todos os tablets ligados)."
+        },
+        "page": {
+          "name": "Página",
+          "description": "home, rooms, house, scenes, climate, security, ou room/ seguido do id da divisão (ex.: room/sala)."
+        }
+      }
+    },
+    "show_camera": {
+      "name": "Mostrar uma câmara",
+      "description": "Abre o vídeo de uma câmara no tablet (e acorda-o).",
+      "fields": {
+        "device_id": {
+          "name": "Tablets",
+          "description": "Os tablets (nenhum: todos os tablets ligados)."
+        },
+        "entity_id": {
+          "name": "Câmara",
+          "description": "A câmara a mostrar."
+        },
+        "seconds": {
+          "name": "Segundos",
+          "description": "Quanto tempo fica aberta."
+        }
+      }
+    },
+    "notify": {
+      "name": "Mostrar uma mensagem",
+      "description": "Mostra uma mensagem no tablet.",
+      "fields": {
+        "device_id": {
+          "name": "Tablets",
+          "description": "Os tablets (nenhum: todos os tablets ligados)."
+        },
+        "title": {
+          "name": "Título",
+          "description": "Título opcional."
+        },
+        "message": {
+          "name": "Mensagem",
+          "description": "O texto."
+        },
+        "seconds": {
+          "name": "Segundos",
+          "description": "Quanto tempo fica no ecrã."
+        },
+        "wake": {
+          "name": "Acordar",
+          "description": "Ligar o ecrã para a mostrar."
+        }
+      }
+    },
+    "screensaver": {
+      "name": "Screensaver",
+      "description": "Liga ou desliga o screensaver no tablet.",
+      "fields": {
+        "device_id": {
+          "name": "Tablets",
+          "description": "Os tablets (nenhum: todos os tablets ligados)."
+        },
+        "on": {
+          "name": "Ligar",
+          "description": "Ligar (on) ou desligar (off) o screensaver."
+        }
+      }
+    }
   }
 }

@@ -23,11 +23,11 @@ const SUMMARIES = { climate: ["mdi:thermometer", "Clima"], security: ["mdi:shiel
 // ---------------------------------------------------------------- state and server
 
 /** Opens the editor: loads the layouts and starts from the draft, else the published layout, else the automatic one. */
-export async function openEditor(p, page = "home") {
-  p._le = { page, sel: null, dirty: false, busy: true, msg: "" };
+export async function openEditor(p, page = "home", target = "main") {
+  p._le = { page, target, sel: null, dirty: false, busy: true, msg: "" };
   p._go("layout");
   try {
-    const data = await p._hass.callWS({ type: "pine3_wall/layout/get" });
+    const data = await p._hass.callWS({ type: "pine3_wall/layout/get", target });
     const doc = clone(data.draft || data.published || data.auto);
     Object.assign(p._le, { data, doc, busy: false, page: doc.pages[page] ? page : "home" });
   } catch (e) {
@@ -41,7 +41,9 @@ async function call(p, type, extra = {}, msg = "") {
   const le = p._le;
   le.busy = true; p._render();
   try {
-    le.data = await p._hass.callWS({ type: `pine3_wall/layout/${type}`, ...extra });
+    const withTarget = ["create", "delete"].includes(type) ? {} : { target: le.target };
+    le.data = await p._hass.callWS({ type: `pine3_wall/layout/${type}`, ...withTarget, ...extra });
+    if (le.data.target) le.target = le.data.target;
     le.msg = msg;
     return true;
   } catch (e) {
@@ -53,6 +55,19 @@ async function call(p, type, extra = {}, msg = "") {
     clearTimeout(le.msgTimer);
     le.msgTimer = setTimeout(() => { le.msg = ""; p._render(); }, 2500);
   }
+}
+
+/** Loads the layouts of the current target into the editor. */
+async function reload(p) {
+  const le = p._le;
+  le.busy = true; p._render();
+  try {
+    le.data = await p._hass.callWS({ type: "pine3_wall/layout/get", target: le.target });
+    le.doc = clone(le.data.draft || le.data.published || le.data.auto);
+    le.dirty = false; le.sel = null;
+    if (!le.doc.pages[le.page]) le.page = "home";
+  } catch (e) { le.msg = t("Não foi possível: {e}", { e: e.message || e.code || "?" }); }
+  le.busy = false; p._render();
 }
 
 /** A change in the working copy; with the preview on, the draft is saved (debounced) so the tablets follow. */
@@ -226,13 +241,16 @@ export function editorView(p) {
   if (!le.doc) return `<div class="set"><div class="empty">${t("A carregar…")}</div></div>`;
   const rooms = roomsById(p);
   const d = le.data, src = d.source;
-  const srcText = src === "preview" ? t("Os tablets estão a mostrar o rascunho") : src === "published" ? t("Os tablets mostram o layout publicado") : t("Os tablets mostram o layout automático (das definições)");
+  const srcText = le.target !== "main"
+    ? (d.preview ? t("Variante \"{n}\": os tablets que a usam mostram o rascunho", { n: le.target }) : d.published ? t("Variante \"{n}\": os tablets que a usam mostram-na", { n: le.target }) : t("Variante \"{n}\": ainda por publicar (os tablets que a usam mostram o layout principal)", { n: le.target }))
+    : src === "preview" ? t("Os tablets estão a mostrar o rascunho") : src === "published" ? t("Os tablets mostram o layout publicado") : t("Os tablets mostram o layout automático (das definições)");
   const pageName = FIXED_PAGES.find(([k]) => k === le.page)?.[2];
   const roomName = le.page.startsWith("room/") ? (rooms[le.page.slice(5)] ? p._roomName(rooms[le.page.slice(5)]) : le.page) : null;
   return `<div class="set le">
     <div class="set-hd"><div><div class="eyebrow">Pine3 Wall</div><div class="t">${t("Editor de layout")}</div>
       <div class="s">${esc(srcText)}${le.dirty ? ` · <b>${t("alterações por guardar")}</b>` : d.draft ? ` · ${t("há um rascunho guardado")}` : ""}${le.msg ? ` · ${esc(le.msg)}` : ""}</div></div>
       <div class="actions le-actions">
+        <select data-le-target title="${t("Layout a editar")}">${(d.targets || ["main"]).map((k) => `<option value="${esc(k)}" ${k === le.target ? "selected" : ""}>${k === "main" ? esc(t("Layout principal")) : esc(k)}</option>`).join("")}<option value="+">${t("Nova variante…")}</option></select>
         <div class="opt" style="padding:0;gap:10px"><b style="font-size:15px">${t("Rascunho nos tablets")}</b><div class="tg ${d.preview ? "on" : ""}" data-le-act="preview" title="${t("Mostra o rascunho nos tablets enquanto editas, sem publicar.")}"><i></i></div></div>
         <button class="pill" data-le-act="save" ${le.busy ? "disabled" : ""}><ha-icon icon="mdi:content-save-outline"></ha-icon>${t("Guardar rascunho")}</button>
         <button class="pill solid" data-le-act="publish" ${le.busy ? "disabled" : ""}><ha-icon icon="mdi:upload"></ha-icon>${t("Publicar")}</button>
@@ -243,6 +261,7 @@ export function editorView(p) {
       ${d.draft ? `<button class="pill" data-le-act="discard">${t("Apagar o rascunho")}</button>` : ""}
       ${d.published ? `<button class="pill" data-le-act="reset">${t("Voltar ao automático")}</button>` : ""}
       <button class="pill" data-le-act="fromauto">${t("Começar do automático")}</button>
+      ${le.target !== "main" ? `<button class="pill" data-le-act="deltarget">${t("Apagar esta variante")}</button>` : ""}
       ${d.history.length ? `<label style="margin-left:8px">${t("Histórico")}</label><select data-le-restore><option value="">${t("Recuperar como rascunho…")}</option>${d.history.map((h, i) => `<option value="${i}">${esc(new Date(h.at).toLocaleString())}</option>`).join("")}</select>` : ""}
     </div>` : ""}
     <div class="le-body">
@@ -292,12 +311,30 @@ export function bindEditor(p) {
       if (await call(p, "discard_draft", {}, t("Rascunho apagado"))) { le.doc = clone(le.data.published || le.data.auto); le.dirty = false; }
       le.menu = false; p._render(); return;
     }
+    if (a === "deltarget") {
+      if (!confirm(t("Apagar a variante \"{n}\"? Os tablets que a usam voltam ao layout principal.", { n: le.target }))) return;
+      if (await call(p, "delete", { name: le.target }, t("Variante apagada"))) { le.target = "main"; await reload(p); }
+      le.menu = false; p._render(); return;
+    }
     if (a === "reset") {
       if (!confirm(t("Voltar ao layout automático? O publicado fica no histórico."))) return;
       if (await call(p, "reset", {}, t("Layout automático"))) { le.doc = clone(le.data.auto); le.dirty = false; }
       le.menu = false; p._render();
     }
   });
+  on("[data-le-target]", async (el) => {
+    let target = el.value;
+    if (le.dirty && !confirm(t("Há alterações por guardar. Mudar de layout mesmo assim?"))) { p._render(); return; }
+    if (target === "+") {
+      const name = (prompt(t("Nome da variante (ex.: Quartos, Cozinha):")) || "").trim().slice(0, 40);
+      if (!name) { p._render(); return; }
+      // the new variant starts as a copy of what is in the editor now (as its draft)
+      if (!(await call(p, "create", { name, layout: le.doc }, t("Variante criada")))) return;
+      target = name;
+    }
+    le.target = target;
+    await reload(p);
+  }, "change");
   on("[data-le-restore]", async (el) => {
     if (el.value === "") return;
     if (await call(p, "restore", { index: Number(el.value) }, t("Recuperado como rascunho"))) { le.doc = clone(le.data.draft); le.dirty = false; }
@@ -391,6 +428,7 @@ export const cssEditor = `
 .le-menu{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:18px}
 .le-menu select,.le-add select{all:unset;box-sizing:border-box;height:42px;padding:0 14px;border-radius:14px;background:rgba(255,255,255,.08);border:1px solid var(--line);color:inherit;font-size:15px;width:100%;cursor:pointer}
 .le-menu select{width:auto;min-width:220px}
+.le-actions select{all:unset;box-sizing:border-box;height:44px;padding:0 16px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid var(--line);color:inherit;font-size:15px;cursor:pointer;max-width:220px}
 .le-add label,.le-menu label{display:block;font-size:13px;color:var(--muted);margin:14px 0 6px}
 .le-body{display:grid;grid-template-columns:220px minmax(0,1fr) 340px;gap:24px;margin-top:28px;align-items:start}
 .le-pages{display:flex;flex-direction:column;gap:4px;position:sticky;top:20px;max-height:calc(100vh - 40px);overflow:auto}

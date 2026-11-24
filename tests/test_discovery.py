@@ -235,11 +235,15 @@ async def test_panel_setup_and_reload(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
     hass.http = AsyncMock()
+    # the tablet platforms are tested in test_panels.py (they need the full frontend here)
     with patch("homeassistant.components.panel_custom.async_register_panel", new=AsyncMock()) as reg, \
-         patch("homeassistant.components.frontend.async_remove_panel"):
+         patch("homeassistant.components.frontend.async_remove_panel"), \
+         patch.object(hass.config_entries, "async_forward_entry_setups", new=AsyncMock()), \
+         patch.object(hass.config_entries, "async_unload_platforms", new=AsyncMock(return_value=True)):
         assert await async_setup_entry(hass, entry)
         assert await async_unload_entry(hass, entry)
         assert await async_setup_entry(hass, entry)
+    assert hass.services.has_service(DOMAIN, "wake") and hass.services.has_service(DOMAIN, "notify")
     assert reg.call_args.kwargs["module_url"] == f"/pine3_wall_static/{VERSION}/pine3-wall-panel.js"
     assert hass.http.async_register_static_paths.await_count == 1
     path = hass.http.async_register_static_paths.await_args.args[0][0]

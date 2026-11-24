@@ -185,79 +185,132 @@ def apply_edit(doc: dict[str, Any], home: dict[str, Any], settings: dict[str, An
     return out
 
 
+MAIN = "main"
+TARGET_NAME = vol.All(str, vol.Length(min=1, max=40))
+
+
+def _empty_target() -> dict[str, Any]:
+    return {"draft": None, "published": None, "history": [], "preview": False}
+
+
 class LayoutStore:
-    """The editor's layouts in Home Assistant's storage (pine3_wall.layouts)."""
+    """The editor's layouts in Home Assistant's storage (pine3_wall.layouts).
+
+    There is one set of layouts per *target*: "main" (every tablet by default) and named variants that a tablet can
+    use instead (Settings > Tablets). Each target has its own draft, published layout, history and preview switch.
+    A variant with nothing published nor on preview shows the main one.
+    """
 
     def __init__(self, hass: HomeAssistant) -> None:
         self._store: Store = Store(hass, 1, STORAGE_KEY)
-        self.data: dict[str, Any] = {"draft": None, "published": None, "history": [], "preview": False}
+        self.data: dict[str, Any] = {"targets": {MAIN: _empty_target()}}
 
     async def async_load(self) -> None:
-        self.data.update(await self._store.async_load() or {})
+        stored = await self._store.async_load() or {}
+        if "targets" in stored:
+            self.data = stored
+        elif stored:  # 0.7: one set of layouts, now the main target
+            self.data = {"targets": {MAIN: {**_empty_target(), **stored}}}
+        self.data["targets"].setdefault(MAIN, _empty_target())
 
     async def async_save(self) -> None:
         await self._store.async_save(self.data)
 
-    def _remember(self, doc: dict | None, label: str) -> None:
+    def targets(self) -> list[str]:
+        return [MAIN] + sorted(k for k in self.data["targets"] if k != MAIN)
+
+    def t(self, target: str | None = None) -> dict[str, Any]:
+        """One target's layouts (KeyError for a variant that doesn't exist)."""
+        return self.data["targets"][target or MAIN]
+
+    def create(self, name: str, doc: dict[str, Any] | None, home: dict[str, Any]) -> None:
+        if name in self.data["targets"]:
+            raise vol.Invalid("a layout with that name already exists")
+        self.data["targets"][name] = _empty_target()
+        if doc is not None:
+            self.save_draft(doc, home, name)
+
+    def delete(self, name: str) -> None:
+        if name == MAIN:
+            raise vol.Invalid("the main layout can't be deleted")
+        self.data["targets"].pop(name, None)
+
+    def _remember(self, t: dict[str, Any], doc: dict | None, label: str) -> None:
         if doc is None:
             return
-        self.data["history"] = ([{"at": _now(), "label": label, "doc": doc}] + self.data["history"])[:HISTORY_MAX]
+        t["history"] = ([{"at": _now(), "label": label, "doc": doc}] + t["history"])[:HISTORY_MAX]
 
-    def active(self, home: dict[str, Any], settings: dict[str, Any]) -> tuple[dict[str, Any], str]:
-        """The layout the tablets draw and where it comes from: 'preview' (the draft), 'published' or 'auto'."""
-        if self.data.get("preview") and self.data.get("draft"):
-            return resolve(self.data["draft"], home, settings), "preview"
-        if self.data.get("published"):
-            return resolve(self.data["published"], home, settings), "published"
+    def active(self, home: dict[str, Any], settings: dict[str, Any], target: str | None = None) -> tuple[dict[str, Any], str]:
+        """The layout a tablet draws and where it comes from: 'preview' (the draft), 'published' or 'auto'."""
+        for key in ([target] if target and target != MAIN and target in self.data["targets"] else []) + [MAIN]:
+            t = self.t(key)
+            if t.get("preview") and t.get("draft"):
+                return resolve(t["draft"], home, settings), "preview"
+            if t.get("published"):
+                return resolve(t["published"], home, settings), "published"
         return build_layout(home, settings), "auto"
 
-    def summary(self, home: dict[str, Any], settings: dict[str, Any]) -> dict[str, Any]:
-        """Everything the editor needs."""
-        _, source = self.active(home, settings)
+    def summary(self, home: dict[str, Any], settings: dict[str, Any], target: str | None = None) -> dict[str, Any]:
+        """Everything the editor needs, for one target."""
+        target = target or MAIN
+        t = self.t(target)
+        _, source = self.active(home, settings, target)
         return {
+            "target": target,
+            "targets": self.targets(),
             "source": source,
-            "preview": bool(self.data.get("preview")),
-            "draft": resolve(self.data["draft"], home, settings) if self.data.get("draft") else None,
-            "published": resolve(self.data["published"], home, settings) if self.data.get("published") else None,
+            "preview": bool(t.get("preview")),
+            "draft": resolve(t["draft"], home, settings) if t.get("draft") else None,
+            "published": resolve(t["published"], home, settings) if t.get("published") else None,
             "auto": build_layout(home, settings),
-            "history": [{"at": h["at"], "label": h["label"]} for h in self.data["history"]],
+            "history": [{"at": h["at"], "label": h["label"]} for h in t["history"]],
         }
 
-    def save_draft(self, doc: dict[str, Any], home: dict[str, Any]) -> None:
-        self.data["draft"] = {**doc, "generated": False, "known": known_of(home)}
+    def save_draft(self, doc: dict[str, Any], home: dict[str, Any], target: str | None = None) -> None:
+        self.t(target)["draft"] = {**doc, "generated": False, "known": known_of(home)}
 
-    def discard_draft(self) -> None:
-        self.data["draft"] = None
-        self.data["preview"] = False
+    def discard_draft(self, target: str | None = None) -> None:
+        t = self.t(target)
+        t["draft"] = None
+        t["preview"] = False
 
-    def publish(self, doc: dict[str, Any] | None, home: dict[str, Any]) -> None:
-        doc = doc if doc is not None else self.data.get("draft")
+    def publish(self, doc: dict[str, Any] | None, home: dict[str, Any], target: str | None = None) -> None:
+        t = self.t(target)
+        doc = doc if doc is not None else t.get("draft")
         if doc is None:
             raise vol.Invalid("nothing to publish")
-        self._remember(self.data.get("published"), "published")
-        self.data["published"] = {**doc, "generated": False, "known": known_of(home)}
-        self.data["draft"] = None
-        self.data["preview"] = False
+        self._remember(t, t.get("published"), "published")
+        t["published"] = {**doc, "generated": False, "known": known_of(home)}
+        t["draft"] = None
+        t["preview"] = False
 
-    def reset(self) -> None:
+    def reset(self, target: str | None = None) -> None:
         """Back to the automatic layout (the published one goes to the history)."""
-        self._remember(self.data.get("published"), "published")
-        self.data["published"] = None
-        self.data["draft"] = None
-        self.data["preview"] = False
+        t = self.t(target)
+        self._remember(t, t.get("published"), "published")
+        t["published"] = None
+        t["draft"] = None
+        t["preview"] = False
 
-    def restore(self, index: int) -> None:
+    def restore(self, index: int, target: str | None = None) -> None:
         """A layout from the history becomes the draft."""
+        t = self.t(target)
         try:
-            self.data["draft"] = copy.deepcopy(self.data["history"][index]["doc"])
+            t["draft"] = copy.deepcopy(t["history"][index]["doc"])
         except IndexError as err:
             raise vol.Invalid("no such layout in the history") from err
 
-    def edit(self, home: dict[str, Any], settings: dict[str, Any], edit: dict[str, Any]) -> bool:
-        """The app's edit mode on the layout the tablets show: the draft while it is on preview, else the published one.
-        False when the layout is the automatic one."""
-        key = "draft" if self.data.get("preview") and self.data.get("draft") else "published"
-        if not self.data.get(key):
-            return False
-        self.data[key] = apply_edit(self.data[key], home, settings, edit)
-        return True
+    def set_preview(self, on: bool, target: str | None = None) -> None:
+        self.t(target)["preview"] = on
+
+    def edit(self, home: dict[str, Any], settings: dict[str, Any], edit: dict[str, Any], target: str | None = None) -> bool:
+        """The app's edit mode on the layout the tablet shows: the draft while it is on preview, else the published one.
+        A variant with nothing of its own edits the main layout. False when the layout is the automatic one."""
+        names = ([target] if target and target != MAIN and target in self.data["targets"] else []) + [MAIN]
+        for name in names:
+            t = self.t(name)
+            key = "draft" if t.get("preview") and t.get("draft") else "published" if t.get("published") else None
+            if key:
+                t[key] = apply_edit(t[key], home, settings, edit)
+                return True
+        return False

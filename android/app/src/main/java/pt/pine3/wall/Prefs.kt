@@ -121,6 +121,14 @@ class Prefs(ctx: Context) {
         get() = sp.getString("saverExtra", "") ?: ""
         set(v) = sp.edit().putString("saverExtra", v.trim()).apply()
 
+    /** Identificador deste tablet no HA (dispositivo Pine3 Wall), criado uma vez. */
+    val panelId: String
+        get() = sp.getString("panelId", null) ?: java.util.UUID.randomUUID().toString().replace("-", "").take(16).also { sp.edit().putString("panelId", it).apply() }
+
+    /** Nome com que o tablet se apresenta ao HA da primeira vez (depois muda-se no painel web, Definições → Tablets). */
+    val panelName: String
+        get() = sp.getString("panelName", null) ?: android.os.Build.MODEL.orEmpty().ifBlank { "Tablet" }
+
     var ignoreSsl: Boolean
         get() = sp.getBoolean("ssl", false)
         set(v) = sp.edit().putBoolean("ssl", v).apply()

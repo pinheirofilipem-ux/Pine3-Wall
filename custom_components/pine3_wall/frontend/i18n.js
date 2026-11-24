@@ -18,6 +18,22 @@ export function tp(n, one, many, vars) { return t(n === 1 ? one : many, { n, ...
 export function num(n) { return LANG === "en" ? String(n) : String(n).replace(".", ","); }
 
 export const EN = {
+  // tablets
+  "Tablets": "Tablets", "Principal": "Main", "Acordar": "Wake", "Testar mensagem": "Test message", "Visto": "Seen", "Página": "Page", "Feito": "Done",
+  "Ligado": "Online", "Desligado": "Offline", "Nome": "Name", "O tablet não está ligado": "The tablet is not connected",
+  "Esta função precisa da integração Pine3 Wall 0.8.0 ou mais recente.": "This needs the Pine3 Wall integration 0.8.0 or newer.",
+  "Cada tablet com a app Pine3 Wall aparece aqui e no Home Assistant como um dispositivo (movimento, ecrã, bateria, página e um botão Acordar). Nas automações usa os serviços pine3_wall.wake, show_page, show_camera, notify e screensaver.": "Every tablet with the Pine3 Wall app shows here and in Home Assistant as a device (motion, screen, battery, page and a Wake button). In automations use the services pine3_wall.wake, show_page, show_camera, notify and screensaver.",
+  "Ainda nenhum tablet se ligou. Abre a app Pine3 Wall 0.8.0 ou mais recente num tablet.": "No tablet has connected yet. Open the Pine3 Wall app 0.8.0 or newer on a tablet.",
+  "O layout de cada tablet: o principal, ou uma variante criada no Editor de layout (escolhe \"Nova variante…\" no topo do editor).": "Each tablet's layout: the main one, or a variant made in the Layout editor (choose \"New variant…\" at the top of the editor).",
+  "Mensagem de teste do painel web.": "Test message from the web panel.",
+  "Remover este tablet do Home Assistant? Volta a aparecer quando a app se ligar de novo.": "Remove this tablet from Home Assistant? It comes back when the app connects again.",
+  "Layout a editar": "Layout to edit", "Layout principal": "Main layout", "Nova variante…": "New variant…", "Apagar esta variante": "Delete this variant",
+  "Variante apagada": "Variant deleted", "Variante criada": "Variant created", "Nome da variante (ex.: Quartos, Cozinha):": "Variant name (e.g. Bedrooms, Kitchen):",
+  "Há alterações por guardar. Mudar de layout mesmo assim?": "There are unsaved changes. Switch layout anyway?",
+  "Apagar a variante \"{n}\"? Os tablets que a usam voltam ao layout principal.": "Delete the variant \"{n}\"? The tablets using it go back to the main layout.",
+  "Variante \"{n}\": os tablets que a usam mostram o rascunho": "Variant \"{n}\": the tablets using it show the draft",
+  "Variante \"{n}\": os tablets que a usam mostram-na": "Variant \"{n}\": the tablets using it show it",
+  "Variante \"{n}\": ainda por publicar (os tablets que a usam mostram o layout principal)": "Variant \"{n}\": not published yet (the tablets using it show the main layout)",
   // layout editor
   "Os tablets usam o layout do editor.": "The tablets use the editor's layout.",
   "A ordem, os escondidos, o tamanho dos cartões, as secções do início e a dock dos tablets mudam-se no Editor de layout. Estas opções só mudam o layout automático.": "The tablets' order, hidden items, card sizes, home sections and dock are changed in the Layout editor. These options only change the automatic layout.",
