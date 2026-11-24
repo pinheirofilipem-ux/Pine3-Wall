@@ -152,3 +152,19 @@ async def test_apply_edit_keeps_other_modules(hass: HomeAssistant) -> None:
     _grid(doc["pages"]["home"]).append({"type": "calendar_upcoming"})
     out = apply_edit(doc, home, DEFAULT_SETTINGS, {"room_order": []})
     assert _grid(out["pages"]["home"])[-1] == {"type": "calendar_upcoming"}
+
+
+async def test_app_edit_goes_to_the_draft_on_preview(hass: HomeAssistant, hass_ws_client) -> None:
+    """While the tablets show the draft, the tablet's edit mode changes the draft (what it is showing)."""
+    _, call = await _ws(hass, hass_ws_client)
+    auto = (await call("layout/get"))["result"]["auto"]
+    await call("layout/publish", layout=copy.deepcopy(auto))
+    await call("layout/save_draft", layout=copy.deepcopy(auto))
+    await call("layout/preview", on=True)
+    sala = ar.async_get(hass).async_get_area_by_name("Sala").id
+    assert (await call("layout/edit", room_order=[sala], big_rooms=[sala]))["success"]
+    got = (await call("layout/get"))["result"]
+    assert _grid(got["draft"]["pages"]["home"])[0] == {"type": "room", "room": sala, "size": "big"}
+    assert _grid(got["published"]["pages"]["home"])[0].get("size") == "normal"  # the published one is untouched
+    home = (await call("home"))["result"]
+    assert _grid(home["layout"]["pages"]["home"])[0]["room"] == sala

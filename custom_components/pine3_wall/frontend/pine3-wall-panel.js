@@ -998,6 +998,11 @@ class Pine3WallPanel extends HTMLElement {
       ["nav", "mdi:dock-bottom", t("Navegação")], ["layout", "mdi:view-dashboard-edit-outline", t("Layout")], ["system", "mdi:cog-outline", t("Sistema")],
     ];
     let main = "";
+    // the tablets use the editor's layout: these options only change the automatic one
+    const layoutNote = this._model?.layout_source && this._model.layout_source !== "auto" && ["home", "rooms", "nav"].includes(sec)
+      ? `<div class="panel glass" style="border:1px solid var(--amber)"><b>${t("Os tablets usam o layout do editor.")}</b>
+        <p style="margin:6px 0 12px">${t("A ordem, os escondidos, o tamanho dos cartões, as secções do início e a dock dos tablets mudam-se no Editor de layout. Estas opções só mudam o layout automático.")}</p>
+        <button class="pill solid" data-openeditor><ha-icon icon="mdi:view-dashboard-edit-outline"></ha-icon>${t("Abrir o editor")}</button></div>` : "";
     if (sec === "look") {
       main = `<div class="panel glass"><div class="opts">
           ${this._choice("language", d.language, [["pt", "Português"], ["en", "English"]], t("Idioma"), t("Idioma de todo o painel."))}
@@ -1116,7 +1121,7 @@ class Pine3WallPanel extends HTMLElement {
         <div class="actions"><button class="pill ${dirty ? "solid" : "dim"}" data-save ${dirty ? "" : "disabled"}><ha-icon icon="mdi:check"></ha-icon>${t("Guardar alterações")}</button>
         <div class="iconbtn" data-closeset title="${t("Fechar")}"><ha-icon icon="mdi:close"></ha-icon></div></div></div>
       <div class="set-body"><nav class="set-nav">${navItems.map(([k, icon, label]) => `<button class="${k === sec ? "act" : ""}" data-sec="${k}"><span class="ni"><ha-icon icon="${icon}"></ha-icon></span>${label}</button>`).join("")}</nav>
-        <div class="set-main">${main}</div></div>
+        <div class="set-main">${layoutNote}${main}</div></div>
       ${this._toast ? `<div class="toast">${esc(this._toast)}</div>` : ""}
     </div>`;
   }
@@ -1250,6 +1255,12 @@ class Pine3WallPanel extends HTMLElement {
   // ---------- edit mode ----------
   _editBtn() { return ""; } // editing starts from the "⋮" menu
   _startEdit() {
+    // With a layout from the editor (published or the draft on preview), the tablets don't use the settings this mode
+    // edits: open the layout editor on the same page instead, so there is one place that changes what the tablets show.
+    if (this._model?.layout_source && this._model.layout_source !== "auto") {
+      openEditor(this, this._view === "room" ? `room/${this._room}` : this._view === "rooms" ? "rooms" : "home");
+      return;
+    }
     const c = this._saved();
     const rooms = this._rooms();
     this._edit = {
