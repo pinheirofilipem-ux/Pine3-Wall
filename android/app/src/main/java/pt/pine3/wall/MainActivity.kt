@@ -308,7 +308,6 @@ class MainActivity : Activity(), Nav {
     private fun dockItem(key: String): Triple<String, String, String> =
         DOCK_ITEMS.firstOrNull { it.first == key }?.let { Triple(Tr.t(it.third), it.second, it.first) }
             ?: Triple(Ha.home?.layout?.page(key)?.title ?: key.substringAfter('/'), "mdi:clock-time-four-outline", key)
-    }
 
     private fun showTab(key: String) {
         if (Lay.edit != null) finishEdit(false)
