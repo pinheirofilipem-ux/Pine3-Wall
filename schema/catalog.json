@@ -186,6 +186,9 @@
         },
         "agenda_today": {
           "description": "Today's events, by time."
+        },
+        "chores_today": {
+          "description": "Today's chores by person."
         }
       }
     },
@@ -215,6 +218,33 @@
           "options": {
             "count": "how many (default 4)",
             "person": "only this person.* (and the family's)",
+            "size": "normal | big"
+          }
+        }
+      }
+    },
+    "chores": {
+      "version": 1,
+      "description": "The house chores: who does what on each weekday (only the list, no 'done').",
+      "pages": "chores: the week, task x day; it can go in the dock.",
+      "sections": {
+        "chores_week": {
+          "platforms": [
+            "android",
+            "web"
+          ],
+          "description": "The week: each task and who does it on each day, today highlighted."
+        }
+      },
+      "cards": {
+        "chores_today": {
+          "platforms": [
+            "android",
+            "web"
+          ],
+          "description": "Today's chores by person (or of one person).",
+          "options": {
+            "person": "only this person.*",
             "size": "normal | big"
           }
         }

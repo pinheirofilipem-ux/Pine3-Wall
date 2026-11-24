@@ -57,6 +57,7 @@ class LCard(val type: String, val size: String, val room: String?, val entity: S
         "device" -> entity.orEmpty()
         "summary" -> if (summary == "vacuum") "@vacuum:${entity.orEmpty()}" else "@${summary.orEmpty()}"
         "upcoming" -> "@upcoming:${person.orEmpty()}"
+        "chores_today" -> "@chores:${person.orEmpty()}"
         else -> "?$type"
     }
 

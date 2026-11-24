@@ -79,6 +79,10 @@
     "calendar": {
       "$ref": "#/$defs/calendar",
       "description": "Module calendar: the family calendar's events (only when a calendar is chosen in the settings)."
+    },
+    "chores": {
+      "$ref": "#/$defs/chores",
+      "description": "Module chores: the tasks and who does them on each weekday (only when there are tasks)."
     }
   },
   "$defs": {
@@ -460,6 +464,34 @@
               "$ref": "#/$defs/color"
             }
           }
+        },
+        "chores": {
+          "type": "object",
+          "description": "Module chores: the tasks and the weekly grid.",
+          "properties": {
+            "tasks": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/chore"
+              },
+              "maxItems": 60
+            },
+            "schedule": {
+              "type": "object",
+              "description": "Task id -> 7 lists of person.* ids, Monday first.",
+              "additionalProperties": {
+                "type": "array",
+                "minItems": 7,
+                "maxItems": 7,
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -583,6 +615,77 @@
         "private": {
           "type": "boolean",
           "description": "Shown only as 'Busy'."
+        }
+      }
+    },
+    "chore": {
+      "type": "object",
+      "required": [
+        "id",
+        "name"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9_]{1,40}$"
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "icon": {
+          "type": "string",
+          "pattern": "^mdi:[a-z0-9-]+$"
+        },
+        "moment": {
+          "enum": [
+            "morning",
+            "afternoon",
+            "evening",
+            "day"
+          ],
+          "description": "When in the day (default 'day': any time)."
+        }
+      }
+    },
+    "chores": {
+      "type": "object",
+      "required": [
+        "tasks",
+        "schedule",
+        "moments"
+      ],
+      "properties": {
+        "tasks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/chore"
+          }
+        },
+        "schedule": {
+          "type": "object",
+          "description": "Task id -> 7 lists of person.* ids, Monday first.",
+          "additionalProperties": {
+            "type": "array",
+            "minItems": 7,
+            "maxItems": 7,
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "moments": {
+          "type": "object",
+          "description": "Start and end hour of morning, afternoon and evening (the tablet highlights the current one).",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          }
         }
       }
     }

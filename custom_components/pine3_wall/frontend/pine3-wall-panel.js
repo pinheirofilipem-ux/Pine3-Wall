@@ -13,6 +13,7 @@ import { houseView, bindHouse, css3d } from "./house3d.js";
 import { planView, bindPlan, cssPlan } from "./plan2d.js";
 import { openEditor, editorView, bindEditor, cssEditor } from "./editor.js";
 import { agendaView, bindAgenda, calendarSettings, bindCalendarSettings, cssCalendar } from "./calendar.js";
+import { choresView, bindChores, choresSettings, bindChoresSettings, cssChores } from "./chores.js";
 
 // the version of this file, from its URL (/pine3_wall/<version>/…): differs from the integration's when the browser kept an old copy
 const FRONT_VERSION = (import.meta.url.match(/\/(\d+\.\d+\.\d+)\//) || [])[1] || null;
@@ -995,7 +996,7 @@ class Pine3WallPanel extends HTMLElement {
     const d = this._draft, sec = this._section || "look";
     const dirty = JSON.stringify(d) !== this._savedJson;
     const navItems = [
-      ["look", "mdi:palette-outline", t("Aparência")], ["home", "mdi:home-outline", t("Início")], ["people", "mdi:account-group-outline", t("Pessoas")], ["calendar", "mdi:calendar-month-outline", t("Calendário")], ["rooms", "mdi:view-grid-outline", t("Divisões")],
+      ["look", "mdi:palette-outline", t("Aparência")], ["home", "mdi:home-outline", t("Início")], ["people", "mdi:account-group-outline", t("Pessoas")], ["calendar", "mdi:calendar-month-outline", t("Calendário")], ["chores", "mdi:broom", t("Tarefas")], ["rooms", "mdi:view-grid-outline", t("Divisões")],
       ["entities", "mdi:format-list-checks", t("Entidades")], ["plan", "mdi:floor-plan", t("Planta 3D")],
       ["nav", "mdi:dock-bottom", t("Navegação")], ["layout", "mdi:view-dashboard-edit-outline", t("Layout")], ["tablets", "mdi:tablet-dashboard", t("Tablets")], ["system", "mdi:cog-outline", t("Sistema")],
     ];
@@ -1090,6 +1091,8 @@ class Pine3WallPanel extends HTMLElement {
       main = this._peopleSection(d);
     } else if (sec === "calendar") {
       main = calendarSettings(this, d);
+    } else if (sec === "chores") {
+      main = choresSettings(this, d);
     } else if (sec === "entities") {
       main = this._entitiesSection(d);
     } else if (sec === "plan") {
@@ -1218,6 +1221,7 @@ class Pine3WallPanel extends HTMLElement {
     if (!d) return;
     if (this._section === "plan") bindPlan(this, root, d, this._planRooms());
     if (this._section === "calendar") bindCalendarSettings(this, root, d);
+    if (this._section === "chores") bindChoresSettings(this, root, d);
     const q = root.querySelector("[data-entq]");
     if (q) {
       q.addEventListener("input", () => { this._entQ = q.value; this._entFocus = true; this._render(); });
@@ -1565,6 +1569,7 @@ class Pine3WallPanel extends HTMLElement {
     else if (this._view === "rooms") body = this._roomsView(rooms);
     else if (this._view === "security") body = this._securityView(rooms);
     else if (this._view === "calendar") body = agendaView(this);
+    else if (this._view === "chores") body = choresView(this);
     else if (this._view === "climate") body = this._climateView(rooms);
     else if (this._view === "house") body = houseView(this, rooms);
     else body = this._homeView(rooms);
@@ -1604,7 +1609,7 @@ class Pine3WallPanel extends HTMLElement {
     const light = isLight(themeKey);
     this.classList.toggle("light", light);
     if (this._styleLight !== light) {
-      const all = `${css}${css3d}${cssPlan}${cssEditor}${cssCalendar}`;
+      const all = `${css}${css3d}${cssPlan}${cssEditor}${cssCalendar}${cssChores}`;
       this._styleEl.textContent = light ? (this._lightCss ||= toLight(all)) : all;
       this._styleLight = light;
     }
@@ -2507,6 +2512,7 @@ class Pine3WallPanel extends HTMLElement {
       });
       if (this._view === "house") bindHouse(this, root);
       if (this._view === "calendar") bindAgenda(this, root);
+      if (this._view === "chores") bindChores(this, root);
     }
 
     // modal

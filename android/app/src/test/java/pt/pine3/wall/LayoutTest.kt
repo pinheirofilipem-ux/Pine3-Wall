@@ -150,6 +150,30 @@ class LayoutTest {
         assertEquals(3, card.count)
     }
 
+    @Test fun appKnowsTheChoresModule() {
+        val m = json("schema/catalog.json").getJSONObject("modules").getJSONObject("chores")
+        assertEquals(m.getJSONObject("sections").keys().asSequence().toSet(), ChoresModule.sectionTypes)
+        assertEquals(m.getJSONObject("cards").keys().asSequence().toSet(), ChoresModule.cardTypes)
+        assertTrue(ModuleRegistry.knowsCard("chores_today") && ModuleRegistry.knowsSection("chores_week"))
+    }
+
+    @Test fun parsesTheChores() {
+        val ch = ChoresData.parse(JSONObject("""{"tasks":[{"id":"mesa","name":"Pôr a mesa","icon":"mdi:silverware-fork-knife","moment":"evening"},
+            {"id":"lixo","name":"Lixo"},{"id":"cao","name":"Cão"}],
+            "schedule":{"mesa":[["person.pedro"],["person.pedro","person.ana"],[],[],[],[],[]],"lixo":[[],[],[],[],[],["person.ana"],["person.ana"]]},
+            "moments":{"morning":[5,12],"afternoon":[12,19],"evening":[19,24]}}"""))
+        assertEquals(listOf("mesa"), ch.forDay(0).map { it.first.id })
+        assertEquals(listOf("person.pedro", "person.ana"), ch.forDay(1)[0].second)
+        assertEquals(listOf("lixo"), ch.ofPerson("person.ana", 6).map { it.id })
+        assertTrue(ch.forDay(3).isEmpty()) // o cão não tem ninguém
+        assertEquals(ChoresData.DEFAULT_ICON, ch.tasks[1].icon)
+        assertEquals("day", ch.tasks[1].moment)
+        assertEquals("morning", ch.momentNow(java.time.LocalDateTime.of(2026, 1, 1, 8, 0)))
+        assertEquals("evening", ch.momentNow(java.time.LocalDateTime.of(2026, 1, 1, 2, 0)))
+        assertEquals(0, ChoresData.today(java.time.LocalDate.of(2026, 11, 23))) // segunda
+        assertEquals("@chores:person.ana", LCard.parse(JSONObject("""{"type":"chores_today","person":"person.ana"}""")).key)
+    }
+
     @Test fun parsesAnAmbientScreen() {
         val doc = LayoutDoc.parse(JSONObject("""{"dock":["home","ambient/noite"],"pages":{"home":{"sections":[]},
             "ambient/noite":{"title":"Noite","sections":[{"type":"ambient","night":true,"color":"#ff0000",
