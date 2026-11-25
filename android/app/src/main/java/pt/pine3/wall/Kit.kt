@@ -182,6 +182,11 @@ class Kit(val ctx: Context) {
 class Grid(ctx: Context, private val minW: Int, private val childH: Int, private val gap: Int, private val fixedCols: Int = 0) : ViewGroup(ctx) {
     /** Disposição em lista: uma coluna, cartões baixos e 10 dp entre eles (.as-list do painel web). */
     var list = false
+    /** Todas as linhas com a mesma altura (a do cartão mais alto), em vez de cada linha com a sua. */
+    var uniform = false
+    /** > 0: as linhas crescem por igual até a grelha chegar a esta distância (px) do fundo do ecrã (a dock), sem passar de 2× [childH]. */
+    var fillBottom = 0
+    private var fillTo = 0
     /** Modo de edição: arrastar um cartão troca-o de lugar; no fim chama [onReorder] com as chaves pela nova ordem. */
     var onReorder: ((List<String>) -> Unit)? = null
     private var drag: View? = null
@@ -261,12 +266,20 @@ class Grid(ctx: Context, private val minW: Int, private val childH: Int, private
             col += sp
             if (col >= cols) { y += rowH + gap; rowH = 0; col = 0 }
         }
-        val total = if (col == 0 && pos.isNotEmpty()) y - gap else y + rowH
+        var total = if (col == 0 && pos.isNotEmpty()) y - gap else y + rowH
         // alturas de uma linha iguais (stretch)
         var k = 0
         val rows = HashMap<Int, Int>()
         pos.forEach { rows[it[1]] = maxOf(rows[it[1]] ?: 0, it[3]) }
-        pos.forEach { it[3] = rows[it[1]] ?: it[3] }
+        if (uniform && !list && rows.isNotEmpty()) {
+            // todas as linhas iguais; e, com [fillBottom], esticadas para acabar junto à dock
+            val n = rows.size
+            var hRow = rows.values.max()
+            if (fillTo > 0) hRow = maxOf(hRow, minOf((fillTo - (n - 1) * gap) / n, maxOf(hRow, childH * 2)))
+            val order = rows.keys.sorted()
+            pos.forEach { it[1] = order.indexOf(it[1]) * (hRow + gap); it[3] = hRow }
+            total = n * hRow + (n - 1) * gap
+        } else pos.forEach { it[3] = rows[it[1]] ?: it[3] }
         for (i in 0 until childCount) {
             val c = getChildAt(i)
             if (c.visibility == GONE) continue
@@ -285,6 +298,15 @@ class Grid(ctx: Context, private val minW: Int, private val childH: Int, private
             c.layout(p[0], p[1], p[0] + p[2], p[1] + p[3])
         }
         drag?.let { d -> if (dragging) { d.translationX = fx - dox - d.left; d.translationY = fy - doy - d.top } }
+        if (fillBottom > 0 && uniform && !list) post { fill() }
+    }
+
+    /** Quanto espaço há entre o topo da grelha e a dock; se mudou, volta a medir com as linhas esticadas até lá. */
+    private fun fill() {
+        if (!isAttachedToWindow) return
+        val loc = IntArray(2); getLocationInWindow(loc)
+        val avail = rootView.height - fillBottom - loc[1]
+        if (avail > 0 && kotlin.math.abs(avail - fillTo) > 2) { fillTo = avail; requestLayout() }
     }
 }
 

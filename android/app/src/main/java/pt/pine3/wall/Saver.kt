@@ -123,6 +123,10 @@ class AerialView(ctx: Context, private val hasBg: Boolean = false, blend: String
     private var vh = 0f
     private var queue: ArrayDeque<Aerials.Clip> = ArrayDeque()
     private var failures = 0
+    /** Vezes seguidas que o Android tirou o descodificador a meio (volta-se a tentar o mesmo clipe). */
+    private var reclaims = 0
+    /** O leitor do clipe anterior, a acabar de libertar o descodificador. */
+    private var old: CodecPlayer? = null
     private var wantPlay = false
     private var released = false
 
@@ -178,13 +182,18 @@ class AerialView(ctx: Context, private val hasBg: Boolean = false, blend: String
         onStatus?.invoke(if (why == "direto") "A carregar $name…" else "MediaPlayer falhou ($why); a tentar o descodificador alternativo…")
         val me = object : CodecPlayer(context, clip.url, Surface(st),
             { w, h -> post { vw = w.toFloat(); vh = h.toFloat(); fit() } },
-            { dec -> post { failures = 0; preferCodec = true; onStatus?.invoke("$name  ${vw.toInt()}×${vh.toInt()}  [$dec]"); reveal(1000) } },
+            { dec -> post { failures = 0; reclaims = 0; preferCodec = true; onStatus?.invoke("$name  ${vw.toInt()}×${vh.toInt()}  [$dec]"); reveal(1000) } },
             { post { if (cp != null) hide(900) { next() } } },
-            { err -> post { failures++; onStatus?.invoke("Erro em $name: $err"); if (failures < 4) postDelayed({ next() }, 1500) } },
+            { err -> post {
+                if (cp !== null && err == CodecPlayer.RECLAIMED && reclaims++ < 3) { queue.addFirst(clip); postDelayed({ next() }, 600) } // volta a tentar o mesmo, sem mostrar erro
+                else { failures++; onStatus?.invoke("Erro em $name: $err"); if (failures < 4) postDelayed({ next() }, 1500) }
+            } },
             { post { if (cp != null && !covered) hide(1100) {} } },
         ) {}
+        val previous = old
+        old = null
         cp = me
-        me.start()
+        me.start(after = previous)
     }
 
     private fun next() {
@@ -192,7 +201,9 @@ class AerialView(ctx: Context, private val hasBg: Boolean = false, blend: String
         if (queue.isEmpty()) { queue = ArrayDeque(Aerials.shuffled()); if (queue.isEmpty()) return }
         val clip = queue.removeFirst()
         val st = surfaceTexture ?: return
-        cp?.stop(); cp = null
+        // o leitor anterior para; o seguinte só arranca quando ele tiver libertado o descodificador
+        cp?.let { it.stop(); old = it }
+        cp = null
         onNextClip?.invoke()
         if (preferCodec) { fallback(clip, "direto"); return }
         // os clipes com transparência chegam com o fundo preto (o Android ignora o canal alfa): "clarear" deixa ver a cor de fundo nesse preto
@@ -218,6 +229,7 @@ class AerialView(ctx: Context, private val hasBg: Boolean = false, blend: String
         try { mp?.release() } catch (_: Exception) {}
         mp = null
         cp?.stop(); cp = null
+        old?.stop(); old = null
     }
 }
 

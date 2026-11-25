@@ -228,7 +228,7 @@ class AgendaPage(kit: Kit, private val home: Home) : Page(kit) {
         col.addView(header)
         events.forEach { e -> col.addView(evChip(c, e, d), LinearLayout.LayoutParams(-1, -2).apply { topMargin = kit.dp(8) }) }
         if (events.isEmpty() && empty != null) col.addView(kit.text(empty, 15f, kit.muted), LinearLayout.LayoutParams(-2, -2).apply { topMargin = kit.dp(10) })
-        return ScrollView(kit.ctx).apply { isVerticalScrollBarEnabled = false; addView(col, FrameLayout.LayoutParams(-1, -2)) }
+        return ScrollView(kit.ctx).apply { isVerticalScrollBarEnabled = false; isFillViewport = true; addView(col, FrameLayout.LayoutParams(-1, -2)) }
     }
 
     private fun evChip(c: CalendarData, e: CalEvent, d: String): View {

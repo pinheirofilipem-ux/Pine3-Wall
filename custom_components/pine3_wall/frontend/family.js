@@ -76,7 +76,7 @@ export const cssFamily = `
 .fd-hd .t{font-family:var(--display);font-size:38px;font-weight:500;margin-top:6px}
 .fd-hd .sp{flex:1}
 .fd-cols{display:grid;grid-template-columns:repeat(var(--n),minmax(200px,1fr));gap:14px;overflow-x:auto}
-.fd-col{border-radius:24px;padding:16px;display:flex;flex-direction:column;gap:8px;min-height:300px}
+.fd-col{border-radius:24px;padding:16px;display:flex;flex-direction:column;gap:8px;min-height:max(300px,calc(100vh - 290px))}
 .fd-colhd{display:flex;align-items:center;gap:12px;margin-bottom:6px}
 .fd-colhd b{font-family:var(--display);font-size:22px;font-weight:500}
 .fd-av{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-weight:600;font-size:18px;color:var(--ink);background-size:cover;background-position:center;flex:none;border:2px solid transparent}
