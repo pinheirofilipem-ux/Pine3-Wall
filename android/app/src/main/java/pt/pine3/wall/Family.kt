@@ -97,7 +97,7 @@ class FamilyPage(kit: Kit, private val home: Home) : Page(kit) {
             col.addView(h, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = kit.dp(6) })
             items.forEach { col.addView(itemRow(it), LinearLayout.LayoutParams(-1, -2).apply { topMargin = kit.dp(8) }) }
             if (items.isEmpty()) col.addView(kit.text(Tr.s("Dia livre", "Free day"), 15f, kit.muted), LinearLayout.LayoutParams(-2, -2).apply { topMargin = kit.dp(10) })
-            row.addView(ScrollView(kit.ctx).apply { isVerticalScrollBarEnabled = false; addView(col, FrameLayout.LayoutParams(-1, -2)) },
+            row.addView(ScrollView(kit.ctx).apply { isVerticalScrollBarEnabled = false; isFillViewport = true; addView(col, FrameLayout.LayoutParams(-1, -2)) },
                 LinearLayout.LayoutParams(0, -1, 1f).apply { if (i > 0) marginStart = kit.dp(14) })
         }
         val wide = cols.size * (minW + kit.dp(14)) > kit.dp(kit.wdp) - kit.dp(80)

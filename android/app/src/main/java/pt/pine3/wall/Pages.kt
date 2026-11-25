@@ -310,8 +310,10 @@ class HomePage(kit: Kit, private val home: Home, private val nav: Nav) : Page(ki
     }
 
     private fun grid(): View {
-        val g = if (dense) Grid(kit.ctx, 0, kit.dp(kotlin.math.max(120f, kotlin.math.min(230f, (kit.hdp - 316f) / 3f)).toInt()), kit.dp(14), 4).also { it.list = kit.list }
+        val g = if (dense) Grid(kit.ctx, 0, kit.dp(kotlin.math.max(120f, kotlin.math.min(230f, (kit.hdp - 316f) / 3f)).toInt()), kit.dp(14), 4).also { it.list = kit.list; it.fillBottom = dockSpace(kit) }
         else Grid(kit.ctx, kit.dp(230), kit.dp(250), kit.dp(20)).also { it.list = kit.list }
+        // todos os cartões do início com a mesma altura (divisões, resumos, módulos)
+        g.uniform = true
         val fromLayout = page?.section("grid")
         if (Lay.useLayout && fromLayout != null) {
             // O layout já traz os cartões pela ordem certa, sem os escondidos e com o tamanho de cada um.
@@ -440,7 +442,7 @@ class HomePage(kit: Kit, private val home: Home, private val nav: Nav) : Page(ki
         val family = home.people.filter { !it.hidden }.ifEmpty {
             home.persons.mapIndexed { k, id -> Person(id, Fmt.name(id), Fmt.name(id), PERSON_COLORS[k % PERSON_COLORS.size], null, false) }
         }
-        family.mapNotNull { p -> Fmt.state(p.id)?.let { p to it } }.take(4).forEachIndexed { k, (p, st) ->
+        family.mapNotNull { p -> Fmt.state(p.id)?.let { p to it } }.forEachIndexed { k, (p, st) ->
             val box = FrameLayout(kit.ctx)
             val color = try { Color.parseColor(p.color) } catch (_: Exception) { Color.parseColor(PERSON_COLORS[0]) }
             val avatar = kit.text(p.alias.trim().take(1).uppercase(), 20f, kit.ink, 600, display = true).apply {
