@@ -286,6 +286,8 @@ h2{font-size:13px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;c
 .list .pill{height:36px;font-size:14px;padding:0 14px}
 .sub{font-size:12px;font-weight:600;color:var(--muted);margin:22px 2px 0;text-transform:uppercase;letter-spacing:.18em}
 .set{padding:40px 0 60px}
+.vin-r{animation:vinr .32s cubic-bezier(.2,.8,.2,1)}.vin-l{animation:vinl .32s cubic-bezier(.2,.8,.2,1)}
+@keyframes vinr{from{transform:translateX(90px);opacity:0}to{transform:none;opacity:1}}@keyframes vinl{from{transform:translateX(-90px);opacity:0}to{transform:none;opacity:1}}
 .set-hd{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
 /* the header with "Save changes" and ✕ stays on top while the settings scroll */
 .set-hd{position:sticky;top:0;z-index:8;margin:0 -20px;padding:12px 20px 14px;border-radius:0 0 28px 28px;background:linear-gradient(180deg,var(--glass-strong) 70%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
