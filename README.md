@@ -38,25 +38,41 @@ storage and app id, so both can be installed side by side while you move over.
 ## Screenshots
 The web panel and the app look the same; these were taken in the web panel with a sample home.
 
-| Home (Big clock) | Home (Two columns, vivid Amber background) |
+| Home (Two columns) | Home (Big clock, light background) |
 |---|---|
-| ![Home screen with a big clock, home status, weather card with an IPMA warning, scenes, rooms and summary cards](docs/screenshots/home.jpg) | ![Two-column home: clock, what is on and weather on the left, scenes and cards on the right](docs/screenshots/home-columns-vivid.jpg) |
-| **Home (light background)** | **Room** |
-| ![Home screen on the light Linen background](docs/screenshots/home-light.jpg) | ![A room with its status, lights on/off, category chips and one grid of cards](docs/screenshots/room.jpg) |
-| **Weather forecast and IPMA warnings** | **Climate screen** |
-| ![Forecast with IPMA warnings, UV and fire risk](docs/screenshots/forecast.jpg) | ![Every air conditioner with quick controls and the temperature of each room](docs/screenshots/climate.jpg) |
-| **Air conditioner** | **Robot vacuum** |
-| ![Climate card: target ring and modes](docs/screenshots/climate-card.jpg) | ![Vacuum card with routines, suction, rooms to clean and the map](docs/screenshots/vacuum.jpg) |
-| **3D Home** | **Floor plan: devices** |
-| ![3D Home with two floors and coloured lights](docs/screenshots/house-3d.jpg) | ![Floor-plan editor placing devices](docs/screenshots/plan-devices.jpg) |
-| **Edit mode** | **Settings: appearance** |
-| ![Edit mode with cards to hide, resize and reorder](docs/screenshots/edit-mode.jpg) | ![Vivid, dark and light backgrounds, fixed or automatic by day and night](docs/screenshots/settings-appearance.jpg) |
+| ![Home in two columns: clock, people, what is on and weather on the left, scenes and cards on the right](docs/screenshots/home.jpg) | ![Home with a big clock on the light Linen background](docs/screenshots/home-light.jpg) |
+| **Home (Sidebar, vivid Amber)** | **Room** |
+| ![Home with the sidebar template on the vivid Amber background](docs/screenshots/home-vivid.jpg) | ![A room with lights, climate, TV and covers](docs/screenshots/room.jpg) |
+| **Agenda: day by person** | **Agenda: week** |
+| ![Agenda day view with a column per person and one for the family](docs/screenshots/agenda-day.jpg) | ![Agenda week view](docs/screenshots/agenda-week.jpg) |
+| **Agenda: month** | **The family's day** |
+| ![Agenda month view](docs/screenshots/agenda-month.jpg) | ![A column per person with today's events and chores](docs/screenshots/family.jpg) |
+| **Chores** | **Ambient screen** |
+| ![Today's chores by person and the week's grid](docs/screenshots/chores.jpg) | ![Ambient screen with an analog clock, the weather and the next event](docs/screenshots/ambient.jpg) |
+| **Ambient screen: the family's day** | **Screensaver (web)** |
+| ![Ambient screen with a digital clock and the family's day](docs/screenshots/ambient-family.jpg) | ![Web screensaver clock](docs/screenshots/screensaver.jpg) |
+| **Light (compact sheet)** | **Robot vacuum** |
+| ![Compact light sheet with brightness, colours and the power button](docs/screenshots/light.jpg) | ![Robot vacuum sheet](docs/screenshots/vacuum.jpg) |
+| **Climate screen** | **Air conditioner** |
+| ![Every air conditioner and the temperature of each room](docs/screenshots/climate.jpg) | ![Climate sheet with the target ring and modes](docs/screenshots/climate-card.jpg) |
+| **Weather and IPMA warnings** | **3D Home** |
+| ![Forecast with the next hours and days](docs/screenshots/forecast.jpg) | ![3D home with two floors and lights on](docs/screenshots/house-3d.jpg) |
+| **Floor-plan editor** | **Edit mode** |
+| ![Floor-plan editor with rooms on the grid](docs/screenshots/plan.jpg) | ![Edit mode: hide, double size and reorder](docs/screenshots/edit-mode.jpg) |
+| **Layout editor** | **Layout editor: ambient screen** |
+| ![Layout editor: pages, sections, cards and the dock](docs/screenshots/editor.jpg) | ![Composing an ambient screen in the editor](docs/screenshots/editor-ambient.jpg) |
+| **Settings: calendar** | **Settings: chores** |
+| ![Calendar settings](docs/screenshots/settings-calendar.jpg) | ![Chores settings with the weekly grid](docs/screenshots/settings-chores.jpg) |
+| **Settings: tablets** | **Settings: appearance** |
+| ![Every wall tablet with its state, layout and Wake / Test message](docs/screenshots/settings-tablets.jpg) | ![Appearance settings](docs/screenshots/settings-appearance.jpg) |
 
 On a phone:
 
-| Home | Light | 3D Home |
-|---|---|---|
-| ![Home screen on a phone](docs/screenshots/phone-home.jpg) | ![Light sheet with brightness and colours](docs/screenshots/phone-light.jpg) | ![3D Home on a phone](docs/screenshots/phone-3d.jpg) |
+| Home | The family's day | Agenda | Light |
+|---|---|---|---|
+| ![Home on a phone](docs/screenshots/phone-home.jpg) | ![The family's day on a phone](docs/screenshots/phone-family.jpg) | ![Agenda week on a phone](docs/screenshots/phone-agenda.jpg) | ![Light sheet on a phone](docs/screenshots/phone-light.jpg) |
+
+*The video screensaver, motion wake-up and the other wall functions run only in the Android app.*
 
 ## Install
 
