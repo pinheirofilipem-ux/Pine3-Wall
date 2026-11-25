@@ -729,7 +729,7 @@ class Pine3WallPanel extends HTMLElement {
     try { window.Pine3Wallpanel?.keepAwake?.(0); } catch { /* not the app */ }
   }
 
-  _openModal(id) { if (dom(id) === "camera") return this._openCam(id); this._modal = id; this._modalAt = Date.now(); this._render(); }
+  _openModal(id) { if (dom(id) === "camera") return this._openCam(id); this._fullSheet = null; this._modal = id; this._modalAt = Date.now(); this._render(); }
   /** A click that lands on a card just opened: the end of the press that opened it (a long press on a tablet), not a choice. */
   _ghost(el) { return !!el.closest?.(".ov") && Date.now() - (this._modalAt || 0) < 600; }
   _moreInfo(id) {
@@ -2319,18 +2319,18 @@ class Pine3WallPanel extends HTMLElement {
       if (on && (a.source_list || []).length) parts.push(`<div class="ck-lbl">${t("Entrada")}</div><div class="ck-chips">${a.source_list.map((src) => `<button class="pill ${src === a.source ? "act" : ""}" data-src="${esc(src)}">${esc(src)}</button>`).join("")}</div>`);
     }
     // the device's readings as a list, its other controls (child lock, modes…) as usual
-    const mem = (this._meta?.[id]?.members || []).filter((e) => e !== id && this._s(e) && this._s(e).state !== "unavailable");
+    // only what matters here: the device's readings (not its configuration or diagnostics); the rest is behind ⚙
+    const all = (this._meta?.[id]?.members || []).filter((e) => e !== id && this._s(e));
+    const mem = all.filter((e) => this._s(e).state !== "unavailable" && !this._hass.entities?.[e]?.entity_category);
     const readings = mem.filter((e) => ["sensor", "binary_sensor"].includes(dom(e)));
     if (readings.length) parts.push(`<div class="ck-box">${readings.map((e) => `<div class="ck-rd"><ha-icon icon="${this._icon(e)}"></ha-icon><span>${esc(this._memberName(id, e))}</span><b>${esc(dom(e) === "sensor" ? this._sensorVal(e) : this._stateText(e))}</b></div>`).join("")}</div>`);
-    const others = mem.filter((e) => !readings.includes(e));
-    if (others.length) parts.push(this._deviceSection(id, others).replace("<!--side-->", ""));
     const canToggle = !na && (!tv || has(128) || has(256));
     const word = on ? (tv ? t("Ligada") : t("Ligado")) : tv ? t("Desligada") : t("Desligado");
     if (canToggle) parts.push(`<button class="ck-tg ${on ? "on" : ""}" data-toggle><ha-icon icon="${this._icon(id)}"></ha-icon><span><b>${word}</b><small>${on ? t("Toca para desligar") : t("Toca para ligar")}</small></span><i><ha-icon icon="mdi:power"></ha-icon></i></button>`);
     const sub = [room ? this._roomName(room) : "", na ? t("Indisponível") : tv ? this._stateText(id) || this._st(s.state) : word, d === "light" && on && a.brightness != null ? `${Math.round((a.brightness / 255) * 100)}%` : ""].filter(Boolean).join(" · ");
     return `<div class="ov ${this._ovEnter(id)}" data-close><div class="sheet ck" style="--acc:${this._accent(id)}">
       <div class="hd"><div class="ic ${on ? "" : "off"}"><ha-icon icon="${this._icon(id)}"></ha-icon></div><div style="flex:1;min-width:0"><div class="nm">${esc(this._name(id))}</div><div class="st">${esc(sub)}</div></div>
-        <button class="sh-x" data-more title="${t("Mais definições")}" aria-label="${t("Mais definições")}"><ha-icon icon="mdi:cog-outline"></ha-icon></button><button class="sh-x" data-closex title="${t("Fechar")}" aria-label="${t("Fechar")}"><ha-icon icon="mdi:close"></ha-icon></button></div>
+        <button class="sh-x" ${all.length ? "data-full" : "data-more"} title="${t("Mais definições")}" aria-label="${t("Mais definições")}"><ha-icon icon="mdi:cog-outline"></ha-icon></button><button class="sh-x" data-closex title="${t("Fechar")}" aria-label="${t("Fechar")}"><ha-icon icon="mdi:close"></ha-icon></button></div>
       ${parts.join("")}</div></div>`;
   }
   _ckBar(kind, pct, icon, label) {
@@ -2342,7 +2342,7 @@ class Pine3WallPanel extends HTMLElement {
     const id = this._modal, s = id && this._s(id);
     if (!s) return "";
     const d = dom(id), a = s.attributes, on = this._isOn(id);
-    if (d === "light" || d === "media_player" || d === "switch" || d === "input_boolean") return this._compactSheet(id);
+    if ((d === "light" || d === "media_player" || d === "switch" || d === "input_boolean") && this._fullSheet !== id) return this._compactSheet(id);
     const compact = !!this._meta?.[id]?.members?.some((e) => this._s(e)); // a whole-device card: keep it short
     let content = "";
     if (d === "light" && (a.supported_color_modes || []).some((m) => m !== "onoff")) {
@@ -2540,6 +2540,7 @@ class Pine3WallPanel extends HTMLElement {
     on("[data-src]", (el) => this._call("media_player", "select_source", { entity_id: id, source: el.dataset.src }));
     on("[data-mute]", () => this._call("media_player", "volume_mute", { entity_id: id, is_volume_muted: !this._s(id).attributes.is_volume_muted }));
     on("[data-more]", () => { this._modal = null; this._render(); this._moreInfo(id); });
+    on("[data-full]", () => { this._fullSheet = id; this._render(); }); // the whole device: settings, diagnostics, every control
     on("[data-svc]", (el) => { const [d, s] = el.dataset.svc.split("."); this._call(d, s, { entity_id: id }); });
     on("[data-vsec]", (el) => { const k = el.dataset.vsec; this._vacOpen[k] = !this._vacOpen[k]; this._render(); });
     on("[data-vroutine]", (el) => {
