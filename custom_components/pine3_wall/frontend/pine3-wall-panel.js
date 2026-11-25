@@ -594,14 +594,14 @@ class Pine3WallPanel extends HTMLElement {
     this._camTick();
     this._camTimer = setInterval(() => this._camTick(), 1000);
   }
+  /** Opens a door beside the camera with one tap (button press or unlock), then the window closes by itself. */
   _camDoor(d) {
     if (dom(d) === "lock" && this._s(d)?.state !== "locked") return;
-    this._twoTap(`cam:${d}`, () => {
-      if (dom(d) === "lock") this._call("lock", "unlock", { entity_id: d });
-      else this._call("button", "press", { entity_id: d });
-      this._camDone = { id: d, until: Date.now() + 5000 };
-      this._camEnd = Math.min(this._camEnd, Date.now() + 5000); // opened: the window closes by itself
-    }, () => this._camSide());
+    if (dom(d) === "lock") this._call("lock", "unlock", { entity_id: d });
+    else this._call("button", "press", { entity_id: d });
+    this._camDone = { id: d, until: Date.now() + 5000 };
+    this._camEnd = Math.min(this._camEnd, Date.now() + 5000);
+    this._camSide();
   }
   _camTick() {
     if (!this._camOv) return;
@@ -625,9 +625,9 @@ class Pine3WallPanel extends HTMLElement {
     }
     const btn = (d) => {
       const open = (this._camDone?.id === d) || (dom(d) === "lock" && this._s(d).state !== "locked");
-      const armed = !open && this._armed(`cam:${d}`), na = this._s(d).state === "unavailable";
-      return `<button class="cam-b door ${armed ? "arm" : ""} ${open ? "ok" : ""}" data-camdoor="${esc(d)}" ${na ? "disabled" : ""}>
-        <ha-icon icon="mdi:${open ? "check" : "door-open"}"></ha-icon><b>${open ? t("Aberta") : armed ? t("Toca outra vez") : t("Abrir")}</b><small>${esc(this._name(d))}${open || armed ? "" : ` · ${t("toca 2 vezes")}`}</small></button>`;
+      const na = this._s(d).state === "unavailable";
+      return `<button class="cam-b door ${open ? "ok" : ""}" data-camdoor="${esc(d)}" ${na ? "disabled" : ""}>
+        <ha-icon icon="mdi:${open ? "check" : "door-open"}"></ha-icon><b>${open ? t("Aberta") : t("Abrir")}</b><small>${esc(this._name(d))}</small></button>`;
     };
     this._camOv.querySelector(".cam-side").innerHTML = `${doors.map(btn).join("")}
       <button class="cam-b" data-camplus><ha-icon icon="mdi:timer-plus-outline"></ha-icon><b>+2 min</b><small>${t("manter ao vivo")}</small></button>
@@ -787,14 +787,14 @@ class Pine3WallPanel extends HTMLElement {
     if (this._s(rel)) return [rel];
     return b.cam ? this._camDoors(b.cam) : [];
   }
+  /** Opens the door from the doorbell window with one tap; the window closes 5 s later. */
   _bellDoor(d) {
     if (dom(d) === "lock" && this._s(d)?.state !== "locked") return;
-    this._twoTap(`bell:${d}`, () => {
-      if (dom(d) === "lock") this._call("lock", "unlock", { entity_id: d });
-      else this._call("button", "press", { entity_id: d });
-      this._bell.opened = d;
-      this._bellEnd = Math.min(this._bellEnd, Date.now() + 5000);
-    }, () => this._bellSide());
+    if (dom(d) === "lock") this._call("lock", "unlock", { entity_id: d });
+    else this._call("button", "press", { entity_id: d });
+    this._bell.opened = d;
+    this._bellEnd = Math.min(this._bellEnd, Date.now() + 5000);
+    this._bellSide();
   }
   _bellSide(tick) {
     if (!this._bellOv) return;
@@ -806,9 +806,9 @@ class Pine3WallPanel extends HTMLElement {
     if (tick) return;
     const btn = (d) => {
       const open = b.opened === d || (dom(d) === "lock" && this._s(d).state !== "locked");
-      const armed = !open && this._armed(`bell:${d}`), na = this._s(d).state === "unavailable";
-      return `<button class="cam-b door ${armed ? "arm" : ""} ${open ? "ok" : ""}" data-belldoor="${esc(d)}" ${na ? "disabled" : ""}>
-        <ha-icon icon="mdi:${open ? "check" : "door-open"}"></ha-icon><b>${open ? t("Aberta") : armed ? t("Toca outra vez") : t("Abrir porta")}</b><small>${esc(this._name(d))}${open || armed ? "" : ` · ${t("toca 2 vezes")}`}</small></button>`;
+      const na = this._s(d).state === "unavailable";
+      return `<button class="cam-b door ${open ? "ok" : ""}" data-belldoor="${esc(d)}" ${na ? "disabled" : ""}>
+        <ha-icon icon="mdi:${open ? "check" : "door-open"}"></ha-icon><b>${open ? t("Aberta") : t("Abrir porta")}</b><small>${esc(this._name(d))}</small></button>`;
     };
     this._bellOv.querySelector(".cam-side").innerHTML = `${this._bellDoors().map(btn).join("")}
       ${b.cam ? `<button class="cam-b" data-bellcam><ha-icon icon="mdi:cctv"></ha-icon><b>${t("Ver câmara")}</b><small>${t("liga o vídeo")}</small></button>` : ""}

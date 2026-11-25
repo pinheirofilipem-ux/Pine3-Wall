@@ -32,7 +32,7 @@ A app e a integração têm **a mesma versão** (ficheiro `VERSION` na raiz). Po
   resto das entidades de cada dispositivo. Os estados dos botões (cartões e Casa 3D) refletem sempre o estado real.
 - **Aspirador**: cartão largo com comandos rápidos e janela com rotinas, potência, escolha das divisões a limpar e o mapa (Roborock).
 - **Câmara**: o cartão mostra só a última imagem guardada (nunca liga a câmara); o vídeo corre dentro da janela, com abrir a porta
-  (2 toques) e +2 minutos. Há um marcador de carregamento enquanto a imagem não chega.
+  (um toque) e +2 minutos. Há um marcador de carregamento enquanto a imagem não chega.
 - **Tempo** (entidade do HA ou Open-Meteo para a localização da casa): cartão e janela de previsão, com as horas a deslizar para a
   esquerda como no iPhone, 7 dias com barra de temperaturas, nascer e pôr do sol, humidade, vento, UV, risco de incêndio e **avisos do IPMA**.
 - **Campainha**: pop-up com a última imagem da câmara da porta; a foto do toque substitui-a assim que chega. Tem "Ver câmara" e abrir a
