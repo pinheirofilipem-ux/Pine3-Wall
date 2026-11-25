@@ -201,6 +201,8 @@ class SettingsActivity : Activity() {
         }
         hd.addView(saveBtn)
         hd.addView(kit.roundButton("mdi:close", 48, kit.soft, kit.fg) { saveApp?.invoke(); finish() }, LinearLayout.LayoutParams(kit.dp(48), kit.dp(48)).apply { marginStart = kit.dp(12) })
+        // o cabeçalho (Guardar e ✕) fica sempre por cima do conteúdo que desliza (os cartões com elevação não lhe passam por cima)
+        hd.translationZ = kit.dp(40).toFloat()
         page.addView(hd, LinearLayout.LayoutParams(-1, -2))
 
         // corpo: barra lateral (com a lente) + conteúdo
@@ -218,7 +220,7 @@ class SettingsActivity : Activity() {
             isVerticalScrollBarEnabled = false; clipToPadding = false; clipChildren = false; setPadding(ov, ov, ov, ov); addView(navWrap)
         }, LinearLayout.LayoutParams(kit.dp(kit.clamp(200f, kit.vw(20f), 270f)) + 2 * ov, -1).apply { marginStart = -ov; marginEnd = kit.dp(22) - ov; topMargin = -ov; bottomMargin = -ov })
         mainBox = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        mainScroll = ScrollView(this).apply { isVerticalScrollBarEnabled = false; addView(mainBox) }
+        mainScroll = ScrollView(this).apply { isVerticalScrollBarEnabled = false; clipChildren = true; clipToPadding = true; addView(mainBox) }
         body.addView(mainScroll, LinearLayout.LayoutParams(0, -1, 1f))
         page.addView(body, LinearLayout.LayoutParams(-1, 0, 1f))
         root.addView(page, FrameLayout.LayoutParams(-1, -1))

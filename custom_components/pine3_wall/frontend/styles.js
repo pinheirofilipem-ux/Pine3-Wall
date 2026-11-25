@@ -287,12 +287,14 @@ h2{font-size:13px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;c
 .sub{font-size:12px;font-weight:600;color:var(--muted);margin:22px 2px 0;text-transform:uppercase;letter-spacing:.18em}
 .set{padding:40px 0 60px}
 .set-hd{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+/* the header with "Save changes" and ✕ stays on top while the settings scroll */
+.set-hd{position:sticky;top:0;z-index:8;margin:0 -20px;padding:12px 20px 14px;border-radius:0 0 28px 28px;background:linear-gradient(180deg,var(--glass-strong) 70%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
 .set-hd .t{font-family:var(--display);font-size:clamp(38px,5vw,54px);font-weight:400;letter-spacing:-.02em;margin-top:10px;line-height:1}
 .set-hd .s{color:var(--muted);font-size:17px;margin-top:10px}
 .set-hd .actions{align-items:center}
 .pill.dim{opacity:.55;cursor:default}
 .set-body{display:grid;grid-template-columns:270px minmax(0,1fr);gap:40px;margin-top:40px;align-items:start}
-.set-nav{display:flex;flex-direction:column;gap:6px;position:sticky;top:20px}
+.set-nav{display:flex;flex-direction:column;gap:6px;position:sticky;top:150px}
 .set-nav button{all:unset;cursor:pointer;display:flex;align-items:center;gap:14px;height:58px;padding:0 14px;border-radius:18px;font-size:18px;font-weight:500;color:rgba(255,255,255,.85);transition:background .2s}
 .set-nav button:hover{background:rgba(255,255,255,.06)}
 .set-nav button.act{background:rgba(255,255,255,.9);color:var(--ink)}
