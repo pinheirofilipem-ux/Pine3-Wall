@@ -64,8 +64,13 @@ class MainActivity : Activity(), Nav {
             blackout.animate().alpha(0f).setDuration(FADE_MS).withEndAction { blackout.visibility = View.GONE; blackout.alpha = 1f }.start()
         }
     }
+    /** Aspiradores e climatizadores que ainda não tinham estado quando a página foi feita (ficaram como mosaico simples). */
+    private var missingAtBuild: Set<String> = emptySet()
+
     private val flush = Runnable {
         dirty = false
+        // um deles já tem estado: refaz a página para ganhar o cartão próprio (sem ter de entrar e sair do modo de edição)
+        if (missingAtBuild.any { Fmt.state(it) != null }) { shownKey = ""; rebuild(); return@Runnable }
         val home = Ha.home
         if (home != null && lookChanged(home)) rebuild() else page?.update()
     }
@@ -417,6 +422,7 @@ class MainActivity : Activity(), Nav {
         val animate = animationsOn && shownKey.isNotEmpty() && shownKey != key
         shownHome = home
         shownKey = key
+        missingAtBuild = home.rooms.flatMap { it.devices }.filter { it.kind in setOf("vacuum", "climate") && Fmt.state(it.id) == null }.map { it.id }.toSet()
         show(p, animate)
         // a página no ecrã, para a entidade "Página" do tablet no HA
         val pageKey = room?.let { "room/${it.id}" } ?: tab
