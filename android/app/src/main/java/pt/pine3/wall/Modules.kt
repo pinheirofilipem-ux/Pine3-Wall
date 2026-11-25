@@ -20,7 +20,7 @@ interface Module {
 }
 
 object ModuleRegistry {
-    val modules: List<Module> = listOf(HomeModule, AmbientModule, CalendarModule, ChoresModule)
+    val modules: List<Module> = listOf(HomeModule, AmbientModule, CalendarModule, ChoresModule, FamilyModule)
 
     fun knowsSection(type: String) = modules.any { type in it.sectionTypes }
     fun knowsCard(type: String) = modules.any { type in it.cardTypes }
