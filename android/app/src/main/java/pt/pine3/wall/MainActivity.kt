@@ -209,7 +209,8 @@ class MainActivity : Activity(), Nav {
 
         root = FrameLayout(this).apply { clipChildren = false }
         root.background = ThemeBackground(Themes.get("ameixa"))
-        content = FrameLayout(this)
+        // deslizar para a esquerda/direita: a vista seguinte/anterior da dock (não dentro de uma divisão nem no modo de edição)
+        content = SwipeFrame(this, { Lay.edit == null && roomId == null && Ha.home != null && dockKeys().size > 1 }) { dir -> swipeTab(dir) }
         root.addView(content, FrameLayout.LayoutParams(-1, -1))
 
         dockHost = FrameLayout(this).apply { clipChildren = false; clipToPadding = false }
@@ -319,6 +320,25 @@ class MainActivity : Activity(), Nav {
         DOCK_ITEMS.firstOrNull { it.first == key }?.let { Triple(Tr.t(it.third), it.second, it.first) }
             ?: Triple(Ha.home?.layout?.page(key)?.title ?: key.substringAfter('/'), "mdi:clock-time-four-outline", key)
 
+    private var slideDir = 0
+
+    /** Um deslize na página: a vista seguinte (1) ou anterior (-1) pela ordem da dock, dando a volta no fim. */
+    private fun swipeTab(dir: Int) {
+        val keys = dockKeys()
+        val i = keys.indexOf(tab).coerceAtLeast(0)
+        val next = keys[(i + dir + keys.size) % keys.size]
+        slideDir = dir
+        showTab(next)
+        slideDir = 0
+    }
+
+    /** A página que entra de lado depois de um deslize. */
+    private fun slideIn(v: View, dir: Int) {
+        val ease = android.view.animation.PathInterpolator(0.2f, 0.8f, 0.2f, 1f)
+        v.translationX = dir * kit.dp(90).toFloat(); v.alpha = 0f
+        v.animate().translationX(0f).alpha(1f).setDuration(if (animationsOn) 320 else 0).setInterpolator(ease).start()
+    }
+
     private fun showTab(key: String) {
         if (Lay.edit != null) finishEdit(false)
         tab = key; roomId = null
@@ -422,7 +442,7 @@ class MainActivity : Activity(), Nav {
         page = p
         content.addView(p.view, FrameLayout.LayoutParams(-1, -1))
         p.update()
-        if (animate) enter(p.view)
+        if (slideDir != 0) slideIn(p.view, slideDir) else if (animate) enter(p.view)
     }
 
     /** Entrada de uma página (como o "vin" do painel web): aparece, sobe 14 dp, assenta e perde o desfoque. */

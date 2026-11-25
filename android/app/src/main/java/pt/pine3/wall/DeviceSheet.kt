@@ -28,8 +28,8 @@ class DeviceSheet(private val act: Activity, private val kit: Kit, private val i
     private var dragging = false
     private var openSel: String? = null
     private val wide = kit.wdp >= 820f
-    /** Luzes e TVs/leitores: uma coluna estreita (cabeçalho, barra, cores, leituras e o botão grande de ligar). */
-    private val compact = Fmt.domain(id) in setOf("light", "media_player")
+    /** Luzes, TVs/leitores e tomadas/interruptores: uma coluna estreita (cabeçalho, barra, cores, leituras e o botão grande de ligar). */
+    private val compact = Fmt.domain(id) in setOf("light", "media_player", "switch", "input_boolean")
     private var pickerOpen = false
     private val listener = object : Ha.Listener {
         override fun onStates(changed: Set<String>) { if (changed.isEmpty() || changed.any { it == id || dev?.members?.contains(it) == true }) schedule() }
@@ -338,7 +338,7 @@ class DeviceSheet(private val act: Activity, private val kit: Kit, private val i
             val tg = LinearLayout(act).apply {
                 gravity = Gravity.CENTER_VERTICAL; setPadding(kit.dp(18), kit.dp(14), kit.dp(16), kit.dp(14))
                 background = kit.ripple(kit.rounded(if (on) acc else Color.argb(26, 255, 255, 255), 22)); isClickable = true
-                setOnClickListener { if (tv) call("media_player", if (on) "turn_off" else "turn_on") else call("light", if (on) "turn_off" else "turn_on") }
+                setOnClickListener { call(if (tv) "media_player" else d, if (on) "turn_off" else "turn_on") }
                 Elastic.press(this, 0.97f)
             }
             tg.addView(kit.icon(Fmt.icon(id, dev?.kind ?: d), fg, 26), LinearLayout.LayoutParams(kit.dp(26), kit.dp(26)).apply { marginEnd = kit.dp(14) })
