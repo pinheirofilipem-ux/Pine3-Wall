@@ -193,6 +193,12 @@ class LayoutTest {
         assertEquals(listOf("Jantar"), fd.family.map { it.title })
     }
 
+    @Test fun aReclaimedDecoderIsNotAFileError() {
+        assertTrue(CodecPlayer.isReclaimed(IllegalStateException("queueInputBuffer() is valid only at Executing states; currently at Released state")))
+        assertFalse(CodecPlayer.isReclaimed(IllegalStateException("something else")))
+        assertFalse(CodecPlayer.isReclaimed(java.io.IOException("Failed to instantiate extractor.")))
+    }
+
     @Test fun parsesAnAmbientScreen() {
         val doc = LayoutDoc.parse(JSONObject("""{"dock":["home","ambient/noite"],"pages":{"home":{"sections":[]},
             "ambient/noite":{"title":"Noite","sections":[{"type":"ambient","night":true,"color":"#ff0000",

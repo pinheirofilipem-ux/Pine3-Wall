@@ -18,10 +18,21 @@ open class CodecPlayer(
     private val onNearEnd: () -> Unit = {},
 ) {
     @Volatile private var stop = false
-    private var thread: Thread? = null
+    @Volatile private var thread: Thread? = null
 
-    fun start() { thread = Thread { run() }.also { it.start() } }
+    /**
+     * Começa a tocar. Com [after] (o leitor do clipe anterior), espera primeiro que esse liberte o descodificador: os de hardware são
+     * poucos (4K HEVC) e, se os dois os pedirem ao mesmo tempo, o Android tira-o a um deles a meio ("Released state").
+     */
+    fun start(after: CodecPlayer? = null) {
+        thread = Thread {
+            after?.let { it.stop(); it.join(3000) }
+            if (!stop) run()
+        }.also { it.start() }
+    }
     fun stop() { stop = true }
+    /** Espera (no máximo [ms]) que o leitor acabe e liberte o descodificador. */
+    fun join(ms: Long) { try { thread?.takeIf { it !== Thread.currentThread() }?.join(ms) } catch (_: InterruptedException) {} }
 
     private fun run() {
         val ex = MediaExtractor()
@@ -73,11 +84,23 @@ open class CodecPlayer(
             }
             if (!stop) onDone()
         } catch (e: Exception) {
-            if (!stop) onError(e.message ?: e.javaClass.simpleName)
+            // o sistema tirou-nos o descodificador (outro leitor, outra app): não é um erro do ficheiro
+            if (!stop) onError(if (isReclaimed(e)) RECLAIMED else e.message ?: e.javaClass.simpleName)
         } finally {
             try { codec?.stop() } catch (_: Exception) {}
             try { codec?.release() } catch (_: Exception) {}
             try { ex.release() } catch (_: Exception) {}
+        }
+    }
+
+    companion object {
+        /** O erro de quando o Android recupera o descodificador a meio (não conta como falha do clipe). */
+        const val RECLAIMED = "reclaimed"
+
+        fun isReclaimed(e: Exception): Boolean {
+            val m = e.message.orEmpty()
+            return (e is IllegalStateException && ("Released state" in m || "Released" in m)) ||
+                (e is MediaCodec.CodecException && (e.errorCode == MediaCodec.CodecException.ERROR_RECLAIMED || e.isRecoverable || e.isTransient))
         }
     }
 }
