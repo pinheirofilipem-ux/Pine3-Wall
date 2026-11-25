@@ -7,129 +7,235 @@
 
 <p align="center"><b>English</b> · <a href="README.pt.md">Português</a></p>
 
-> **Pine3 Wall** is the successor of [Pine3 View](https://github.com/pinheirofilipem-ux/pine3-view): a Home Assistant
-> integration (the backend and a web editor) plus a **native Android app** for wall tablets. It starts as the same code as
-> Pine3 View 0.27 under a new name (`pine3_wall`), so both can be installed side by side without touching each other.
-> The roadmap is in [PLANO.md](PLANO.md) (Portuguese). The logo images still show the old name for now.
+**Pine3 Wall** turns a tablet on the wall into the control panel of your home. It has three parts that share one model of the house:
 
+| Part | What it does |
+|---|---|
+| **Home Assistant integration** (`pine3_wall`) | Builds the house from your areas, devices and entities (no YAML), keeps the people, layouts, family calendar and chores, and registers each wall tablet as a Home Assistant device you can automate. |
+| **Web editor and panel** (Home Assistant sidebar) | Designs what the tablets show (pages, sections, cards, dock, ambient screens) and is also a full panel in the browser or on a phone, with the same views as the tablets. |
+| **Native Android app** (`pt.pine3.wall`) | The panel on the tablet, without a WebView: wakes up with motion, turns the screen off, plays the video screensaver, opens the doorbell and draws everything natively and smoothly. |
 
-A personal dashboard for Home Assistant, inspired by Apple Home. It organises your home
-by room automatically (Areas → Devices → Entities), with no YAML, and adds a 3D view of
-your house that you can draw yourself. Original code, built from scratch.
+> **Tested on an OPPO Pad SE (11", ColorOS) mounted on the wall.** Other Android tablets should work, but power management differs between
+> brands (see [Setting up the tablet](#setting-up-the-tablet)).
+
+Pine3 Wall is the successor of [Pine3 View](https://github.com/pinheirofilipem-ux/pine3-view). It uses another domain, panel address,
+storage and app id, so both can be installed side by side while you move over.
+
+## Contents
+- [Screenshots](#screenshots)
+- [Install](#install)
+- [Setting up the tablet](#setting-up-the-tablet)
+- [The home](#the-home)
+- [Layout editor](#layout-editor)
+- [Modules: ambient screens, family calendar, chores and the family's day](#modules)
+- [The wall tablet (Android app)](#the-wall-tablet-android-app)
+- [Tablets in Home Assistant](#tablets-in-home-assistant)
+- [The web panel](#the-web-panel)
+- [Settings](#settings)
+- [How it works](#how-it-works)
+- [Development](#development)
 
 ## Screenshots
+The web panel and the app look the same; these were taken in the web panel with a sample home.
 
 | Home (Big clock) | Home (Two columns, vivid Amber background) |
 |---|---|
-| ![Home screen with a big clock, home status, weather card with an IPMA warning, scenes, rooms and summary cards](docs/screenshots/home.jpg) | ![Two-column home: clock, what is on and weather on the left, scenes and cards on the right, on the Amber background](docs/screenshots/home-columns-vivid.jpg) |
+| ![Home screen with a big clock, home status, weather card with an IPMA warning, scenes, rooms and summary cards](docs/screenshots/home.jpg) | ![Two-column home: clock, what is on and weather on the left, scenes and cards on the right](docs/screenshots/home-columns-vivid.jpg) |
 | **Home (light background)** | **Room** |
 | ![Home screen on the light Linen background](docs/screenshots/home-light.jpg) | ![A room with its status, lights on/off, category chips and one grid of cards](docs/screenshots/room.jpg) |
 | **Weather forecast and IPMA warnings** | **Climate screen** |
-| ![Forecast with IPMA warnings, UV and fire risk on the left and hours and days on the right](docs/screenshots/forecast.jpg) | ![Every air conditioner with quick controls and the temperature of each room](docs/screenshots/climate.jpg) |
-| **Air conditioner card** | **Robot vacuum card** |
-| ![Climate card in two columns: target ring and modes](docs/screenshots/climate-card.jpg) | ![Vacuum card with routines, buttons, suction, rooms to clean and controls](docs/screenshots/vacuum.jpg) |
-| **3D Home** | **3D Home, ground floor** |
-| ![3D Home with two floors, an L-shaped living room, coloured lights and devices in place](docs/screenshots/house-3d.jpg) | ![3D Home showing only the ground floor](docs/screenshots/house-3d-ground-floor.jpg) |
-| **Floor plan: free shapes** | **Floor plan: devices** |
-| ![Floor-plan editor painting cells for an L-shaped room](docs/screenshots/plan-shapes.jpg) | ![Floor-plan editor placing devices](docs/screenshots/plan-devices.jpg) |
+| ![Forecast with IPMA warnings, UV and fire risk](docs/screenshots/forecast.jpg) | ![Every air conditioner with quick controls and the temperature of each room](docs/screenshots/climate.jpg) |
+| **Air conditioner** | **Robot vacuum** |
+| ![Climate card: target ring and modes](docs/screenshots/climate-card.jpg) | ![Vacuum card with routines, suction, rooms to clean and the map](docs/screenshots/vacuum.jpg) |
+| **3D Home** | **Floor plan: devices** |
+| ![3D Home with two floors and coloured lights](docs/screenshots/house-3d.jpg) | ![Floor-plan editor placing devices](docs/screenshots/plan-devices.jpg) |
 | **Edit mode** | **Settings: appearance** |
 | ![Edit mode with cards to hide, resize and reorder](docs/screenshots/edit-mode.jpg) | ![Vivid, dark and light backgrounds, fixed or automatic by day and night](docs/screenshots/settings-appearance.jpg) |
-| **Settings: entities** | **This device** |
-| ![Choosing which entities are shown](docs/screenshots/settings-entities.jpg) | ![Per-device options: 3D Home view, light effects, animations, sidebar, screen on, full screen](docs/screenshots/settings-device.jpg) |
-| **List layout, in English** | **Screensaver** |
-| ![A room in the list layout with the panel in English](docs/screenshots/list-english.jpg) | ![Large screensaver clock](docs/screenshots/screensaver.jpg) |
 
 On a phone:
 
-| Home | Light details | 3D Home |
+| Home | Light | 3D Home |
 |---|---|---|
-| ![Home screen on a phone](docs/screenshots/phone-home.jpg) | ![Detail sheet with brightness and colours](docs/screenshots/phone-light.jpg) | ![3D Home on a phone](docs/screenshots/phone-3d.jpg) |
+| ![Home screen on a phone](docs/screenshots/phone-home.jpg) | ![Light sheet with brightness and colours](docs/screenshots/phone-light.jpg) | ![3D Home on a phone](docs/screenshots/phone-3d.jpg) |
 
-*Screenshots taken with a sample home on a landscape tablet-sized screen; most show the Portuguese interface (English is one tap away in Settings).*
+## Install
 
-## Install with HACS
-1. In Home Assistant open **HACS** → **⋮** menu → **Custom repositories**.
-2. Repository: `https://github.com/pinheirofilipem-ux/pine3-wall`, type **Integration** → **Add**.
-3. Search for **Pine3 Wall**, open it and select **Download**.
-4. Restart Home Assistant.
-5. **Settings → Devices & services → Add integration → Pine3 Wall**.
-6. Open **Pine3 Wall** in the sidebar.
+### 1. The integration (HACS)
+1. In Home Assistant open **HACS** → **⋮** → **Custom repositories**.
+2. Repository `https://github.com/pinheirofilipem-ux/pine3-wall`, type **Integration** → **Add**.
+3. Search for **Pine3 Wall**, **Download**, and restart Home Assistant.
+4. **Settings → Devices & services → Add integration → Pine3 Wall**.
+5. **Pine3 Wall** appears in the sidebar.
 
-Requires Home Assistant 2024.7 or newer (the integration icon needs 2026.3 or newer). To update,
-download the new version in HACS and restart Home Assistant; the browser picks up the new files on its own.
+Requires Home Assistant 2024.7 or newer. To update, download the new version in HACS and restart; the browser picks up the new files by itself.
+Manual install: copy `custom_components/pine3_wall` to `/config/custom_components/`, restart and add the integration.
 
-### Manual install
-Copy `custom_components/pine3_wall` to `/config/custom_components/`, restart and add the integration.
+### 2. The app
+1. Download `Pine3Wall-X.Y.Z.apk` from the [Releases](https://github.com/pinheirofilipem-ux/pine3-wall/releases) (same version as the integration)
+   and install it on the tablet.
+2. In Home Assistant, create a **long-lived access token** (your profile → Security).
+3. Open the app: enter the Home Assistant address (an IP like `http://192.168.1.10:8123` is safer than `.local` on Android) and the token.
+   **Test connection** checks DNS, the websocket, the token and the integration step by step.
+4. In the app's settings → **Permissions**, grant everything until it is all green: camera (motion), device administrator (turn the
+   screen off completely), no battery optimisation, and display over other apps (start on boot).
 
-## Features
-- **Home layouts** (*Settings → Home → Home layout*): **Big clock** (a large clock with the home status beside it), **Sidebar** (a full-height glass sidebar with the date, clock, weather, home status and people, and the scenes and cards beside it), **Two columns** (a third for the date, a big clock, weather, people and what is on; two thirds for Lights on/off, scenes and the cards in rows of four) or **Classic**. Big clock and Two columns also show a **weather card**: now (temperature, condition, today's high and low), the next hours with rain chance, and tomorrow; tap it for the full forecast. With the **IPMA** integration, an active warning (yellow, orange or red) shows as a coloured strip on the weather card, with "+N" when there are more (or ⚠ on the weather pill), and the forecast lists every warning of your area with its start, end and text (the integration exposes only the first, so Pine3 Wall asks IPMA for the rest), the UV index and the fire risk. The home status lists what else is on besides the lights (plugs, purifiers, TVs, AC…).
-- **Home**: clock, weather with the next days (tap for the forecast), home status with what else is on as chips (tap one to open it; "+N" lists the rest, each with a power button), scenes (those that don't fit go in a "+N" menu) (an activated scene stays highlighted while its devices are on, until a later scene sets the same devices, so scenes for different rooms can be on together; tap it again to turn them off), room cards and summary cards (Climate, Security, Now playing).
-- **Weather**: uses your Home Assistant weather entity or, if there is none, [Open-Meteo](https://open-meteo.com) for your home's location (no API key). Forecast for the next 12 hours and 7 days.
-- **3D Home**: every room is a block, stacked by floor (Home Assistant floors). Lit rooms glow in the colour and brightness of their lights (each light casts a pool of its own colour on the floor), lights show as points you can toggle, drag to rotate (the house turns with your finger), zoom with two fingers, the mouse wheel or the + and − buttons, and tap a room to open it. A tap near a light toggles it, even if you miss it slightly. Each floor's slab is only as big as its rooms, and the **wall height** is adjustable (↕ buttons in the 3D Home or a slider in Settings).
-- **Floor-plan editor** (*Settings → 3D floor plan*, or *Edit floor plan* in the 3D Home), a top view of one floor at a time:
-  - **Move and resize**: draw rooms as rectangles, drag to move, drag the corner to resize, move rooms between floors or add floors. *Generate automatic plan* gives you a starting point.
-  - **Paint / erase cells**: give a room any right-angled shape (L, U, T…). Painting over another room hands those cells over.
-  - **Devices**: put each entity where it really is. Its type is detected automatically (ceiling light, lamp, LED strip, spotlight, TV, Apple TV, HomePod, speaker, air conditioner, blind, door, window, plug, sensor, camera…) and can be changed. LED strips also get a length and an angle. In the 3D Home lights glow in place (ceiling lights up high, LED strips as a line of their real length and direction) and other devices are icons that open their details.
-  - Rooms you don't place are arranged automatically.
-- **Entities** (*Settings → Entities*): every entity of each room, with search. Hide tiles you don't want, or show secondary entities (a TV's power switch, a plug's power sensor, diagnostic sensors) as tiles of their own.
-- **Whole-device cards**: a device's detail card shows everything it exposes — readings in a grid (PM2.5, allergen index, humidity, filter life…) and its controls (switches, options, numbers, buttons), plus fan/purifier preset modes. Option lists (lamp mode, timer…) are compact tiles that open a row of chips. Great for air purifiers (e.g. Philips), vacuums or AC units; a double-size tile shows up to 6 readings.
-- **Room screen**: the home screen's look — the room name with its temperature and humidity, how many lights and devices are on, *On / Off* for the room's lights, then category chips (All, Lights, Climate, Covers, Media…, with counts) and the room's scenes, and one grid of cards ordered by category, sized so three rows fit above the dock on a landscape tablet. Tap a category to show only it.
-- **Climate and air conditioning** (e.g. Tado via HomeKit): a ring with the target temperature or the heat/cool range (low and high), what the unit is doing now (heating, cooling, idle…), current temperature and humidity, the HVAC modes and, when the unit exposes them, fan speed, swing and preset chips. Thermostats and AC units get their own icons.
-- **Climate screen**: every air conditioner and thermostat on one screen, each card with a ring for the target, the current temperature, quick modes (Cool / Heat / Off) and − / + (tap the card for every control; the same card appears in each room), plus the temperature and humidity of each room. With more than one device, the Climate card on the home screen opens it; it can also go in the dock (*Settings → Navigation*).
-- **Robot vacuum** (e.g. the official *Roborock* integration): one card for the robot and its dock. Tapping the vacuum opens a card with battery, status (and the error, if any), the robot's **routines** from the Roborock app at the top, Start/Pause, Back to dock and Locate, suction power, **cleaning chosen rooms** (the rooms of the map in use come from `roborock.get_maps`), the map and the everyday controls (mop mode, dust emptying…). Maintenance (consumables and resets), robot settings and diagnostics are folded into sections that open with a tap. The home screen has a **Vacuum** card with its status, battery and, while cleaning, progress; tapping it opens the robot's card (it never starts it). In its room the robot gets a **wide card** with status, battery, suction (or progress while cleaning) and four quick commands: Start/Pause, Dock, **This room** (cleans only that room, when the map has a room with the same name; otherwise Suction) and Locate.
-- **Locks**: on a lock's card only the icon locks or unlocks it; tapping the rest opens it, with Lock/Unlock and a big lock button. Unlocking takes **two taps** (the first one arms it for 3 seconds), so a stray touch never opens a door; locking takes one.
-- **Cameras** (e.g. a Comelit intercom): a wide card with the last picture seen on that device and a ▶. It never streams by itself (some intercoms are busy while streaming). A tap opens the **live video** with the room's doors beside it (its locks, or door buttons such as an intercom's "Activate", two taps to open), +2 min and **Choose doors** (pick which locks or buttons show beside that camera, e.g. the building door and not the flat's), and it closes by itself after 2 minutes, 5 seconds after opening a door, or when you close it.
-- **Doorbell** (e.g. the [Comelit Intercom Doorbell](https://github.com/pinheirofilipem-ux/comelit_homeassistant_intercom) integration, or any `event` entity of class doorbell): when it rings, a window opens at once with the last picture of the door camera, replaced by **the call's own picture** as soon as the integration receives it (its `snapshot_entity`, matched by `call_id`), **Open door** (two taps) and **View camera**, which only then starts the video. It wakes the Pine3 Wallpanel tablet, shows "Answered on another device" or "Nobody answered", and closes after 90 seconds. A ring at the flat door (`floor_call`) opens a smaller window without the camera. Each device can turn it off or test it under Settings, Home, This device.
-- **TVs** (e.g. via HomeKit): a TV icon, a power button on the tile and a card with its **inputs** (HDMI, apps…), the current source and only the controls the TV supports (playback, volume).
-- **Apple TV and HomePod** (Home Assistant's *Apple TV* integration): their own icons and the app or song that's playing.
-- **Edit mode** (✎): drag to reorder rooms and devices (on the home screen also the Climate, Security, Vacuum and Now playing cards, among the rooms), tap − to hide, tap the arrows to make a card double size (a double room card gets shortcuts to its devices).
-- **Layout**: grid or list. Switching screens in the dock slides a glass lens to the new tab and the screen flows in (*Settings → Appearance → Animations* turns this off).
-- **Screensaver**: a large dimmed clock after 1–30 minutes without touches.
-- **Menu and kiosk mode**: the small ⋮ button at the top right opens *Edit screen* and *Settings*. Full screen is in *Settings → Home → This device*. In *Settings → Home → This device* you can hide the Home Assistant sidebar and keep the screen on (on that device only). Opening the panel with `?kiosk` in the address (e.g. `http://homeassistant.local:8123/pine3-wall?kiosk`) also hides the sidebar, ideal for a wall tablet.
-- **Weaker tablets** (e.g. Samsung Galaxy Tab A7): in *Settings → Home → This device* you choose how that device shows the 3D Home — **Full 3D**, **Light 3D** (without the heaviest effects), **3D picture** (the home drawn as one image, light and smooth, with the same lights and taps) or **2D plan** (seen from above, one floor at a time). **Light effects** removes the frosted-glass blur, which leaves white or empty areas on some tablets, and **Animations** can be turned on or off on that device only. On *Auto*, devices with little memory use the 3D picture and light effects. The dock shrinks by itself when it doesn't fit (first only the active tab keeps its name, then icons only). On short screens, such as a tablet in landscape, room and device cards get more compact so three rows fit above the dock. On the Home screen, the clock, status, scenes and two rows of cards fit on one screen.
-- **House chores** (*Settings → Chores*): the chores (name, icon, time of day) and who does each one on each weekday ("Set the table", Monday, Pedro). Only the list of what was agreed, no "done". The **Chores** page (dock) shows today by person and the week; the **Today's chores** card (everyone's or one person's) goes on the home screen from the layout editor, and the ambient screens get a **Today's chores** face. The chore of the current time of day (morning, afternoon, evening) is highlighted. Each person gets a sensor (*Tarefas da casa* device) with the number of chores today and the list in its attributes, for automations and notifications.
-- **The family's day**: a page (dock **Family**) with a column per person holding their events and chores of today or tomorrow, in time order (chores by time of day, the current one highlighted, past events dimmed), plus a column for the whole family's events. Also an ambient face with one line per person.
-- **Same views as the tablets** (web panel): with a layout published in the layout editor (or its draft shown as a preview), the web shows what the tablets show: the home template and sections, the order, double size and kind of every card (rooms, devices, summaries, *Coming up*, *Today's chores*), each room's devices and the dock in the layout's order, ambient screens included (full page, ticking clock). On a phone or touch screen, swipe left/right to go to the next/previous view of the dock.
-- **Language**: Português or English, chosen in Settings.
-- **Family calendar** (*Settings → Calendar*): one shared calendar for the family, e.g. a "Família" calendar in iCloud connected with Home Assistant's **CalDAV** integration (server `https://caldav.icloud.com`, your Apple ID and an app-specific password; Google, Outlook or the HA local calendar work too). Whose each event is comes from its title: `[Pedro] Swimming`, `Pedro: Swimming`, `Pedro and Ana: Dinner` or `Swimming [Pedro]` (name or short name from *Settings → People*; no name = the whole family). A calendar can be shown only as "Busy". The **Agenda** page (dock) has **Day** with a column per person and one for the family, **Week** and **Month**; tap an event for its time, place and people. The **Coming up** card (all, or one person's) goes on the home screen from the layout editor, and the ambient screens get **Next event** and **Today's agenda** faces. The app and the web show the same events.
+The app and the integration share one version number; the app warns when one of them is too old for the other.
+
+## Setting up the tablet
+Android brands kill background apps in different ways. On the tested **OPPO Pad SE (ColorOS)**:
+- **App settings → Battery**: *Allow background activity*, *Allow auto launch* on; battery use **unrestricted**.
+- **App settings → Permissions**: turn off *Remove permissions if the app isn't used*. Keep the app's notifications on (the motion service
+  needs its notification to stay alive).
+- **Battery**: power saving off; *Optimise battery use* / *sleep standby optimisation* off.
+- **Recents**: lock the app (padlock) so it isn't cleared; screen pinning works too.
+- **Screen lock**: *None* or *Swipe* is the most reliable (the app shows over the lock screen, but with a PIN some versions wake to the lock screen).
+- **Display → Auto screen off**: the longest value; the app turns the screen off itself.
+- If the old Pine3 View app is still installed, stop it: only one app can use the front camera for motion.
+
+Then restart the tablet. The app must start by itself, and the tablet's *Online* entity in Home Assistant must stay on overnight.
+
+## The home
+Everything is built automatically from Home Assistant and kept up to date when you add or move devices.
+
+- **Home screen** in four templates: **Big clock**, **Two columns**, **Sidebar** or **Classic**, with date, people at home, home status
+  (lights and what else is on), weather, scenes and one grid of cards. On the tablet the cards are all the same height and reach the dock.
+- **Rooms** from your areas (ordered by floor), with a power button for the lights, what is on, temperature and humidity; a **room screen**
+  with category chips (Lights, Climate, Covers, Media…) and one grid of cards.
+- **Devices** as cards driven by their main entity; the device's other entities (power, battery, filters…) come along.
+  - **Lights, TVs, plugs and switches** open a **compact sheet**: brightness, colours (with a free colour picker), media controls, the
+    device's readings and a big on/off button. ⚙ opens the whole device (settings and diagnostics).
+  - **Climate** (Tado, HomeKit, AC units…): target ring, heat/cool range, modes, fan, swing and presets; a **Climate screen** with every unit.
+  - **Robot vacuum** (Roborock): status, battery, **routines**, start/pause/dock/locate, suction, **clean chosen rooms** (`roborock.get_maps`),
+    the map and the everyday controls; a wide card in its room with "clean this room".
+  - **Cameras**: the last picture only (never streams on its own); live video on tap with the doors beside it ("choose doors").
+  - **Locks** need two taps to unlock. **Covers**, fans, purifiers, media players, Apple TV and HomePod have their own cards.
+- **Summary cards**: Climate, Security (doors, windows, locks), Vacuum and Now playing.
+- **Doorbell** (`event` entities of class doorbell, e.g. Comelit Intercom): a pop-up with the door camera's last picture, the call's own
+  picture as soon as it arrives, **Open door** (two taps) and **View camera**; on the tablet it wakes the screen.
+- **Weather** from a Home Assistant weather entity or [Open-Meteo](https://open-meteo.com): now, the next hours (scroll sideways), 7 days,
+  UV, fire risk and **IPMA warnings** (Portugal).
+- **3D Home**: rooms stacked by floor, lit in the colour of their lights; rotate, zoom, tap a light or open a room. A **floor-plan editor**
+  (web) draws rooms in any shape and places every device.
+- **Scenes** stay highlighted while their devices are on; tap again to turn them off.
+- **Edit mode** (✎ on the web, ⋮ on the tablet): drag to reorder, hide, double size.
+
+## Layout editor
+*Settings → Layout → Open the editor* in the web panel. What you build here is what the tablets draw.
+
+- **Pages**: Home, Rooms, 3D Home, Scenes, Climate, Security, Agenda, Chores, Family, every room and your **ambient screens**.
+- **Sections** (clock, people, status, weather, scenes, grid…) and **cards** (rooms, devices, summaries, *Coming up*, *Today's chores*),
+  dragged into order, double size, added or removed; the home template; the **dock** (which views and in what order); grid or list,
+  24-hour clock and animations.
+- **Draft, Publish and History**: work on a draft, publish when ready, go back to an earlier version or to the automatic layout.
+- **Draft on the tablets**: shows the draft live on every tablet while you edit, without publishing.
+- **Variants**: besides the main layout you can create others (e.g. "Bedrooms") and choose, per tablet, which one it uses.
+
+Without a published layout, the layout is made automatically from the settings, so nothing changes until you publish one.
+
+## Modules
+
+### Ambient screens
+Composed screens to look at from afar (like StandBy): **1 to 3 faces side by side**: analog clock (classic, minimal, bold), digital
+clock, date, weather, a sensor in big type, who is home, **next event**, **today's agenda**, **today's chores** and **the family's day**,
+with an accent colour and a dim red **night mode**. An ambient screen can be a page in the dock (tablet and web) and the tablet's
+**screensaver** (app settings → Screensaver → Ambient screen).
+
+### Family calendar
+One shared calendar for the family, for example a **"Família" calendar in iCloud** connected with Home Assistant's **CalDAV** integration
+(server `https://caldav.icloud.com`, your Apple ID and an app-specific password); Google, Outlook or the local calendar work too.
+- *Settings → Calendar*: which calendars to read, those shown only as **Busy**, days ahead and the family colour.
+- **Whose an event is** comes from its title: `[Pedro] Swimming`, `Pedro: Swimming`, `Pedro and Ana: Dinner` or `Swimming [Pedro]`
+  (name or short name from *Settings → People*); no name means the whole family. The settings preview whose a title would be.
+- **Agenda** page: **Day** with a column per person and one for the family, **Week** and **Month**; tap an event for its time, place and people.
+- *Coming up* card (everyone's or one person's) and the *Next event* / *Today's agenda* faces.
+
+### Chores
+Who does what on each day of the week: only the list of what was agreed, there is no "done".
+- *Settings → Chores*: the chores (name, icon, time of day) and a weekly grid where you tap who does each one on each day.
+- **Chores** page (today by person and the whole week), *Today's chores* card and face; the chore of the current time of day is highlighted.
+- A **sensor per person** in Home Assistant (*House chores* device) with the number of chores today and the list in its attributes, for
+  automations and notifications.
+
+### The family's day
+A **Family** page with a column per person holding their events and chores of today or tomorrow in time order (the current chore highlighted,
+past events dimmed), plus the whole family's events, and an ambient face with one line per person.
+
+### People
+*Settings → People*: the family comes from Home Assistant's `person.*`; choose each person's colour, short name and whether they show.
+The calendar, chores, home screen and ambient faces all use them.
+
+## The wall tablet (Android app)
+- **Motion wakes the screen** (front camera, adjustable sensitivity) and the app **turns it off completely** after a while (device
+  administrator), fading to black and back.
+- **Screensaver** before the screen turns off (entry and lock times in seconds):
+  - **Classic**: a dimmed drifting clock.
+  - **Video**: full-screen clips with the time and date, fades between clips, fit and quality; clips from **one or more folders on the
+    tablet**, a zip pack, a list of addresses or the Apple TV aerials, with a per-clip switch. 4K HEVC that the normal player refuses
+    plays through MediaCodec. Videos stay on the tablet.
+  - **Ambient screen** from the layout editor.
+- **Doorbell wakes the screen** and opens the pop-up; the services below wake it too.
+- **Swipe left/right** to go to the next/previous view of the dock.
+- **Liquid Glass** dock (the lens slides and stretches like a drop, and can be dragged), elastic animations, 26 themes, three glass styles,
+  Portuguese and English, interface scale.
+- Every Material Design icon (the same as Home Assistant), and settings in the same format as the web panel plus an **App** section
+  (connection, interface size, doorbell test, start on boot, permissions).
+- Starts by itself after a reboot; reconnects by itself and stays connected with the screen off.
+- Shortcut to the settings: hold two fingers for 2 s, or the ⋮ menu.
+
+More detail (build, signing, releases) in [android/README.md](android/README.md).
+
+## Tablets in Home Assistant
+Each tablet that connects appears as a **device "Pine3 Wall &lt;name&gt;"** with: *Online*, *Motion* (front camera), *Screen*,
+*Battery*, *Screen brightness*, *Page* and a **Wake** button. Rename it, choose its layout (main or a variant) or remove it in
+*Settings → Tablets* in the web panel, which also has **Wake** and **Test message** buttons.
+
+Services for automations (target one or more tablets; no target = all of them):
+
+| Service | What it does |
+|---|---|
+| `pine3_wall.wake` | Turns the screen on (and keeps it on for `seconds`). |
+| `pine3_wall.show_page` | Opens a page: `home`, `rooms`, `calendar`, `chores`, `family`, `room/<area>`, `ambient/<id>`… |
+| `pine3_wall.show_camera` | Opens a camera's live video. |
+| `pine3_wall.notify` | Shows a message on the screen ("Dinner is ready"), waking it. |
+| `pine3_wall.screensaver` | Turns the screensaver on or off. |
+
+## The web panel
+The same panel as the tablets, in any browser or on a phone:
+- With a **published layout** it shows exactly what the tablets show: home template and sections, the order, size and kind of every
+  card, each room's devices and the dock with its ambient screens.
+- **Phone**: one column, the agenda and the family's day as a list, swipe between views.
+- **Full screen** (*Settings → Home → This device*) and **kiosk mode**: add `?kiosk` to the address
+  (`http://homeassistant.local:8123/pine3-wall?kiosk`) to hide the Home Assistant sidebar.
+- Per-device options (stay in that browser): sidebar, keep the screen on, 3D view quality (full, light, picture or 2D plan), light effects, animations, doorbell pop-up.
 
 ## Settings
-⚙ button in the top-right corner:
-- **Appearance**: language, layout, card colour, highlight colour and background, with a live preview. Six ambient backgrounds (Nebula, Forest, Slate, Wine, Midnight, Ember: deep tones with soft glows of colour behind frosted-glass cards), eight vivid backgrounds (Amber, Coral, Lime, Blue, Violet, Magenta, Turquoise, Sunset), six dark and six light ones (Linen, Mist, Peach, Mint, Lavender, Sky); a light background switches the whole panel to light mode. **Automatic** mode uses one background by day and another at night, switching at sunrise and sunset (`sun.sun`; without it 7:00–19:00).
-- **Home**: weather and its source, people next to the date (off by default), home status, scenes, summary cards, 12/24-hour clock, screensaver, and the per-device options (sidebar, keep screen on, full screen).
-- **Rooms**: reorder and hide rooms, choose their size in the automatic 3D layout, show hidden devices again.
-- **Entities**: pick exactly what appears.
-- **3D floor plan**: the editor above and the wall height.
-- **Calendar**: which calendar(s) to read, the ones shown only as "Busy", days ahead, the family colour and a preview of whose each event is.
-- **Chores**: the chores and the weekly grid of who does what.
-- **Navigation**: dock buttons (Rooms, 3D Home, Scenes, Climate, Security, Agenda, Chores, Family).
-- **System**: version, counts, rebuild now, reset to defaults.
+In the web panel (⋮ → Settings) or the app. Stored in Home Assistant, so they apply to every tablet and browser:
+**Appearance** (language, grid or list, card and highlight colours, 26 backgrounds, automatic day/night), **Home** (template, sections,
+weather source, screensaver), **People**, **Calendar**, **Chores**, **Rooms** (order, hidden, size in the 3D home), **Entities** (exactly
+what appears), **3D floor plan**, **Navigation** (dock), **Layout** (the editor), **Tablets** and **System**.
 
-Settings are stored in Home Assistant and apply to every device, except the *This device* options, which stay in each browser.
+## How it works
+- **The house** (`discovery.py`) is built from Home Assistant's registries: areas → rooms (ordered by floor), devices → cards driven by
+  their main entity, multi-channel relays split, room names removed from device names, hidden/diagnostic/configuration entities left out.
+- **The contract** between the integration and the app lives in [`schema/`](schema/): the home model, the layout document, the catalogue
+  of modules, cards and faces, the design tokens (themes and colours, generated for both Kotlin and CSS) and example payloads tested on
+  both sides. A card type a tablet doesn't know shows "Update the app" instead of breaking.
+- **One version** (`VERSION`) for the integration and the app; releases are tagged `vX.Y.Z` and carry the APK.
 
-## How it builds itself
-The server side (`discovery.py`) reads Home Assistant's registries and assembles the home:
-- **Areas → rooms**, ordered by floor and name, with an icon picked from the name (Kitchen, Bedroom, Bathroom… in English or Portuguese).
-- **Devices → tiles**: one tile per device, driven by its main entity (climate > media > covers > light > plug…). Sensors of the same device (power, battery, humidity) appear as extras on that tile.
-- Multi-channel relays get one tile per channel. The room name is removed from device names ("Living room Lamp" → "Lamp").
-- Hidden, disabled, diagnostic and configuration entities are left out (you can bring them back in *Entities*).
-- Temperature and humidity sensors feed each room's summary.
-- When you add or change devices or areas in Home Assistant, the panel updates by itself.
-
-## Look and feel
-Plum background (plus 5 others), cream cards when something is on, a power button per room and per device,
-status dots, Climate / Security / Now playing cards, a pill-shaped dock.
-Typefaces: [Outfit](https://github.com/Outfitio/Outfit-Fonts) and [Figtree](https://github.com/erikdkennedy/figtree), both SIL OFL 1.1 (licences in `frontend/fonts/`).
-The icon and logo live in `custom_components/pine3_wall/brand/` (source: `docs/brand/source.html`).
-
-## Tests
-```
+## Development
+```bash
 pip install -r requirements_test.txt
 pytest
 ```
+```bash
+cd android
+./gradlew :app:testReleaseUnitTest :app:assembleRelease
+```
+CI runs hassfest, the HACS check, pytest, the Kotlin tests and builds the signed APK. The plan and its phases are in [PLANO.md](PLANO.md)
+(Portuguese). Next: pairing by QR code, an in-app update notice, kiosk as device owner and importing settings from Pine3 View.
 
-## Roadmap
-Cameras on the home screen, a Spotify player, more device types for the floor plan.
+Typefaces: [Outfit](https://github.com/Outfitio/Outfit-Fonts) and [Figtree](https://github.com/erikdkennedy/figtree) (SIL OFL 1.1).
+Icons: [Material Design Icons](https://pictogrammers.com/library/mdi/) (Apache 2.0).
 
 ## License
-MIT (see `LICENSE`). The Outfit and Figtree fonts are under the SIL Open Font License 1.1 (see `NOTICE`).
+MIT (see `LICENSE`). The fonts are under the SIL Open Font License 1.1 (see `NOTICE`).

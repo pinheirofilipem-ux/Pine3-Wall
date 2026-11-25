@@ -7,123 +7,244 @@
 
 <p align="center"><a href="README.md">English</a> · <b>Português</b></p>
 
-> **Pine3 Wall** é o sucessor do [Pine3 View](https://github.com/pinheirofilipem-ux/pine3-view): uma integração do Home
-> Assistant (o backend e um editor web) mais uma **app Android nativa** para tablets de parede. Começa com o mesmo código do
-> Pine3 View 0.27, com nome novo (`pine3_wall`), por isso os dois podem estar instalados lado a lado sem se tocarem.
-> O plano está em [PLANO.md](PLANO.md). As imagens do logótipo ainda mostram o nome antigo.
+O **Pine3 Wall** transforma um tablet na parede no painel de controlo da casa. Tem três partes que partilham o mesmo modelo da casa:
 
-
-Painel pessoal para o Home Assistant, inspirado no Apple Home. Organiza a casa automaticamente
-por divisão (Áreas → Dispositivos → Entidades), sem YAML, e junta uma vista 3D da casa que tu
-próprio desenhas. Código original, feito de raiz.
-
-## Capturas de ecrã
-
-| Início (Relógio grande) | Início (Duas colunas, fundo vivo Âmbar) |
+| Parte | O que faz |
 |---|---|
-| ![Início com relógio grande, estado da casa, cartão do tempo com aviso do IPMA, cenas, divisões e cartões de resumo](docs/screenshots/home.jpg) | ![Início em duas colunas: relógio, o que está ligado e o tempo à esquerda, cenas e cartões à direita, no fundo Âmbar](docs/screenshots/home-columns-vivid.jpg) |
+| **Integração do Home Assistant** (`pine3_wall`) | Monta a casa a partir das tuas áreas, dispositivos e entidades (sem YAML), guarda as pessoas, os layouts, o calendário da família e as tarefas, e regista cada tablet de parede como um dispositivo do Home Assistant que podes usar em automações. |
+| **Editor e painel web** (barra lateral do Home Assistant) | Desenha o que os tablets mostram (páginas, secções, cartões, dock, ecrãs ambiente) e é também um painel completo no browser ou no telemóvel, com as mesmas vistas dos tablets. |
+| **App Android nativa** (`pt.pine3.wall`) | O painel no tablet, sem WebView: acorda com o movimento, desliga o ecrã, mostra o screensaver de vídeo, abre a campainha e desenha tudo de forma nativa e fluida. |
+
+> **Testado num OPPO Pad SE (11", ColorOS) montado na parede.** Outros tablets Android devem funcionar, mas a gestão de energia muda de
+> marca para marca (ver [Preparar o tablet](#preparar-o-tablet)).
+
+O Pine3 Wall sucede ao [Pine3 View](https://github.com/pinheirofilipem-ux/pine3-view). Usa outro domínio, outro endereço do painel, outro
+armazenamento e outra app, por isso os dois podem estar instalados lado a lado durante a mudança.
+
+## Conteúdo
+- [Imagens](#imagens)
+- [Instalação](#instalação)
+- [Preparar o tablet](#preparar-o-tablet)
+- [A casa](#a-casa)
+- [Editor de layout](#editor-de-layout)
+- [Módulos: ecrãs ambiente, calendário da família, tarefas e o dia da família](#módulos)
+- [O tablet de parede (app Android)](#o-tablet-de-parede-app-android)
+- [Os tablets no Home Assistant](#os-tablets-no-home-assistant)
+- [O painel web](#o-painel-web)
+- [Definições](#definições)
+- [Como funciona](#como-funciona)
+- [Desenvolvimento](#desenvolvimento)
+
+## Imagens
+O painel web e a app têm o mesmo aspeto; estas imagens são do painel web, com uma casa de exemplo.
+
+| Início (Relógio grande) | Início (Duas colunas, fundo Âmbar) |
+|---|---|
+| ![Início com relógio grande, estado da casa, tempo com aviso do IPMA, cenas, divisões e cartões de resumo](docs/screenshots/home.jpg) | ![Início em duas colunas: relógio, o que está ligado e tempo à esquerda, cenas e cartões à direita](docs/screenshots/home-columns-vivid.jpg) |
 | **Início (fundo claro)** | **Divisão** |
-| ![Início no fundo claro Linho](docs/screenshots/home-light.jpg) | ![Uma divisão com o estado, acender/apagar luzes, filtros por categoria e uma grelha de cartões](docs/screenshots/room.jpg) |
-| **Previsão do tempo e avisos do IPMA** | **Ecrã Clima** |
-| ![Previsão com avisos do IPMA, UV e risco de incêndio à esquerda e horas e dias à direita](docs/screenshots/forecast.jpg) | ![Todos os ares condicionados com controlos rápidos e a temperatura de cada divisão](docs/screenshots/climate.jpg) |
-| **Cartão do ar condicionado** | **Cartão do aspirador robô** |
-| ![Cartão de clima em duas colunas: anel da temperatura e modos](docs/screenshots/climate-card.jpg) | ![Cartão do aspirador com rotinas, botões, potência, divisões a limpar e controlos](docs/screenshots/vacuum.jpg) |
-| **Casa 3D** | **Casa 3D, rés-do-chão** |
-| ![Casa 3D com dois pisos, uma sala em L, luzes coloridas e dispositivos no sítio](docs/screenshots/house-3d.jpg) | ![Casa 3D só com o rés-do-chão](docs/screenshots/house-3d-ground-floor.jpg) |
-| **Planta: formas livres** | **Planta: dispositivos** |
-| ![Editor da planta a pintar quadrículas para uma sala em L](docs/screenshots/plan-shapes.jpg) | ![Editor da planta a pôr dispositivos](docs/screenshots/plan-devices.jpg) |
+| ![Início com o fundo claro Linho](docs/screenshots/home-light.jpg) | ![Uma divisão com o estado, luzes, filtros por tipo e uma grelha de cartões](docs/screenshots/room.jpg) |
+| **Previsão e avisos do IPMA** | **Ecrã de clima** |
+| ![Previsão com avisos do IPMA, UV e risco de incêndio](docs/screenshots/forecast.jpg) | ![Todos os ares condicionados com controlos rápidos e a temperatura de cada divisão](docs/screenshots/climate.jpg) |
+| **Ar condicionado** | **Aspirador** |
+| ![Cartão de clima: anel e modos](docs/screenshots/climate-card.jpg) | ![Aspirador com rotinas, potência, divisões a limpar e o mapa](docs/screenshots/vacuum.jpg) |
+| **Casa 3D** | **Planta: dispositivos** |
+| ![Casa 3D com dois pisos e luzes coloridas](docs/screenshots/house-3d.jpg) | ![Editor de planta a colocar dispositivos](docs/screenshots/plan-devices.jpg) |
 | **Modo de edição** | **Definições: aparência** |
-| ![Modo de edição com cartões para esconder, duplicar e reordenar](docs/screenshots/edit-mode.jpg) | ![Fundos vivos, escuros e claros, fixos ou automáticos de dia e de noite](docs/screenshots/settings-appearance.jpg) |
-| **Definições: entidades** | **Este dispositivo** |
-| ![Escolher que entidades aparecem](docs/screenshots/settings-entities.jpg) | ![Opções por dispositivo: vista da Casa 3D, efeitos leves, animações, barra lateral, ecrã ligado, ecrã inteiro](docs/screenshots/settings-device.jpg) |
-| **Lista, em inglês** | **Ecrã de descanso** |
-| ![Uma divisão em lista com o painel em inglês](docs/screenshots/list-english.jpg) | ![Relógio grande do ecrã de descanso](docs/screenshots/screensaver.jpg) |
+| ![Modo de edição com cartões para esconder, aumentar e ordenar](docs/screenshots/edit-mode.jpg) | ![Fundos vivos, escuros e claros, fixos ou automáticos de dia e de noite](docs/screenshots/settings-appearance.jpg) |
 
 No telemóvel:
 
-| Início | Detalhe de uma luz | Casa 3D |
+| Início | Luz | Casa 3D |
 |---|---|---|
-| ![Início no telemóvel](docs/screenshots/phone-home.jpg) | ![Folha de detalhe com luminosidade e cores](docs/screenshots/phone-light.jpg) | ![Casa 3D no telemóvel](docs/screenshots/phone-3d.jpg) |
+| ![Início no telemóvel](docs/screenshots/phone-home.jpg) | ![Folha da luz com luminosidade e cores](docs/screenshots/phone-light.jpg) | ![Casa 3D no telemóvel](docs/screenshots/phone-3d.jpg) |
 
-*Capturas feitas com uma casa de exemplo, num ecrã do tamanho de um tablet deitado; a maioria mostra o painel em português (o inglês está a um toque nas Definições).*
+## Instalação
 
-## Instalar com HACS
-1. No Home Assistant abre **HACS** → menu **⋮** → **Repositórios personalizados**.
-2. Repositório: `https://github.com/pinheirofilipem-ux/pine3-wall`, categoria **Integração** → **Adicionar**.
-3. Procura **Pine3 Wall**, abre e carrega em **Transferir**.
-4. Reinicia o Home Assistant.
-5. **Definições → Dispositivos e serviços → Adicionar integração → Pine3 Wall**.
-6. Abre **Pine3 Wall** na barra lateral.
+### 1. A integração (HACS)
+1. No Home Assistant abre o **HACS** → **⋮** → **Repositórios personalizados**.
+2. Repositório `https://github.com/pinheirofilipem-ux/pine3-wall`, tipo **Integração** → **Adicionar**.
+3. Procura **Pine3 Wall**, **Transferir**, e reinicia o Home Assistant.
+4. **Definições → Dispositivos e serviços → Adicionar integração → Pine3 Wall**.
+5. O **Pine3 Wall** aparece na barra lateral.
 
-Requer Home Assistant 2024.7 ou mais recente (o ícone da integração precisa da 2026.3 ou mais recente).
-Para atualizar, transfere a nova versão no HACS e reinicia o Home Assistant; o browser vai buscar os ficheiros novos sozinho.
+Precisa do Home Assistant 2024.7 ou mais recente. Para atualizar, transfere a versão nova no HACS e reinicia; o browser apanha os ficheiros
+novos sozinho. Instalação manual: copia `custom_components/pine3_wall` para `/config/custom_components/`, reinicia e adiciona a integração.
 
-### Instalação manual
-Copia `custom_components/pine3_wall` para `/config/custom_components/`, reinicia e adiciona a integração.
+### 2. A app
+1. Transfere o `Pine3Wall-X.Y.Z.apk` dos [Releases](https://github.com/pinheirofilipem-ux/pine3-wall/releases) (a mesma versão da
+   integração) e instala-o no tablet.
+2. No Home Assistant, cria um **token de acesso de longa duração** (o teu perfil → Segurança).
+3. Abre a app: põe o endereço do Home Assistant (um IP como `http://192.168.1.10:8123` é mais seguro do que `.local` no Android) e o token.
+   O **Teste de ligação** verifica o DNS, o websocket, o token e a integração passo a passo.
+4. Nas definições da app → **Permissões**, dá tudo até ficar tudo a verde: câmara (movimento), administrador do dispositivo (desligar o
+   ecrã por completo), sem otimização de bateria e aparecer por cima de outras apps (arranque automático).
 
-## Funcionalidades
-- **Disposição do início** (*Definições → Início → Disposição do início*): **Relógio grande** (relógio grande com o estado da casa ao lado), **Barra lateral** (uma barra de vidro com a altura do ecrã, com a data, o relógio, o tempo, o estado da casa e as pessoas, e as cenas e os cartões ao lado), **Duas colunas** (um terço com a data, um relógio grande, o tempo, as pessoas e o que está ligado; dois terços com Acender/Apagar luzes, cenas e os cartões em filas de quatro) ou **Clássica**. O Relógio grande e as Duas colunas mostram também um **cartão do tempo**: agora (temperatura, estado, máxima e mínima do dia), as próximas horas com a probabilidade de chuva e amanhã; toca nele para a previsão completa. Com a integração do **IPMA**, um aviso ativo (amarelo, laranja ou vermelho) aparece numa faixa colorida no cartão do tempo, com "+N" quando há mais (ou ⚠ na pílula do tempo), e a previsão lista todos os avisos da tua zona com início, fim e texto (a integração só expõe o primeiro, por isso o Pine3 Wall pede os restantes ao IPMA), o índice UV e o risco de incêndio. O estado da casa mostra também o que está ligado além das luzes (tomadas, purificadores, TV, ar condicionado…).
-- **Início**: relógio, tempo com os próximos dias (toca para ver a previsão), estado da casa com o que mais está ligado em etiquetas (toca numa para a abrir; "+N" mostra o resto, cada um com um botão para desligar), cenas (as que não cabem ficam num menu "+N") (uma cena ativada fica destacada enquanto os seus dispositivos estiverem ligados, até outra cena mais recente mexer nos mesmos dispositivos, por isso cenas de divisões diferentes podem estar ativas ao mesmo tempo; tocar nela outra vez desliga-os), cartões de divisão e de resumo (Clima, Segurança, A tocar).
-- **Tempo**: usa a entidade de tempo do Home Assistant ou, se não houver, a [Open-Meteo](https://open-meteo.com) para a localização da casa (sem chave). Previsão das próximas 12 horas e 7 dias.
-- **Casa 3D**: cada divisão é um bloco, empilhado por piso (pisos do HA). As divisões acesas brilham com a cor e a intensidade das suas luzes (cada luz projeta no chão uma mancha da sua cor), as luzes aparecem como pontos que podes ligar e desligar, arrastas para rodar (a casa roda com o dedo), aproximas com dois dedos, a roda do rato ou os botões + e −, e tocas numa divisão para a abrir. Um toque perto de uma luz liga-a, mesmo que não acertes em cheio. A base de cada piso tem só o tamanho das suas divisões e a **altura das paredes** é ajustável (botões ↕ na Casa 3D ou um controlo deslizante nas definições).
-- **Editor da planta** (*Definições → Planta 3D*, ou *Editar planta* na Casa 3D), visto de cima, um piso de cada vez:
-  - **Mover e redimensionar**: desenhas as divisões como retângulos, arrastas para mover, puxas o canto para redimensionar, mudas de piso ou crias pisos novos. *Gerar planta automática* dá um ponto de partida.
-  - **Pintar / apagar quadrículas**: dá a uma divisão qualquer forma de ângulos retos (L, U, T…). Pintar por cima de outra divisão passa-lhe essas quadrículas.
-  - **Dispositivos**: pões cada entidade no sítio certo. O tipo é detetado automaticamente (luz de teto, candeeiro, fita LED, spot, TV, Apple TV, HomePod, coluna, ar condicionado, estore, porta, janela, tomada, sensor, câmara…) e podes mudá-lo. As fitas LED têm também comprimento e orientação. Na Casa 3D as luzes brilham no sítio (as de teto no alto, a fita LED como uma faixa com o seu comprimento e direção reais) e os outros aparelhos são ícones que abrem o detalhe.
-  - As divisões que não colocares são arrumadas automaticamente.
-- **Entidades** (*Definições → Entidades*): todas as entidades de cada divisão, com pesquisa. Esconde mosaicos que não queres ou mostra entidades secundárias (o interruptor de uma TV, a potência de uma tomada, sensores de diagnóstico) como mosaicos próprios.
-- **Cartão do dispositivo inteiro**: o cartão de detalhe mostra tudo o que o dispositivo expõe — leituras numa grelha (PM2.5, índice de alérgenos, humidade, vida do filtro…) e os controlos (interruptores, opções, números, botões), além dos modos de ventoinhas e purificadores. As listas de opções (modo da luz, temporizador…) são mosaicos compactos que abrem uma fila de botões. Ideal para purificadores de ar (ex.: Philips), aspiradores ou ar condicionado; um mosaico em tamanho duplo mostra até 6 leituras.
-- **Ecrã da divisão**: o mesmo aspeto do início — o nome da divisão com a temperatura e a humidade, quantas luzes e aparelhos estão ligados, *Acender / Apagar* para as luzes da divisão, depois os filtros por categoria (Tudo, Luzes, Clima, Cortinas, Multimédia…, com contagem) e as cenas da divisão, e uma grelha de cartões ordenada por categoria, com o tamanho certo para caberem três linhas acima da dock num tablet deitado. Toca numa categoria para ver só essa.
-- **Clima e ar condicionado** (ex.: Tado via HomeKit): anel com a temperatura-alvo ou o intervalo de aquecer/arrefecer (mínima e máxima), o que o aparelho está a fazer (a aquecer, a arrefecer, inativo…), temperatura e humidade atuais, os modos e, quando o aparelho os expõe, velocidade da ventilação, oscilação e perfis. Termóstatos e ar condicionado têm ícones próprios.
-- **Ecrã Clima**: todos os ares condicionados e termóstatos num só ecrã, cada cartão com um anel da temperatura-alvo, a temperatura atual, modos rápidos (Frio / Calor / Desligar) e − / + (toca no cartão para todos os controlos; o mesmo cartão aparece em cada divisão), mais a temperatura e a humidade de cada divisão. Com mais de um aparelho, o cartão Clima do início abre este ecrã; também pode ficar na dock (*Definições → Navegação*).
-- **Aspirador robô** (ex.: integração oficial *Roborock*): um só cartão para o robô e a base. Tocar no aspirador abre o cartão com a bateria, o estado (e o erro, se houver), as **rotinas** da app Roborock no topo, Iniciar/Pausar, Voltar à base e Localizar, a potência de aspiração, a **limpeza de divisões escolhidas** (as divisões do mapa em uso vêm de `roborock.get_maps`), o mapa e os controlos do dia a dia (modo da mopa, esvaziar o pó…). Manutenção (consumíveis e repor), definições do robô e diagnóstico ficam recolhidos em secções que se abrem com um toque. No início há um cartão **Aspirador** com o estado, a bateria e, durante a limpeza, o progresso; tocar nele abre o cartão do robô (nunca o põe a limpar). Na sua divisão o robô tem um **cartão largo** com o estado, a bateria, a potência (ou o progresso durante a limpeza) e quatro comandos rápidos: Iniciar/Pausar, Base, **Esta divisão** (limpa só essa divisão, quando o mapa tem uma divisão com o mesmo nome; senão, Potência) e Localizar.
-- **Fechaduras**: no cartão de uma fechadura só o ícone tranca ou destranca; tocar no resto abre-a, com Trancar/Destrancar e um botão grande de cadeado. Destrancar pede **dois toques** (o primeiro arma durante 3 segundos), para um toque sem querer nunca abrir uma porta; trancar é com um toque.
-- **Câmaras** (ex.: intercomunicador Comelit): um cartão largo com a última imagem vista nesse dispositivo e um ▶. Nunca fica em direto sozinho (alguns intercomunicadores ficam ocupados enquanto transmitem). Um toque abre o **vídeo ao vivo** com as portas da divisão ao lado (as fechaduras, ou botões de porta como o "Activate" de um intercomunicador, com dois toques para abrir), +2 min e **Escolher portas** (escolhes que fechaduras ou botões aparecem ao lado dessa câmara, por exemplo a porta do prédio e não a do apartamento), e fecha sozinho ao fim de 2 minutos, 5 segundos depois de abrir uma porta ou quando o fechas.
-- **Campainha** (ex.: integração [Comelit Intercom Doorbell](https://github.com/pinheirofilipem-ux/comelit_homeassistant_intercom), ou qualquer entidade `event` da classe doorbell): quando tocam, abre logo uma janela com a última imagem da câmara da porta, trocada pela **foto do toque** assim que a integração a recebe (o seu `snapshot_entity`, pelo `call_id`), **Abrir porta** (dois toques) e **Ver câmara**, que só então liga o vídeo. Acorda o tablet com a app Pine3 Wallpanel, mostra "Atendida noutro aparelho" ou "Ninguém atendeu" e fecha ao fim de 90 segundos. Um toque na porta de casa (`floor_call`) abre uma janela mais pequena, sem câmara. Cada dispositivo pode desligá-la ou testá-la em Definições, Início, Este dispositivo.
-- **Televisões** (ex.: via HomeKit): ícone de TV, botão para ligar/desligar no mosaico e um cartão com as **entradas** (HDMI, apps…), a fonte atual e só os controlos que a TV suporta (reprodução, volume).
-- **Apple TV e HomePod** (integração *Apple TV* do HA): ícones próprios e a app ou música que está a tocar.
-- **Modo de edição** (✎): arrasta para reordenar divisões e dispositivos (no início também os cartões Clima, Segurança, Aspirador e A tocar, no meio das divisões), toca em − para esconder e nas setas para duplicar o tamanho (um cartão de divisão duplo mostra atalhos para os dispositivos).
-- **Disposição**: grelha ou lista. Ao mudar de ecrã na dock, uma lente de vidro desliza até ao novo separador e o ecrã entra suavemente (*Definições → Aparência → Animações* desliga isto).
-- **Ecrã de descanso**: relógio grande e escurecido após 1–30 min sem toques.
-- **Menu e modo quiosque**: o pequeno botão ⋮ no canto superior direito abre *Editar ecrã* e *Definições*. O ecrã inteiro está em *Definições → Início → Este dispositivo*. Em *Definições → Início → Este dispositivo* escondes a barra lateral do Home Assistant e manténs o ecrã ligado (só nesse dispositivo). Abrir o painel com `?kiosk` no endereço (ex.: `http://homeassistant.local:8123/pine3-wall?kiosk`) também esconde a barra lateral, ideal para um tablet na parede.
-- **Tablets mais fracos** (ex.: Samsung Galaxy Tab A7): em *Definições → Início → Este dispositivo* escolhes como esse dispositivo mostra a Casa 3D — **3D completo**, **3D leve** (sem os efeitos mais pesados), **Imagem 3D** (a casa desenhada como uma só imagem, leve e fluida, com as mesmas luzes e toques) ou **Planta 2D** (vista de cima, um piso de cada vez). **Efeitos leves** tira o desfoque do vidro, que em alguns tablets deixa zonas brancas ou vazias, e as **Animações** podem ser ligadas ou desligadas só nesse dispositivo. Em *Automático*, os dispositivos com pouca memória usam a Imagem 3D e os efeitos leves. A dock encolhe sozinha quando não cabe (primeiro só o separador ativo fica com nome, depois só ícones). Em ecrãs baixos, como um tablet deitado, os cartões das divisões e dos dispositivos ficam mais compactos, para caberem três filas acima da dock. No ecrã Casa, o relógio, o estado, as cenas e duas filas de cartões cabem num só ecrã.
-- **Idioma**: Português ou English, escolhido nas definições.
+A app e a integração têm o mesmo número de versão; a app avisa quando uma delas é antiga demais para a outra.
+
+## Preparar o tablet
+Cada marca de Android mata as apps em segundo plano à sua maneira. No **OPPO Pad SE (ColorOS)** testado:
+- **Definições da app → Bateria**: *Permitir atividade em segundo plano* e *Permitir arranque automático* ligados; utilização da bateria
+  **sem restrições**.
+- **Definições da app → Permissões**: desliga *Remover permissões se a app não for usada*. Mantém as notificações da app ligadas (o serviço
+  de movimento precisa da sua notificação para continuar vivo).
+- **Bateria**: poupança de energia desligada; *Otimizar utilização da bateria* / *otimização em suspensão* desligadas.
+- **Recentes**: bloqueia a app (cadeado) para não ser fechada; fixar o ecrã também funciona.
+- **Bloqueio do ecrã**: *Nenhum* ou *Deslizar* é o mais fiável (a app abre por cima do bloqueio, mas com PIN algumas versões acordam no
+  ecrã de bloqueio).
+- **Ecrã → Desligar ecrã automaticamente**: o valor mais alto; é a app que desliga o ecrã.
+- Se a app antiga do Pine3 View ainda estiver instalada, para-a: só uma app de cada vez pode usar a câmara frontal para o movimento.
+
+Depois reinicia o tablet. A app tem de arrancar sozinha e a entidade *Ligado* do tablet no Home Assistant tem de ficar ligada a noite toda.
+
+## A casa
+Tudo é montado automaticamente a partir do Home Assistant e atualizado quando acrescentas ou mudas dispositivos.
+
+- **Início** com quatro disposições: **Relógio grande**, **Duas colunas**, **Barra lateral** ou **Clássica**, com data, quem está em casa,
+  estado da casa (luzes e o que mais está ligado), tempo, cenas e uma grelha de cartões. No tablet os cartões têm todos a mesma altura e
+  chegam até à dock.
+- **Divisões** a partir das tuas áreas (ordenadas por piso), com botão para as luzes, o que está ligado, temperatura e humidade; um
+  **ecrã por divisão** com filtros (Luzes, Clima, Estores, Multimédia…) e uma grelha de cartões.
+- **Dispositivos** como cartões guiados pela entidade principal; as outras entidades do dispositivo (potência, bateria, filtros…) vêm junto.
+  - **Luzes, TVs, tomadas e interruptores** abrem uma **folha compacta**: luminosidade, cores (com seletor de cor livre), controlos
+    multimédia, as leituras do dispositivo e um botão grande de ligar. O ⚙ abre o dispositivo todo (definições e diagnóstico).
+  - **Clima** (Tado, HomeKit, ares condicionados…): anel da temperatura, intervalo calor/frio, modos, ventilação, oscilação e presets; um
+    **ecrã de Clima** com todos.
+  - **Aspirador** (Roborock): estado, bateria, **rotinas**, iniciar/pausa/base/localizar, potência, **limpar as divisões escolhidas**
+    (`roborock.get_maps`), o mapa e os controlos do dia a dia; um cartão largo na sua divisão com "limpar esta divisão".
+  - **Câmaras**: só a última imagem (nunca liga o vídeo sozinha); o vídeo ao vivo ao tocar, com as portas ao lado ("escolher portas").
+  - **Fechaduras** precisam de dois toques para abrir. **Estores**, ventoinhas, purificadores, leitores, Apple TV e HomePod têm cartões próprios.
+- **Cartões de resumo**: Clima, Segurança (portas, janelas, fechaduras), Aspirador e A tocar.
+- **Campainha** (entidades `event` de classe doorbell, p. ex. Comelit Intercom): pop-up com a última imagem da câmara da porta, a foto da
+  chamada assim que chega, **Abrir porta** (dois toques) e **Ver câmara**; no tablet acorda o ecrã.
+- **Tempo** de uma entidade do Home Assistant ou do [Open-Meteo](https://open-meteo.com): agora, as próximas horas (deslizam de lado),
+  7 dias, UV, risco de incêndio e **avisos do IPMA**.
+- **Casa 3D**: divisões empilhadas por piso, iluminadas com a cor das luzes; rodar, aproximar, tocar numa luz ou abrir uma divisão. Um
+  **editor de planta** (web) desenha divisões de qualquer forma e coloca cada dispositivo.
+- **Cenas** ficam realçadas enquanto os seus dispositivos estão ligados; tocar outra vez desliga-os.
+- **Modo de edição** (✎ na web, ⋮ no tablet): arrastar para ordenar, esconder, tamanho duplo.
+
+## Editor de layout
+*Definições → Layout → Abrir o editor* no painel web. O que constróis aqui é o que os tablets desenham.
+
+- **Páginas**: Início, Divisões, Casa 3D, Cenas, Clima, Segurança, Agenda, Tarefas, Família, cada divisão e os teus **ecrãs ambiente**.
+- **Secções** (relógio, pessoas, estado, tempo, cenas, grelha…) e **cartões** (divisões, dispositivos, resumos, *Próximos*, *Tarefas de
+  hoje*), arrastados para ordenar, tamanho duplo, acrescentados ou tirados; a disposição do início; a **dock** (que vistas e por que ordem);
+  grelha ou lista, relógio de 24 horas e animações.
+- **Rascunho, Publicar e Histórico**: trabalhas num rascunho, publicas quando estiver pronto, voltas a uma versão anterior ou ao layout automático.
+- **Rascunho nos tablets**: mostra o rascunho ao vivo em todos os tablets enquanto editas, sem publicar.
+- **Variantes**: além do layout principal podes criar outros (p. ex. "Quartos") e escolher, por tablet, qual usa.
+
+Sem layout publicado, o layout é feito automaticamente a partir das definições, por isso nada muda até publicares um.
+
+## Módulos
+
+### Ecrãs ambiente
+Ecrãs para ver de longe (como o StandBy): **1 a 3 faces lado a lado**: relógio analógico (clássico, minimalista, forte), relógio digital,
+data, tempo, um sensor em letra grande, quem está em casa, **próximo evento**, **agenda de hoje**, **tarefas de hoje** e **o dia da
+família**, com uma cor de destaque e um **modo noturno** vermelho escuro. Um ecrã ambiente pode ser uma página da dock (tablet e web) e o
+**screensaver** do tablet (definições da app → Screensaver → Ecrã ambiente).
+
+### Calendário da família
+Um calendário partilhado pela família, por exemplo um calendário **"Família" no iCloud** ligado pela integração **CalDAV** do Home
+Assistant (servidor `https://caldav.icloud.com`, o teu Apple ID e uma palavra-passe específica de app); Google, Outlook ou o calendário
+local também servem.
+- *Definições → Calendário*: que calendários ler, os que só aparecem como **Ocupado**, dias à frente e a cor da família.
+- **De quem é cada evento** vem do título: `[Pedro] Natação`, `Pedro: Natação`, `Pedro e Ana: Jantar` ou `Natação [Pedro]` (nome ou nome
+  curto de *Definições → Pessoas*); sem nome, é da família toda. As definições mostram de quem seria um título.
+- Página **Agenda**: **Dia** com uma coluna por pessoa e uma da família, **Semana** e **Mês**; toca num evento para ver a hora, o sítio e
+  as pessoas.
+- Cartão *Próximos* (de todos ou de uma pessoa) e as faces *Próximo evento* / *Agenda de hoje*.
+
+### Tarefas
+Quem faz o quê em cada dia da semana: só a lista do que está combinado, não há "feito".
+- *Definições → Tarefas*: as tarefas (nome, ícone, momento do dia) e uma grelha semanal onde tocas em quem faz cada uma em cada dia.
+- Página **Tarefas** (hoje por pessoa e a semana inteira), cartão e face *Tarefas de hoje*; a tarefa do momento do dia aparece realçada.
+- Um **sensor por pessoa** no Home Assistant (dispositivo *Tarefas da casa*) com o número de tarefas de hoje e a lista nos atributos, para
+  automações e notificações.
+
+### O dia da família
+Uma página **Família** com uma coluna por pessoa com os eventos e as tarefas de hoje ou de amanhã por hora (a tarefa do momento realçada,
+os eventos que já passaram esbatidos), mais os eventos de toda a família, e uma face ambiente com uma linha por pessoa.
+
+### Pessoas
+*Definições → Pessoas*: a família vem das `person.*` do Home Assistant; escolhes a cor de cada pessoa, o nome curto e se aparece. O
+calendário, as tarefas, o início e as faces ambiente usam-nas.
+
+## O tablet de parede (app Android)
+- **O movimento acorda o ecrã** (câmara frontal, sensibilidade ajustável) e a app **desliga-o por completo** ao fim de algum tempo
+  (administrador do dispositivo), com fade para preto e de volta.
+- **Screensaver** antes de o ecrã desligar (tempos de entrada e de bloqueio em segundos):
+  - **Clássico**: relógio escurecido com deriva lenta.
+  - **Vídeo**: clipes em ecrã inteiro com a hora e a data, fade entre clipes, ajuste e qualidade; clipes de **uma ou várias pastas do
+    tablet**, um pacote zip, uma lista de endereços ou os aéreos da Apple TV, com interruptor por clipe. O 4K HEVC que o leitor normal recusa
+    passa pelo MediaCodec. Os vídeos ficam no tablet.
+  - **Ecrã ambiente** do editor de layout.
+- **A campainha acorda o ecrã** e abre o pop-up; os serviços abaixo também o acordam.
+- **Deslizar para a esquerda/direita** passa para a vista seguinte/anterior da dock.
+- Dock **Liquid Glass** (a lente desliza e estica como uma gota, e arrasta-se com o dedo), animações elásticas, 26 temas, três estilos de
+  vidro, português e inglês, escala da interface.
+- Todos os ícones do Material Design (os mesmos do Home Assistant) e definições no mesmo formato do painel web, mais uma secção **App**
+  (ligação, tamanho da interface, teste da campainha, arranque automático, permissões).
+- Arranca sozinha depois de reiniciar; religa sozinha e mantém-se ligada com o ecrã desligado.
+- Atalho para as definições: dois dedos premidos durante 2 s, ou o menu ⋮.
+
+Mais detalhe (compilar, assinatura, releases) em [android/README.md](android/README.md).
+
+## Os tablets no Home Assistant
+Cada tablet que se liga aparece como um **dispositivo "Pine3 Wall &lt;nome&gt;"** com: *Ligado*, *Movimento* (câmara frontal), *Ecrã*,
+*Bateria*, *Brilho do ecrã*, *Página* e um botão **Acordar**. O nome, o layout (principal ou uma variante) e a remoção estão em
+*Definições → Tablets* no painel web, que também tem os botões **Acordar** e **Testar mensagem**.
+
+Serviços para automações (um ou mais tablets; sem alvo, todos):
+
+| Serviço | O que faz |
+|---|---|
+| `pine3_wall.wake` | Liga o ecrã (e mantém-no ligado durante `seconds`). |
+| `pine3_wall.show_page` | Abre uma página: `home`, `rooms`, `calendar`, `chores`, `family`, `room/<área>`, `ambient/<id>`… |
+| `pine3_wall.show_camera` | Abre o vídeo ao vivo de uma câmara. |
+| `pine3_wall.notify` | Mostra uma mensagem no ecrã ("O jantar está na mesa"), acordando-o. |
+| `pine3_wall.screensaver` | Liga ou desliga o screensaver. |
+
+## O painel web
+O mesmo painel dos tablets, em qualquer browser ou no telemóvel:
+- Com um **layout publicado** mostra exatamente o que os tablets mostram: a disposição e as secções do início, a ordem, o tamanho e o tipo
+  de cada cartão, os dispositivos de cada divisão e a dock com os ecrãs ambiente.
+- **Telemóvel**: uma coluna, a agenda e o dia da família em lista, deslizar entre vistas.
+- **Ecrã inteiro** (*Definições → Início → Este dispositivo*) e **modo quiosque**: acrescenta `?kiosk` ao endereço
+  (`http://homeassistant.local:8123/pine3-wall?kiosk`) para esconder a barra lateral do Home Assistant.
+- Opções por dispositivo (ficam nesse browser): barra lateral, manter o ecrã ligado, qualidade da Casa 3D (completa, leve, imagem ou planta
+  2D), efeitos leves, animações e pop-up da campainha.
 
 ## Definições
-Botão ⚙ no canto superior direito:
-- **Aparência**: idioma, disposição, cor dos cartões, cor de destaque e fundo, com pré-visualização ao vivo. Seis fundos de ambiente (Nebulosa, Floresta, Ardósia, Vinho, Meia-noite, Brasa: tons profundos com brilhos suaves de cor por trás dos cartões de vidro), oito fundos vivos (Âmbar, Coral, Lima, Azul, Violeta, Magenta, Turquesa, Pôr do sol), seis escuros e seis claros (Linho, Névoa, Pêssego, Menta, Lavanda, Céu); um fundo claro põe todo o painel em modo claro. O modo **Automático** usa um fundo de dia e outro à noite, trocando ao nascer e ao pôr do sol (`sun.sun`; sem ela, das 7h às 19h).
-- **Início**: meteorologia e fonte do tempo, pessoas ao lado da data (desligado por defeito), estado da casa, cenas, cartões de resumo, relógio 12/24 h, ecrã de descanso e as opções deste dispositivo (barra lateral, ecrã ligado, ecrã inteiro).
-- **Divisões**: ordenar, esconder e escolher o tamanho de cada divisão na planta automática; voltar a mostrar dispositivos escondidos.
-- **Entidades**: escolher exatamente o que aparece.
-- **Planta 3D**: o editor acima e a altura das paredes.
-- **Navegação**: botões do dock (Divisões, Casa 3D, Cenas, Segurança).
-- **Sistema**: versão, contagens, reconstruir agora, repor predefinições.
+No painel web (⋮ → Definições) ou na app. Ficam guardadas no Home Assistant e valem para todos os tablets e browsers:
+**Aparência** (língua, grelha ou lista, cor dos cartões e de destaque, 26 fundos, automático de dia e de noite), **Início** (disposição,
+secções, fonte do tempo, screensaver), **Pessoas**, **Calendário**, **Tarefas**, **Divisões** (ordem, escondidas, tamanho na Casa 3D),
+**Entidades** (exatamente o que aparece), **Planta 3D**, **Navegação** (dock), **Layout** (o editor), **Tablets** e **Sistema**.
 
-As definições ficam guardadas no Home Assistant e valem para todos os dispositivos, exceto as de *Este dispositivo*, que ficam em cada browser.
+## Como funciona
+- **A casa** (`discovery.py`) é montada a partir dos registos do Home Assistant: áreas → divisões (ordenadas por piso), dispositivos →
+  cartões guiados pela entidade principal, relés de vários canais separados, nome da divisão tirado do nome dos dispositivos, entidades
+  escondidas/de diagnóstico/de configuração deixadas de fora.
+- **O contrato** entre a integração e a app está em [`schema/`](schema/): o modelo da casa, o documento de layout, o catálogo de módulos,
+  cartões e faces, os tokens de design (temas e cores, gerados para Kotlin e CSS) e exemplos testados dos dois lados. Um tipo de cartão que
+  o tablet não conhece mostra "Atualiza a app" em vez de falhar.
+- **Uma só versão** (`VERSION`) para a integração e para a app; os releases têm a tag `vX.Y.Z` e trazem o APK.
 
-## Como se constrói sozinho
-O servidor (`discovery.py`) lê os registos do Home Assistant e monta a casa:
-- **Áreas → divisões**, ordenadas por piso e nome; ícone escolhido pelo nome (Cozinha, Quarto, Casa de banho… em português ou inglês).
-- **Dispositivos → mosaicos**: cada dispositivo dá um mosaico, com a entidade principal (clima > multimédia > estores > luz > tomada…). Os sensores do mesmo dispositivo (potência, bateria, humidade) aparecem como extras no mosaico.
-- Relés de vários canais dão um mosaico por canal. O nome da divisão é retirado do nome do dispositivo ("Sala Candeeiro" → "Candeeiro").
-- Entidades escondidas, desativadas, de diagnóstico ou configuração ficam de fora (podes trazê-las de volta em *Entidades*).
-- Sensores de temperatura e humidade alimentam o resumo de cada divisão.
-- Quando adicionas ou mudas dispositivos ou áreas no HA, o painel atualiza-se sozinho.
-
-## Visual
-Fundo ameixa (e mais 5), cartões creme quando ligados, botão de energia por divisão e por dispositivo,
-pontos de estado, cartões de Clima, Segurança e "A tocar", dock em pílula.
-Tipografia: [Outfit](https://github.com/Outfitio/Outfit-Fonts) e [Figtree](https://github.com/erikdkennedy/figtree), ambas SIL OFL 1.1 (licenças em `frontend/fonts/`).
-O ícone e o logótipo estão em `custom_components/pine3_wall/brand/` (origem: `docs/brand/source.html`).
-
-## Testes
-```
+## Desenvolvimento
+```bash
 pip install -r requirements_test.txt
 pytest
 ```
+```bash
+cd android
+./gradlew :app:testReleaseUnitTest :app:assembleRelease
+```
+O CI corre o hassfest, a validação do HACS, o pytest, os testes Kotlin e compila o APK assinado. O plano e as fases estão em
+[PLANO.md](PLANO.md). A seguir: emparelhamento por QR code, aviso de atualização na app, quiosque como device owner e importação das
+definições do Pine3 View.
 
-## Roadmap
-Câmaras no início, leitor Spotify, mais tipos de dispositivo para a planta.
+Tipos de letra: [Outfit](https://github.com/Outfitio/Outfit-Fonts) e [Figtree](https://github.com/erikdkennedy/figtree) (SIL OFL 1.1).
+Ícones: [Material Design Icons](https://pictogrammers.com/library/mdi/) (Apache 2.0).
 
 ## Licença
-MIT (ver `LICENSE`). As fontes Outfit e Figtree estão sob a SIL Open Font License 1.1 (ver `NOTICE`).
+MIT (ver `LICENSE`). Os tipos de letra estão sob a SIL Open Font License 1.1 (ver `NOTICE`).
