@@ -38,25 +38,41 @@ armazenamento e outra app, por isso os dois podem estar instalados lado a lado d
 ## Imagens
 O painel web e a app têm o mesmo aspeto; estas imagens são do painel web, com uma casa de exemplo.
 
-| Início (Relógio grande) | Início (Duas colunas, fundo Âmbar) |
+| Início (Duas colunas) | Início (Relógio grande, fundo claro) |
 |---|---|
-| ![Início com relógio grande, estado da casa, tempo com aviso do IPMA, cenas, divisões e cartões de resumo](docs/screenshots/home.jpg) | ![Início em duas colunas: relógio, o que está ligado e tempo à esquerda, cenas e cartões à direita](docs/screenshots/home-columns-vivid.jpg) |
-| **Início (fundo claro)** | **Divisão** |
-| ![Início com o fundo claro Linho](docs/screenshots/home-light.jpg) | ![Uma divisão com o estado, luzes, filtros por tipo e uma grelha de cartões](docs/screenshots/room.jpg) |
-| **Previsão e avisos do IPMA** | **Ecrã de clima** |
-| ![Previsão com avisos do IPMA, UV e risco de incêndio](docs/screenshots/forecast.jpg) | ![Todos os ares condicionados com controlos rápidos e a temperatura de cada divisão](docs/screenshots/climate.jpg) |
-| **Ar condicionado** | **Aspirador** |
-| ![Cartão de clima: anel e modos](docs/screenshots/climate-card.jpg) | ![Aspirador com rotinas, potência, divisões a limpar e o mapa](docs/screenshots/vacuum.jpg) |
-| **Casa 3D** | **Planta: dispositivos** |
-| ![Casa 3D com dois pisos e luzes coloridas](docs/screenshots/house-3d.jpg) | ![Editor de planta a colocar dispositivos](docs/screenshots/plan-devices.jpg) |
-| **Modo de edição** | **Definições: aparência** |
-| ![Modo de edição com cartões para esconder, aumentar e ordenar](docs/screenshots/edit-mode.jpg) | ![Fundos vivos, escuros e claros, fixos ou automáticos de dia e de noite](docs/screenshots/settings-appearance.jpg) |
+| ![Início em duas colunas: relógio, pessoas, o que está ligado e tempo à esquerda, cenas e cartões à direita](docs/screenshots/home.jpg) | ![Início com relógio grande no fundo claro Linho](docs/screenshots/home-light.jpg) |
+| **Início (Barra lateral, fundo Âmbar)** | **Divisão** |
+| ![Início com barra lateral no fundo Âmbar](docs/screenshots/home-vivid.jpg) | ![Uma divisão com luzes, clima, TV e estores](docs/screenshots/room.jpg) |
+| **Agenda: dia por pessoa** | **Agenda: semana** |
+| ![Agenda do dia com uma coluna por pessoa e uma da família](docs/screenshots/agenda-day.jpg) | ![Agenda da semana](docs/screenshots/agenda-week.jpg) |
+| **Agenda: mês** | **O dia da família** |
+| ![Agenda do mês](docs/screenshots/agenda-month.jpg) | ![Uma coluna por pessoa com os eventos e as tarefas de hoje](docs/screenshots/family.jpg) |
+| **Tarefas** | **Ecrã ambiente** |
+| ![Tarefas de hoje por pessoa e a grelha da semana](docs/screenshots/chores.jpg) | ![Ecrã ambiente com relógio analógico, tempo e próximo evento](docs/screenshots/ambient.jpg) |
+| **Ecrã ambiente: o dia da família** | **Screensaver (web)** |
+| ![Ecrã ambiente com relógio digital e o dia da família](docs/screenshots/ambient-family.jpg) | ![Relógio do screensaver na web](docs/screenshots/screensaver.jpg) |
+| **Luz (folha compacta)** | **Aspirador** |
+| ![Folha compacta da luz com luminosidade, cores e o botão de ligar](docs/screenshots/light.jpg) | ![Folha do aspirador](docs/screenshots/vacuum.jpg) |
+| **Ecrã de clima** | **Ar condicionado** |
+| ![Todos os ares condicionados e a temperatura de cada divisão](docs/screenshots/climate.jpg) | ![Folha do clima com o anel e os modos](docs/screenshots/climate-card.jpg) |
+| **Tempo e avisos do IPMA** | **Casa 3D** |
+| ![Previsão com as próximas horas e dias](docs/screenshots/forecast.jpg) | ![Casa 3D com dois pisos e luzes acesas](docs/screenshots/house-3d.jpg) |
+| **Editor de planta** | **Modo de edição** |
+| ![Editor de planta com as divisões na grelha](docs/screenshots/plan.jpg) | ![Modo de edição: esconder, tamanho duplo e ordenar](docs/screenshots/edit-mode.jpg) |
+| **Editor de layout** | **Editor de layout: ecrã ambiente** |
+| ![Editor de layout: páginas, secções, cartões e dock](docs/screenshots/editor.jpg) | ![A compor um ecrã ambiente no editor](docs/screenshots/editor-ambient.jpg) |
+| **Definições: calendário** | **Definições: tarefas** |
+| ![Definições do calendário](docs/screenshots/settings-calendar.jpg) | ![Definições das tarefas com a grelha semanal](docs/screenshots/settings-chores.jpg) |
+| **Definições: tablets** | **Definições: aparência** |
+| ![Cada tablet de parede com o estado, o layout e Acordar / Testar mensagem](docs/screenshots/settings-tablets.jpg) | ![Definições de aparência](docs/screenshots/settings-appearance.jpg) |
 
 No telemóvel:
 
-| Início | Luz | Casa 3D |
-|---|---|---|
-| ![Início no telemóvel](docs/screenshots/phone-home.jpg) | ![Folha da luz com luminosidade e cores](docs/screenshots/phone-light.jpg) | ![Casa 3D no telemóvel](docs/screenshots/phone-3d.jpg) |
+| Início | O dia da família | Agenda | Luz |
+|---|---|---|---|
+| ![Início no telemóvel](docs/screenshots/phone-home.jpg) | ![O dia da família no telemóvel](docs/screenshots/phone-family.jpg) | ![Agenda da semana no telemóvel](docs/screenshots/phone-agenda.jpg) | ![Folha da luz no telemóvel](docs/screenshots/phone-light.jpg) |
+
+*O screensaver de vídeo, o acordar com o movimento e as outras funções de parede só existem na app Android.*
 
 ## Instalação
 

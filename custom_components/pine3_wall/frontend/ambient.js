@@ -26,7 +26,7 @@ export function ambientHtml(p, sec, h24 = true, cls = "") {
         return `<small style="color:${acc};font-weight:600;letter-spacing:.1em">${esc(now.toLocaleDateString(undefined, { weekday: "long" }).toUpperCase())}</small><div class="le-at" style="color:${fg}">${now.getDate()}</div><small style="color:${dim}">${esc(now.toLocaleDateString(undefined, { month: "long" }))}</small>`;
       case "weather": {
         const w = p._model?.weather && p._s(p._model.weather);
-        return `<ha-icon icon="mdi:weather-partly-cloudy" style="--mdc-icon-size:42px;color:${acc}"></ha-icon><div class="le-at" style="color:${fg}">${w?.attributes.temperature != null ? Math.round(w.attributes.temperature) + "°" : "–"}</div><small style="color:${dim}">${esc(w?.state || t("Tempo"))}</small>`;
+        return `<ha-icon icon="mdi:weather-partly-cloudy" style="--mdc-icon-size:42px;color:${acc}"></ha-icon><div class="le-at" style="color:${fg}">${w?.attributes.temperature != null ? Math.round(w.attributes.temperature) + "°" : "–"}</div><small style="color:${dim}">${esc(w ? (p._wxLabel ? p._wxLabel(w.state) : w.state) : t("Tempo"))}</small>`;
       }
       case "sensor": {
         const s = f.entity && p._s(f.entity);
