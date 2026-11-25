@@ -34,14 +34,18 @@ object Vac {
 
     fun fanLabel(f: String) = Tr.t(Fmt.STATE_PT[f] ?: f.replace('_', ' ').replaceFirstChar { it.uppercase() })
 
-    /** Mapas e divisões (roborock.get_maps), pedidos uma vez por aspirador. */
+    private val failedAt = java.util.concurrent.ConcurrentHashMap<String, Long>()
+
+    /** Mapas e divisões (roborock.get_maps), pedidos uma vez por aspirador (de novo, se o pedido falhou). */
     fun load(id: String, done: () -> Unit) {
-        if (maps.containsKey(id)) return
+        // um pedido sem resposta (a app ligou-se antes do HA estar pronto, o HA reiniciou…) volta a ser feito, no máximo uma vez por minuto
+        if (maps.containsKey(id) && !(maps[id] == null && android.os.SystemClock.elapsedRealtime() - (failedAt[id] ?: 0L) > 60_000)) return
         maps[id] = "loading"
         Ha.request(JSONObject().put("type", "call_service").put("domain", "roborock").put("service", "get_maps")
             .put("target", JSONObject().put("entity_id", id)).put("return_response", true)) { res ->
             val resp = res?.optJSONObject("response")
             val arr = (resp?.optJSONObject(id) ?: resp)?.optJSONArray("maps")
+            if (arr == null) failedAt[id] = android.os.SystemClock.elapsedRealtime()
             maps[id] = if (arr == null) null else (0 until arr.length()).mapNotNull { arr.optJSONObject(it) }.map { m ->
                 val r = m.optJSONObject("rooms")
                 VMap(m.optString("name"), r?.keys()?.asSequence()?.associate { k -> k.toInt() to r.optString(k) } ?: emptyMap())
