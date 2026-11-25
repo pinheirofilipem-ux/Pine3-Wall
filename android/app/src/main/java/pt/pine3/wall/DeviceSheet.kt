@@ -29,12 +29,24 @@ class DeviceSheet(private val act: Activity, private val kit: Kit, private val i
     private var openSel: String? = null
     private val wide = kit.wdp >= 820f
     /** Luzes, TVs/leitores e tomadas/interruptores: uma coluna estreita (cabeçalho, barra, cores, leituras e o botão grande de ligar). */
-    private val compact = Fmt.domain(id) in setOf("light", "media_player", "switch", "input_boolean")
+    private var compact = Fmt.domain(id) in setOf("light", "media_player", "switch", "input_boolean")
     private var pickerOpen = false
     private val listener = object : Ha.Listener {
         override fun onStates(changed: Set<String>) { if (changed.isEmpty() || changed.any { it == id || dev?.members?.contains(it) == true }) schedule() }
     }
     private val muted = Color.argb(166, 255, 255, 255)
+
+    private var card: LinearLayout? = null
+
+    /** Da folha compacta para a completa (⚙): mais larga, com o dispositivo todo. */
+    private fun showFull() {
+        compact = false
+        card?.let { c ->
+            c.setPadding(kit.dp(26), kit.dp(22), kit.dp(26), kit.dp(26))
+            (c.layoutParams as? FrameLayout.LayoutParams)?.let { it.width = kit.dp(kit.clamp(320f, kit.wdp - 48f, 1350f)); c.layoutParams = it }
+        }
+        render()
+    }
 
     fun show() {
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
@@ -44,6 +56,7 @@ class DeviceSheet(private val act: Activity, private val kit: Kit, private val i
             if (compact) setPadding(kit.dp(18), kit.dp(18), kit.dp(18), kit.dp(18)) else setPadding(kit.dp(26), kit.dp(22), kit.dp(26), kit.dp(26)); isClickable = true
             addView(ScrollView(act).apply { isVerticalScrollBarEnabled = false; addView(content) }, LinearLayout.LayoutParams(-1, -2))
         }
+        this.card = card
         val root = FrameLayout(act).apply {
             setBackgroundColor(Color.argb(150, 10, 4, 12)); isClickable = true; setOnClickListener { dismiss() }
             addView(card, FrameLayout.LayoutParams(kit.dp(if (compact) kit.clamp(300f, kit.wdp - 32f, 400f) else kit.clamp(320f, kit.wdp - 48f, 1350f)), -2, Gravity.CENTER))
@@ -227,6 +240,9 @@ class DeviceSheet(private val act: Activity, private val kit: Kit, private val i
         tt.addView(kit.text(dev?.name ?: Fmt.name(id), 19f, Color.WHITE, 500, display = true).apply { setSingleLine(); ellipsize = android.text.TextUtils.TruncateAt.END })
         tt.addView(kit.text(subTxt, 13f, muted).apply { setSingleLine(); ellipsize = android.text.TextUtils.TruncateAt.END })
         hd.addView(tt, LinearLayout.LayoutParams(0, -2, 1f))
+        // o resto do dispositivo (definições, diagnóstico, outros controlos) na folha completa
+        if (dev?.members.orEmpty().any { it != id && Fmt.state(it) != null }) hd.addView(kit.roundButton("mdi:cog-outline", 36, Color.argb(40, 255, 255, 255), Color.WHITE) { showFull() },
+            LinearLayout.LayoutParams(kit.dp(36), kit.dp(36)).apply { marginEnd = kit.dp(8) })
         hd.addView(kit.roundButton("mdi:close", 36, Color.argb(40, 255, 255, 255), Color.WHITE) { dismiss() })
         content.addView(hd)
 
@@ -314,8 +330,9 @@ class DeviceSheet(private val act: Activity, private val kit: Kit, private val i
             }
         }
 
-        // the device's readings as a list, its other controls as in the full sheet
-        val mem = dev?.members.orEmpty().filter { it != id && Fmt.state(it)?.state.let { st -> st != null && st != "unavailable" } }
+        // só o essencial: as leituras do dispositivo (sem as de configuração e diagnóstico); o resto em "Mais definições"
+        val cat = Ha.home?.rooms?.flatMap { it.entities }?.filter { it.category }?.map { it.id }?.toSet().orEmpty()
+        val mem = dev?.members.orEmpty().filter { it != id && it !in cat && Fmt.state(it)?.state.let { st -> st != null && st != "unavailable" } }
         val readings = mem.filter { Fmt.domain(it) in setOf("sensor", "binary_sensor") }
         if (readings.isNotEmpty()) {
             val box = LinearLayout(act).apply { orientation = LinearLayout.VERTICAL; background = kit.rounded(soft, 20) }
@@ -329,9 +346,6 @@ class DeviceSheet(private val act: Activity, private val kit: Kit, private val i
             }
             content.addView(box, lp(14))
         }
-        val others = mem.filter { it !in readings }
-        if (others.isNotEmpty()) deviceSection(others, content)
-
         val canToggle = !na && (!tv || has(128) || has(256) || Fmt.isTv(id))
         if (canToggle) {
             val fg = if (on) kit.ink else Color.WHITE

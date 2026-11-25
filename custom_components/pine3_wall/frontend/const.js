@@ -5,7 +5,7 @@ export const SHOWN = new Set([
   "binary_sensor", "scene", "script", "vacuum", "camera", "input_boolean", "button",
 ]);
 export const TOGGLE = new Set(["light", "switch", "fan", "input_boolean", "lock", "cover", "media_player"]);
-export const DETAIL = new Set(["light", "cover", "climate", "media_player", "fan"]);
+export const DETAIL = new Set(["light", "switch", "input_boolean", "cover", "climate", "media_player", "fan"]);
 
 export const SECTIONS = [
   ["Luzes", ["light"]],

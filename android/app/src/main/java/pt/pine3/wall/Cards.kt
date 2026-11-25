@@ -167,7 +167,7 @@ class Tile(private val kit: Kit, private val dev: Dev, private val secWatch: Boo
         if (!kit.list && (if (Lay.edit == null && bigSize != null) bigSize else Ha.home?.let { Lay.isBigDev(it, dev.id) } == true)) tag = 2
         val pad = kit.dp(18)
         isClickable = domain != "sensor"
-        setOnClickListener { if (domain in setOf("light", "cover", "climate", "media_player", "fan", "vacuum")) onOpen(dev.id) else Fmt.tap(dev.id) }
+        setOnClickListener { if (domain in setOf("light", "switch", "input_boolean", "cover", "climate", "media_player", "fan", "vacuum")) onOpen(dev.id) else Fmt.tap(dev.id) }
         if (kit.list) {
             val row = LinearLayout(kit.ctx).apply { gravity = Gravity.CENTER_VERTICAL; setPadding(kit.dp(16), kit.dp(12), kit.dp(16), kit.dp(12)) }
             row.addView(ic, LinearLayout.LayoutParams(kit.dp(44), kit.dp(44)).apply { marginEnd = kit.dp(14) })
