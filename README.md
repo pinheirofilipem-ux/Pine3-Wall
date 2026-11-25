@@ -1,7 +1,7 @@
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/brand/dark_logo@2x.png">
-    <img src="docs/brand/logo@2x.png" alt="Pine3 Wall" width="420">
+    <source media="(prefers-color-scheme: dark)" srcset="docs/brand/pine3-wall-logo-dark@2x.png">
+    <img src="docs/brand/pine3-wall-logo@2x.png" alt="Pine3 Wall" width="420">
   </picture>
 </p>
 
@@ -127,7 +127,7 @@ Everything is built automatically from Home Assistant and kept up to date when y
   - **Locks** need two taps to unlock. **Covers**, fans, purifiers, media players, Apple TV and HomePod have their own cards.
 - **Summary cards**: Climate, Security (doors, windows, locks), Vacuum and Now playing.
 - **Doorbell** (`event` entities of class doorbell, e.g. Comelit Intercom): a pop-up with the door camera's last picture, the call's own
-  picture as soon as it arrives, **Open door** (two taps) and **View camera**; on the tablet it wakes the screen.
+  picture as soon as it arrives, **Open door** (one tap) and **View camera**; on the tablet it wakes the screen.
 - **Weather** from a Home Assistant weather entity or [Open-Meteo](https://open-meteo.com): now, the next hours (scroll sideways), 7 days,
   UV, fire risk and **IPMA warnings** (Portugal).
 - **3D Home**: rooms stacked by floor, lit in the colour of their lights; rotate, zoom, tap a light or open a room. A **floor-plan editor**

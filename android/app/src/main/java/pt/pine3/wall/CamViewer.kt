@@ -23,8 +23,6 @@ class CamViewer(private val act: Activity, private val kit: Kit, private val cam
     private val elapsed = kit.text("0:00", 15f, Color.argb(190, 255, 255, 255))
     private var started = 0L
     private var until = 0L
-    private var armed: String? = null
-    private var armUntil = 0L
     private val loading = LoadingOverlay(kit, Tr.t("A carregar a câmara…"))
     private var last: android.graphics.Bitmap? = null
     private var open = true
@@ -85,15 +83,12 @@ class CamViewer(private val act: Activity, private val kit: Kit, private val cam
                     background = kit.ripple(kit.rounded(kit.accent, 24)); setPadding(kit.dp(14), kit.dp(18), kit.dp(14), kit.dp(18)); isClickable = true
                     addView(kit.icon("mdi:door-open", kit.ink, 30), LinearLayout.LayoutParams(kit.dp(30), kit.dp(30)))
                     addView(kit.text(Tr.t("Abrir"), 19f, kit.ink, 600, display = true))
-                    addView(label.apply { text = Fmt.name(d) + " · " + Tr.t("toca duas vezes"); setTextColor(Color.argb(170, 42, 34, 31)); textSize = 12f })
+                    addView(label.apply { text = Fmt.name(d); setTextColor(Color.argb(170, 42, 34, 31)); textSize = 12f })
                 }
+                // um toque abre a porta
                 b.setOnClickListener {
-                    val now = System.currentTimeMillis()
-                    if (armed == d && now < armUntil) {
-                        armed = null
-                        if (Fmt.domain(d) == "button") Ha.call("button", "press", listOf(d)) else Ha.call("lock", "open", listOf(d))
-                        label.text = Tr.t("Abrir") + " ✓"
-                    } else { armed = d; armUntil = now + 4000 }
+                    if (Fmt.domain(d) == "button") Ha.call("button", "press", listOf(d)) else Ha.call("lock", "open", listOf(d))
+                    label.text = Fmt.name(d) + " ✓"
                 }
                 doorsBox.addView(b, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = kit.dp(12) })
             }

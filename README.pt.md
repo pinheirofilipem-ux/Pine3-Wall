@@ -1,7 +1,7 @@
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/brand/dark_logo@2x.png">
-    <img src="docs/brand/logo@2x.png" alt="Pine3 Wall" width="420">
+    <source media="(prefers-color-scheme: dark)" srcset="docs/brand/pine3-wall-logo-dark@2x.png">
+    <img src="docs/brand/pine3-wall-logo@2x.png" alt="Pine3 Wall" width="420">
   </picture>
 </p>
 
@@ -131,7 +131,7 @@ Tudo é montado automaticamente a partir do Home Assistant e atualizado quando a
   - **Fechaduras** precisam de dois toques para abrir. **Estores**, ventoinhas, purificadores, leitores, Apple TV e HomePod têm cartões próprios.
 - **Cartões de resumo**: Clima, Segurança (portas, janelas, fechaduras), Aspirador e A tocar.
 - **Campainha** (entidades `event` de classe doorbell, p. ex. Comelit Intercom): pop-up com a última imagem da câmara da porta, a foto da
-  chamada assim que chega, **Abrir porta** (dois toques) e **Ver câmara**; no tablet acorda o ecrã.
+  chamada assim que chega, **Abrir porta** (um toque) e **Ver câmara**; no tablet acorda o ecrã.
 - **Tempo** de uma entidade do Home Assistant ou do [Open-Meteo](https://open-meteo.com): agora, as próximas horas (deslizam de lado),
   7 dias, UV, risco de incêndio e **avisos do IPMA**.
 - **Casa 3D**: divisões empilhadas por piso, iluminadas com a cor das luzes; rodar, aproximar, tocar numa luz ou abrir uma divisão. Um
