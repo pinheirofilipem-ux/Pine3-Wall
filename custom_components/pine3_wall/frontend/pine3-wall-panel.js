@@ -95,6 +95,23 @@ class Pine3WallPanel extends HTMLElement {
     // Home Assistant pushes a new hass object whenever *any* entity changes; only redraw
     // when something this screen shows has changed (redraws restart animations and flicker).
     if (prev && !this._affects(prev, h)) return;
+    this._passiveRender();
+  }
+
+  /**
+   * A redraw nobody asked for (a state changed in Home Assistant, a new home model). With a dropdown open it waits:
+   * redrawing replaces the <select> and the browser closes its list. It happens as soon as the dropdown loses focus.
+   */
+  _passiveRender() {
+    const act = this.shadowRoot?.activeElement;
+    if (act && act.tagName === "SELECT") {
+      if (!this._deferred) {
+        this._deferred = true;
+        act.addEventListener("blur", () => { if (this._deferred) { this._deferred = false; this._render(); } }, { once: true });
+      }
+      return;
+    }
+    this._deferred = false;
     this._render();
   }
 
@@ -146,7 +163,7 @@ class Pine3WallPanel extends HTMLElement {
     try {
       this._model = await this._hass.callWS({ type: "pine3_wall/home" });
       if (this._model.settings?.theme) this._theme = this._model.settings.theme;
-      this._unsub = this._hass.connection.subscribeMessage((m) => { this._model = m; if (!this._drag) this._render(); }, { type: "pine3_wall/subscribe" });
+      this._unsub = this._hass.connection.subscribeMessage((m) => { this._model = m; if (!this._drag) this._passiveRender(); }, { type: "pine3_wall/subscribe" });
     } catch (err) {
       console.warn("Pine3 Wall: API unavailable, using local discovery", err);
       this._model = null;
@@ -837,7 +854,7 @@ class Pine3WallPanel extends HTMLElement {
         this._hass.callWS({ type: "pine3_wall/ipma_warnings", area })
           .then((r) => { this._ipmaW = { area, at: Date.now(), list: r.warnings || [] }; })
           .catch(() => { this._ipmaW = { area, at: Date.now(), list: null }; })
-          .finally(() => { this._ipmaLoading = false; if (this._view === "home" || this._modal === "_wx") this._render(); });
+          .finally(() => { this._ipmaLoading = false; if (this._view === "home" || this._modal === "_wx") this._passiveRender(); });
       }
     }
     const rank = { red: 3, orange: 2, yellow: 1 };
@@ -871,7 +888,7 @@ class Pine3WallPanel extends HTMLElement {
       this._weather.forecast(this._hass, this._cfg().weather_entity)
         .then((fc) => { this._hfc = { fc, at: Date.now() }; })
         .catch(() => { this._hfc = { fc: { hourly: [], daily: [] }, at: Date.now() }; })
-        .finally(() => { this._hfcLoading = false; if (this._view === "home" && !this._drag) this._render(); });
+        .finally(() => { this._hfcLoading = false; if (this._view === "home" && !this._drag) this._passiveRender(); });
     }
     return c?.fc || null;
   }
@@ -982,7 +999,7 @@ class Pine3WallPanel extends HTMLElement {
     } catch (e) { console.error("Pine3 Wall", e); this._toast = t("Não foi possível guardar"); }
     this._savedJson = JSON.stringify(d);
     this._render();
-    setTimeout(() => { this._toast = null; this._render(); }, 1800);
+    setTimeout(() => { this._toast = null; this._passiveRender(); }, 1800);
   }
 
   _toggle(key, on, label, sub) {
@@ -1295,7 +1312,7 @@ class Pine3WallPanel extends HTMLElement {
     const tabletCall = async (msg) => {
       try { const r = await this._hass.callWS(msg); if (r?.panels) this._tablets = { ...this._tablets, panels: r.panels }; this._toast = t("Feito"); }
       catch (e) { this._toast = e.code === "offline" ? t("O tablet não está ligado") : t("Não foi possível guardar"); }
-      this._render(); setTimeout(() => { this._toast = null; this._render(); }, 1500);
+      this._render(); setTimeout(() => { this._toast = null; this._passiveRender(); }, 1500);
     };
     root.querySelectorAll("[data-tname]").forEach((el) => el.addEventListener("change", () => { const v = el.value.trim(); if (v) tabletCall({ type: "pine3_wall/panel/update", panel_id: el.dataset.tname, name: v }); }));
     root.querySelectorAll("[data-tlayout]").forEach((el) => el.addEventListener("change", () => tabletCall({ type: "pine3_wall/panel/update", panel_id: el.dataset.tlayout, layout: el.value })));
@@ -1669,7 +1686,7 @@ class Pine3WallPanel extends HTMLElement {
     // the family from the integration (colour, alias, picture); without it, every person.* with the default colours
     const fam = this._model?.people?.filter((p) => !p.hidden)
       || Object.keys(h.states).filter((i) => dom(i) === "person").map((id, k) => ({ id, alias: this._s(id)?.attributes.friendly_name || id, color: PERSON_COLORS[k % PERSON_COLORS.length], picture: this._s(id)?.attributes.entity_picture }));
-    const persons = fam.map((p) => ({ p, st: this._s(p.id) })).filter((x) => x.st).slice(0, 4);
+    const persons = fam.map((p) => ({ p, st: this._s(p.id) })).filter((x) => x.st);
     return persons.length ? `<div class="people">${persons.map(({ p, st }) => {
       const pic = p.picture;
       const ini = (p.alias || "?").trim()[0].toUpperCase();
@@ -2040,7 +2057,7 @@ class Pine3WallPanel extends HTMLElement {
     this._hass.callWS({ type: "call_service", domain: "roborock", service: "get_maps", target: { entity_id: id }, return_response: true })
       .then((r) => { const res = r?.response?.[id] ?? r?.response; this._vacRooms[id] = res?.maps || []; })
       .catch((e) => { console.warn("Pine3 Wall: roborock.get_maps", e); this._vacRooms[id] = []; })
-      .finally(() => { if (this._modal === id || this._view === "room") this._render(); });
+      .finally(() => { if (this._modal === id || this._view === "room") this._passiveRender(); });
   }
   /** The map the robot is using: the one named by its "selected map" select, else the first. */
   _vacMap(id, maps) {

@@ -281,5 +281,10 @@ export const cssCalendar = `
 .cal-row small{color:var(--muted)}
 .calcard .cal-row small{color:inherit;opacity:.7}
 .cal-empty{max-width:640px}
-@media (max-width:700px){.cal-hd .t{font-size:26px;width:100%}.cal-cell{min-height:60px}.cal-mev{display:none}}
+@media (max-width:700px){.cal-hd .t{font-size:26px;width:100%}.cal-cell{min-height:60px}.cal-mev{display:none}
+  /* phone: Day and Week as a list (one card per person / per day), not columns side by side */
+  .cal-day,.cal-week{grid-template-columns:1fr;overflow:visible}
+  .cal-col,.cal-week .cal-col{min-height:0}
+  .cal-col{text-align:left}
+  .cal-month{gap:4px}.cal-cell{padding:6px;border-radius:12px}}
 `;

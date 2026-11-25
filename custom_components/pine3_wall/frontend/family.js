@@ -88,5 +88,16 @@ export const cssFamily = `
 .fd-it.now{background:var(--amber);color:var(--ink);border-color:transparent;font-weight:600}
 .fd-it.now em{color:var(--ink)}
 .fd-it.past{opacity:.45}
-.fd-free{color:var(--muted)}
+.fd-free{color:var(--muted);align-self:flex-start;text-align:left}
+.fd-col{text-align:left}
+.fd-it span{justify-self:start;text-align:left}
+/* phone: one card per person, one under the other, as tall as what it holds */
+@media (max-width:700px){
+  .fd-hd .t{font-size:30px}
+  .fd-cols{grid-template-columns:minmax(0,1fr);overflow:visible;gap:12px;width:100%;justify-items:stretch}
+  .fd-col{width:auto}
+  .fd-col{min-height:0;padding:14px}
+  .fd-colhd b{font-size:20px}
+  .fd-av{width:40px;height:40px;font-size:16px}
+}
 `;
