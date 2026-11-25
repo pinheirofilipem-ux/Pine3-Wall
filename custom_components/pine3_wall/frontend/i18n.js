@@ -18,6 +18,11 @@ export function tp(n, one, many, vars) { return t(n === 1 ? one : many, { n, ...
 export function num(n) { return LANG === "en" ? String(n) : String(n).replace(".", ","); }
 
 export const EN = {
+  // the family's day
+  "O dia da família": "The family's day",
+  "Junta o calendário e as tarefas de cada pessoa. Escolhe o calendário em Definições → Calendário e cria as tarefas em Definições → Tarefas.": "It joins each person's calendar and chores. Choose the calendar in Settings → Calendar and create the chores in Settings → Chores.",
+  "Dia livre": "Free day",
+  "O dia da família: os eventos e as tarefas de cada pessoa.": "The family's day: each person's events and chores.",
   // module chores
   "Sem tarefas hoje.": "No chores today.",
   "Tarefas: {n}": "Chores: {n}",

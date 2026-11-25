@@ -174,6 +174,25 @@ class LayoutTest {
         assertEquals("@chores:person.ana", LCard.parse(JSONObject("""{"type":"chores_today","person":"person.ana"}""")).key)
     }
 
+    @Test fun joinsTheFamilyDay() {
+        assertEquals(json("schema/catalog.json").getJSONObject("modules").getJSONObject("family").getJSONObject("sections").keys().asSequence().toSet(), FamilyModule.sectionTypes)
+        val h = Home.parse(JSONObject("""{"rooms":[],"people":[{"id":"person.pedro","name":"Pedro","alias":"Pedro","color":"#7fc8f8"},{"id":"person.ana","name":"Ana","alias":"Ana","color":"#f4a3b4"}],
+            "calendar":{"entities":["calendar.f"],"days":14,"events":[
+              {"id":"a","title":"Natação","start":"2026-11-25T17:30","end":"2026-11-25T18:30","all_day":false,"people":["person.pedro"],"calendar":"calendar.f"},
+              {"id":"b","title":"Dentista","start":"2026-11-25T09:00","end":"2026-11-25T10:00","all_day":false,"people":["person.pedro"],"calendar":"calendar.f"},
+              {"id":"c","title":"Jantar","start":"2026-11-25T20:00","end":"2026-11-25T22:00","all_day":false,"people":[],"calendar":"calendar.f"}]},
+            "chores":{"tasks":[{"id":"mesa","name":"Pôr a mesa","moment":"evening"},{"id":"cao","name":"Cão","moment":"afternoon"}],
+              "schedule":{"mesa":[[],[],["person.pedro"],[],[],[],[]],"cao":[[],[],["person.pedro","person.ana"],[],[],[],[]]}}}"""))
+        // quarta-feira, 25 de novembro, às 15:00
+        val fd = FamilyDay.of(h, java.time.LocalDate.of(2026, 11, 25), java.time.LocalDateTime.of(2026, 11, 25, 15, 0))
+        val pedro = fd.columns.first { it.first.id == "person.pedro" }.second
+        assertEquals(listOf("Dentista", "Cão", "Natação", "Pôr a mesa"), pedro.map { it.title }) // por hora; tarefas pelo momento do dia
+        assertTrue(pedro[0].past && !pedro[2].past)
+        assertTrue(pedro[1].hot && !pedro[3].hot) // a tarefa da tarde está realçada
+        assertEquals(listOf("Cão"), fd.columns.first { it.first.id == "person.ana" }.second.map { it.title })
+        assertEquals(listOf("Jantar"), fd.family.map { it.title })
+    }
+
     @Test fun parsesAnAmbientScreen() {
         val doc = LayoutDoc.parse(JSONObject("""{"dock":["home","ambient/noite"],"pages":{"home":{"sections":[]},
             "ambient/noite":{"title":"Noite","sections":[{"type":"ambient","night":true,"color":"#ff0000",

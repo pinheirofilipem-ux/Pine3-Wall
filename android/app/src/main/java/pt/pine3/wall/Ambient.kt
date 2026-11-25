@@ -18,7 +18,7 @@ import kotlin.math.sin
 class AmbientFace(val type: String, val style: String, val seconds: Boolean?, val entity: String?, val label: String?) {
     companion object {
         /** As faces que esta app sabe desenhar (as mesmas do catálogo; verificado nos testes). */
-        val TYPES = setOf("clock_analog", "clock_digital", "date", "weather", "sensor", "people", "next_event", "agenda_today", "chores_today")
+        val TYPES = setOf("clock_analog", "clock_digital", "date", "weather", "sensor", "people", "next_event", "agenda_today", "chores_today", "family_day")
 
         fun parse(o: JSONObject) = AmbientFace(
             o.optString("type"), o.optString("style", "classic"), if (o.has("seconds")) o.optBoolean("seconds") else null,
@@ -92,6 +92,7 @@ class AmbientView(private val kit: Kit, private val spec: AmbientSpec, private v
                 "next_event" -> nextEvent(c, r)
                 "agenda_today" -> agendaToday(c, r)
                 "chores_today" -> choresToday(c, r)
+                "family_day" -> familyDay(c, r)
                 else -> text(c, Tr.s("Atualiza a app", "Update the app"), r.centerX(), r.centerY(), kit.dp(18).toFloat(), dim, 500)
             }
         }
@@ -233,6 +234,22 @@ class AmbientView(private val kit: Kit, private val spec: AmbientSpec, private v
             val s = p.alias + "  " + tasks.joinToString(" · ") { it.name }
             val col = if (night) fg else ChoresModule.color(kit, p)
             text(c, s, r.centerX(), y, fit(s, r.width(), line * 0.5f, 400), col, 400, false)
+        }
+    }
+
+    /** O dia da família: uma linha por pessoa com os eventos e as tarefas de hoje ("Pedro  17:30 Natação · Pôr a mesa"). */
+    private fun familyDay(c: Canvas, r: RectF) {
+        val home = Ha.home
+        if (home == null || (home.calendar == null && home.chores == null)) { text(c, Tr.s("Sem calendário nem tarefas", "No calendar or chores"), r.centerX(), r.centerY(), kit.dp(22).toFloat(), dim, 500, false); return }
+        val rows = FamilyDay.of(home).columns.filter { it.second.isNotEmpty() }.take(6)
+        val line = min(kit.dp(52).toFloat(), r.height() / (rows.size + 2))
+        var y = r.centerY() - line * (rows.size + 1) / 2f + line * 0.5f
+        text(c, Tr.s("O DIA DA FAMÍLIA", "THE FAMILY'S DAY"), r.centerX(), y, kit.dp(22).toFloat(), accent, 600, false)
+        if (rows.isEmpty()) { text(c, Tr.s("Dia livre", "Free day"), r.centerX(), y + line * 1.2f, kit.dp(24).toFloat(), dim, 500, false); return }
+        rows.forEach { (p, items) ->
+            y += line
+            val s = p.alias + "  " + items.filter { !it.past }.ifEmpty { items }.joinToString(" · ") { (if (it.kind == "event" && ':' in it.label) it.label + " " else "") + it.title }
+            text(c, s, r.centerX(), y, fit(s, r.width(), line * 0.5f, 400), if (night) fg else ChoresModule.color(kit, p), 400, false)
         }
     }
 

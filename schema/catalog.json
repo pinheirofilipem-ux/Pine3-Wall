@@ -189,6 +189,9 @@
         },
         "chores_today": {
           "description": "Today's chores by person."
+        },
+        "family_day": {
+          "description": "The family's day: each person's events and chores, one line each."
         }
       }
     },
@@ -249,6 +252,21 @@
           }
         }
       }
+    },
+    "family": {
+      "version": 1,
+      "description": "The family's day: one column per person with today's events (module calendar) and chores (module chores).",
+      "pages": "family: the family's day; it can go in the dock.",
+      "sections": {
+        "family_day": {
+          "platforms": [
+            "android",
+            "web"
+          ],
+          "description": "A column per person with their events and chores of the day, by time."
+        }
+      },
+      "cards": {}
     }
   }
 }

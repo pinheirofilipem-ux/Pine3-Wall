@@ -108,7 +108,7 @@ equivalente no `ambient`.
 | 5 ✅ | Módulo `ambient` | Faces, composição na web, página e modo de screensaver | Primeiro módulo novo |
 | 6 ✅ | Módulo `calendar` | Ligar o iCloud via CalDAV e confirmar o que é possível; leitura, "Próximos", Hoje/Semana/Mês, atribuição pelo título, privacidade, faces | Calendário de família |
 | 7 ✅ | Módulo `chores` | Tarefas, grelha semanal, cartões "Hoje" e por pessoa, sensor por pessoa | Tarefas da casa |
-| 8 | O dia da família | Página e face que juntam eventos e tarefas por pessoa | A vista "família" |
+| 8 ✅ | O dia da família | Página e face que juntam eventos e tarefas por pessoa | A vista "família" |
 | 9 | Painel web completo (nível 3) | Renderer interativo, sheets de detalhe, dock, ecrã inteiro e `?kiosk`, telemóvel, campainha como pop-up, paridade dos módulos | As mesmas vistas da app no browser |
 | 10 | Instalação e substituição | Emparelhamento por QR, aviso de atualização da app, kiosk (Device Owner), importação do Pine3 View, guia de migração | O Pine3 Wall substitui o Pine3 View |
 

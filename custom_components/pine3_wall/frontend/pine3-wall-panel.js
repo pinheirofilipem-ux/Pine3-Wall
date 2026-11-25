@@ -14,6 +14,7 @@ import { planView, bindPlan, cssPlan } from "./plan2d.js";
 import { openEditor, editorView, bindEditor, cssEditor } from "./editor.js";
 import { agendaView, bindAgenda, calendarSettings, bindCalendarSettings, cssCalendar } from "./calendar.js";
 import { choresView, bindChores, choresSettings, bindChoresSettings, cssChores } from "./chores.js";
+import { familyView, bindFamily, cssFamily } from "./family.js";
 
 // the version of this file, from its URL (/pine3_wall/<version>/…): differs from the integration's when the browser kept an old copy
 const FRONT_VERSION = (import.meta.url.match(/\/(\d+\.\d+\.\d+)\//) || [])[1] || null;
@@ -1570,6 +1571,7 @@ class Pine3WallPanel extends HTMLElement {
     else if (this._view === "security") body = this._securityView(rooms);
     else if (this._view === "calendar") body = agendaView(this);
     else if (this._view === "chores") body = choresView(this);
+    else if (this._view === "family") body = familyView(this);
     else if (this._view === "climate") body = this._climateView(rooms);
     else if (this._view === "house") body = houseView(this, rooms);
     else body = this._homeView(rooms);
@@ -1617,7 +1619,7 @@ class Pine3WallPanel extends HTMLElement {
     const light = isLight(themeKey);
     this.classList.toggle("light", light);
     if (this._styleLight !== light) {
-      const all = `${css}${css3d}${cssPlan}${cssEditor}${cssCalendar}${cssChores}`;
+      const all = `${css}${css3d}${cssPlan}${cssEditor}${cssCalendar}${cssChores}${cssFamily}`;
       this._styleEl.textContent = light ? (this._lightCss ||= toLight(all)) : all;
       this._styleLight = light;
     }
@@ -2525,6 +2527,7 @@ class Pine3WallPanel extends HTMLElement {
       if (this._view === "house") bindHouse(this, root);
       if (this._view === "calendar") bindAgenda(this, root);
       if (this._view === "chores") bindChores(this, root);
+      if (this._view === "family") bindFamily(this, root);
     }
 
     // modal

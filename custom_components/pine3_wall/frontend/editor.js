@@ -5,6 +5,7 @@ import { t } from "./i18n.js";
 import { esc, dom, ACCENTS } from "./const.js";
 import { upcomingCard, faceHtml, agendaView } from "./calendar.js";
 import { choresCard, choresView, faceHtml as choresFace } from "./chores.js";
+import { familyView, faceHtml as familyFace } from "./family.js";
 
 const clone = (o) => JSON.parse(JSON.stringify(o));
 
@@ -12,8 +13,9 @@ const FIXED_PAGES = [
   ["home", "mdi:home-outline", "Início"], ["rooms", "mdi:view-grid-outline", "Divisões"], ["house", "mdi:cube-outline", "Casa 3D"],
   ["scenes", "mdi:creation-outline", "Cenas"], ["climate", "mdi:thermometer", "Clima"], ["security", "mdi:shield-outline", "Segurança"],
   ["calendar", "mdi:calendar-month-outline", "Agenda"], ["chores", "mdi:broom", "Tarefas"],
+  ["family", "mdi:account-group", "Família"],
 ];
-const DOCKABLE = ["home", "rooms", "house", "scenes", "climate", "security", "calendar", "chores"];
+const DOCKABLE = ["home", "rooms", "house", "scenes", "climate", "security", "calendar", "chores", "family"];
 const AGENDA_VIEWS = [["day", "Dia"], ["week", "Semana"], ["month", "Mês"]];
 const TEMPLATES = [["top", "Relógio grande"], ["columns", "Duas colunas"], ["sidebar", "Barra lateral"], ["classic", "Clássica"]];
 const SECTIONS = {
@@ -21,14 +23,14 @@ const SECTIONS = {
   weather: ["mdi:weather-partly-cloudy", "Tempo"], scenes: ["mdi:creation-outline", "Cenas"], grid: ["mdi:view-grid-outline", "Grelha de cartões"],
   room_header: ["mdi:format-header-1", "Cabeçalho da divisão"], house3d: ["mdi:cube-outline", "Casa 3D"], scene_list: ["mdi:format-list-bulleted", "Todas as cenas"],
   climate_list: ["mdi:thermometer", "Clima de toda a casa"], security_list: ["mdi:shield-outline", "Portas, janelas e câmaras"],
-  agenda: ["mdi:calendar-month-outline", "Agenda"], chores_week: ["mdi:broom", "Tarefas da semana"],
+  agenda: ["mdi:calendar-month-outline", "Agenda"], chores_week: ["mdi:broom", "Tarefas da semana"], family_day: ["mdi:account-group", "O dia da família"],
 };
 // module ambient: composed screens ("ambient/<id>" pages with one "ambient" section of 1-3 faces)
 const FACES = {
   clock_analog: ["mdi:clock-outline", "Relógio analógico"], clock_digital: ["mdi:clock-digital", "Relógio digital"], date: ["mdi:calendar-today", "Data"],
   weather: ["mdi:weather-partly-cloudy", "Tempo"], sensor: ["mdi:gauge", "Sensor"], people: ["mdi:account-group-outline", "Pessoas"],
   next_event: ["mdi:calendar-arrow-right", "Próximo evento"], agenda_today: ["mdi:calendar-today-outline", "Agenda de hoje"],
-  chores_today: ["mdi:broom", "Tarefas de hoje"],
+  chores_today: ["mdi:broom", "Tarefas de hoje"], family_day: ["mdi:account-group", "O dia da família"],
 };
 const ANALOG_STYLES = [["classic", "Clássico"], ["minimal", "Minimalista"], ["bold", "Forte"]];
 const ambientSec = (page) => page?.sections.find((s) => s.type === "ambient");
@@ -172,6 +174,8 @@ function sectionBody(p, page, sec, si, rooms) {
       const note = sec.group === "category" ? `<small class="le-note">${t("No tablet os cartões são agrupados por categoria (luzes, clima…), por esta ordem dentro de cada uma.")}</small>` : "";
       return `${note}<div class="${cls}">${cards || `<small>${t("Grelha vazia: acrescenta cartões à direita.")}</small>`}</div>`;
     }
+    case "family_day":
+      return `<div class="le-agenda">${familyView(p).replace(/data-famday/g, "data-xfamday")}</div>`;
     case "chores_week":
       return `<div class="le-agenda">${choresView(p).replace(/data-chsettings/g, "data-xchsettings")}</div>`;
     case "agenda": {
@@ -219,6 +223,8 @@ function ambientPreview(p, sec) {
         return faceHtml(p, f.type, fg, dim, acc);
       case "chores_today":
         return choresFace(p, fg, dim, acc);
+      case "family_day":
+        return familyFace(p, fg, dim, acc);
       case "people":
         return `<div class="people">${(p._model?.people || []).filter((x) => !x.hidden).map((x) => `<div class="av" style="background-color:${night ? fg : x.color};opacity:${p._s(x.id)?.state === "home" ? 1 : 0.35}">${esc((x.alias || "?")[0])}</div>`).join("")}</div>`;
       default:

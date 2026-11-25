@@ -95,6 +95,7 @@ export const DOCK_ITEMS = [
   ["security", "mdi:shield-outline", "Segurança", "Portas, janelas, fechaduras e câmaras."],
   ["calendar", "mdi:calendar-month-outline", "Agenda", "O calendário da família: hoje por pessoa, semana e mês."],
   ["chores", "mdi:broom", "Tarefas", "Quem faz o quê em cada dia da semana."],
+  ["family", "mdi:account-group", "Família", "O dia da família: os eventos e as tarefas de cada pessoa."],
 ];
 export const DEFAULTS = {
   theme: "ameixa", card_color: "#f5efe1", accent_color: "#f6b83f", clock_24h: true,

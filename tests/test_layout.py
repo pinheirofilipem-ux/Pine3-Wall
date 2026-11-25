@@ -117,8 +117,9 @@ async def test_vacuum_summary(hass: HomeAssistant) -> None:
 def test_catalog_faces_and_modules() -> None:
     ambient = CATALOG["modules"]["ambient"]
     assert set(ambient["sections"]) == {"ambient"}
-    assert set(ambient["faces"]) == {"clock_analog", "clock_digital", "date", "weather", "sensor", "people", "next_event", "agenda_today", "chores_today"}
+    assert set(ambient["faces"]) == {"clock_analog", "clock_digital", "date", "weather", "sensor", "people", "next_event", "agenda_today", "chores_today", "family_day"}
     cal = CATALOG["modules"]["calendar"]
     assert set(cal["sections"]) == {"agenda"} and set(cal["cards"]) == {"upcoming"}
     ch = CATALOG["modules"]["chores"]
     assert set(ch["sections"]) == {"chores_week"} and set(ch["cards"]) == {"chores_today"}
+    assert set(CATALOG["modules"]["family"]["sections"]) == {"family_day"}

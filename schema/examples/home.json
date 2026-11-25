@@ -451,6 +451,14 @@
           }
         ]
       },
+      "family": {
+        "title": "Família",
+        "sections": [
+          {
+            "type": "family_day"
+          }
+        ]
+      },
       "room/cozinha": {
         "room": "cozinha",
         "sections": [
