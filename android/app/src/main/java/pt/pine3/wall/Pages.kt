@@ -107,6 +107,8 @@ class WxCard(kit: Kit, private val home: Home, private val kind: String, private
     /** Dedo na fila das horas: não se redesenha a meio do gesto (fica para quando o dedo sai). */
     private var touching = false
     private var pending = false
+    /** O que o cartão mostra da última vez: se não mudou, não se redesenha (o cartão é chamado a cada mudança de estado na casa). */
+    private var sig = ""
     init {
         isClickable = true; setOnClickListener { onClick() }
         Weather.load(pref) { post { update() } }
@@ -124,13 +126,22 @@ class WxCard(kit: Kit, private val home: Home, private val kind: String, private
     override fun update() {
         if (touching) { pending = true; return }
         pending = false
-        removeAllViews()
         val tall = kind.contains("tall")
         val wide = kind == "wide"
-        background = k.glass(24)
         Weather.load(pref) { post { update() } }
         val st = Weather.current(pref) { post { update() } }
         val als = Ipma.alerts { post { update() } }
+        // só se redesenha quando o tempo, os avisos, a hora certa, a língua ou as cores mudam
+        val newSig = listOf(
+            st?.let { "${it.cond}|${it.temp}" }, Weather.hourly.joinToString(";") { "${it.time},${it.cond},${it.temp},${it.precip}" },
+            Weather.daily.joinToString(";") { "${it.time},${it.cond},${it.temp},${it.low},${it.precip}" },
+            als.joinToString(";") { "${it.level},${it.type},${it.start},${it.end}" },
+            System.currentTimeMillis() / 3_600_000, Tr.en, k.fg, k.muted, k.accent,
+        ).joinToString("#")
+        if (newSig == sig && childCount > 0) return
+        sig = newSig
+        removeAllViews()
+        background = k.glass(24)
         val col = LinearLayout(k.ctx).apply { orientation = if (tall) LinearLayout.VERTICAL else LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
             setPadding(k.dp(if (wide) 16 else 18), k.dp(if (wide) 12 else 14), k.dp(if (wide) 16 else 18), k.dp(if (wide) 12 else 14)) }
         val daily = Weather.daily
@@ -174,8 +185,11 @@ class WxCard(kit: Kit, private val home: Home, private val kind: String, private
                     }
                     false
                 }
+                // a posição guardada é reposta antes do primeiro desenho (sem se ver a fila no início e depois a saltar)
                 val keep = hourScroll
-                if (keep > 0) post { scrollTo(keep, 0) }
+                if (keep > 0) viewTreeObserver.addOnPreDrawListener(object : android.view.ViewTreeObserver.OnPreDrawListener {
+                    override fun onPreDraw(): Boolean { viewTreeObserver.removeOnPreDrawListener(this); scrollTo(keep, 0); return scrollX == keep || hr.width <= width }
+                })
             }
             col.addView(hsv, if (tall) LinearLayout.LayoutParams(-1, -2) else LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = k.dp(12); marginEnd = k.dp(12) })
         }
