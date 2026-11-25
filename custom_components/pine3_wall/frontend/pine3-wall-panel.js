@@ -15,6 +15,9 @@ import { openEditor, editorView, bindEditor, cssEditor } from "./editor.js";
 import { agendaView, bindAgenda, calendarSettings, bindCalendarSettings, cssCalendar } from "./calendar.js";
 import { choresView, bindChores, choresSettings, bindChoresSettings, cssChores } from "./chores.js";
 import { familyView, bindFamily, cssFamily } from "./family.js";
+import { upcomingCard } from "./calendar.js";
+import { choresCard } from "./chores.js";
+import { ambientView, tickAmbient, cssAmbient } from "./ambient.js";
 
 // the version of this file, from its URL (/pine3_wall/<version>/…): differs from the integration's when the browser kept an old copy
 const FRONT_VERSION = (import.meta.url.match(/\/(\d+\.\d+\.\d+)\//) || [])[1] || null;
@@ -176,7 +179,55 @@ class Pine3WallPanel extends HTMLElement {
   _cfg() {
     if (this._view === "settings" && this._draft) return this._draft;
     const c = this._saved();
-    return this._edit ? { ...c, ...this._edit } : c;
+    if (this._edit) return { ...c, ...this._edit };
+    const l = this._fromLayout();
+    return l ? { ...c, ...l } : c;
+  }
+
+  /**
+   * With a layout made in the editor (published, or the draft shown as a preview) the web shows what the tablets
+   * show: the home sections and template, the order, size and kind of every card, the rooms' devices and the dock.
+   * Without one (automatic layout) the settings already are the layout, so nothing changes.
+   */
+  _fromLayout() {
+    const m = this._model, L = m?.layout;
+    if (!L || L.generated !== false || !L.pages?.home) return null;
+    if (this._lay?.m === m) return this._lay.v;
+    const grid = (page) => page?.sections?.find((x) => x.type === "grid")?.cards || [];
+    const secs = L.pages.home.sections || [], has = (type) => secs.some((x) => x.type === type);
+    const cards = grid(L.pages.home);
+    const key = (c) => (c.type === "room" ? c.room : c.type === "device" ? c.entity
+      : c.type === "summary" ? (c.summary === "vacuum" ? `@vacuum:${c.entity}` : `@${c.summary}`)
+      : c.type === "upcoming" ? `@upcoming:${c.person || ""}` : c.type === "chores_today" ? `@chores:${c.person || ""}` : null);
+    const device_order = {}, big_devices = [], hidden = [];
+    for (const r of m.rooms || []) {
+      const page = L.pages[`room/${r.id}`], g = grid(page);
+      if (!page || !page.sections?.some((x) => x.type === "grid")) continue;
+      const ids = g.filter((c) => c.type === "device").map((c) => c.entity);
+      device_order[r.id] = ids;
+      big_devices.push(...g.filter((c) => c.type === "device" && c.size === "big").map((c) => c.entity));
+      hidden.push(...r.devices.map((d) => d.id).filter((id) => !ids.includes(id)));
+    }
+    const v = {
+      home_layout: L.pages.home.template || "top",
+      show_weather: has("weather"), show_status: has("status"), show_scenes: has("scenes"), home_people: has("people"),
+      room_order: cards.map(key).filter(Boolean),
+      hidden_rooms: (m.rooms || []).map((r) => r.id).filter((id) => !cards.some((c) => c.type === "room" && c.room === id)),
+      big_rooms: cards.filter((c) => c.type === "room" && c.size === "big").map((c) => c.room),
+      big_devices, device_order, hidden: [...new Set([...(m.settings?.hidden || []), ...hidden])],
+      layout: L.options?.display || "grid", clock_24h: L.options?.clock_24h !== false, animations: L.options?.animations !== false,
+      dock: L.dock || ["home"], show_summary: true, _cards: cards,
+    };
+    this._lay = { m, v };
+    return v;
+  }
+
+  /** The dock's views in order: the layout's (with ambient screens) or the settings' fixed order. */
+  _dockKeys(cfg = this._cfg()) {
+    const L = this._model?.layout;
+    const known = (k) => DOCK_ITEMS.some(([x]) => x === k) || (k.startsWith("ambient/") && !!L?.pages?.[k]);
+    if (cfg._cards) return ["home", ...(cfg.dock || []).filter((k) => k !== "home" && known(k))];
+    return DOCK_ITEMS.map(([k]) => k).filter((k) => k === "home" || (cfg.dock || []).includes(k));
   }
 
   async _persist(patch) {
@@ -327,7 +378,8 @@ class Pine3WallPanel extends HTMLElement {
   /** Dock buttons: rebuilt only when the items or the language change; otherwise just the active one moves. */
   _updateDock(cfg) {
     const nav = this._dockEl, show = this._view !== "settings" && this._view !== "layout" && !this._edit;
-    const items = DOCK_ITEMS.filter(([k]) => k === "home" || cfg.dock.includes(k));
+    const L = this._model?.layout;
+    const items = this._dockKeys(cfg).map((k) => DOCK_ITEMS.find(([x]) => x === k) || [k, "mdi:clock-time-four-outline", L?.pages?.[k]?.title || k.slice(8)]);
     const key = items.map(([k]) => k).join() + lang();
     if (nav._key !== key) {
       nav.querySelectorAll("button").forEach((b) => b.remove());
@@ -344,6 +396,37 @@ class Pine3WallPanel extends HTMLElement {
     this._dockSpace();
     this._placeBlob(this._blobAt != null && this._blobAt !== active);
     this._blobAt = active;
+  }
+
+  /**
+   * Swipe left/right on a touch screen: the next/previous view of the dock, wrapping around (as in the app). Not in a
+   * room, the settings, the editor, edit mode, with a card open, over the 3D home or from a row that scrolls sideways.
+   */
+  _bindSwipe(app) {
+    let x0 = 0, y0 = 0, ok = false;
+    const sideways = (el) => {
+      for (let e = el; e && e !== app; e = e.parentElement || e.getRootNode?.().host) {
+        if (e.scrollWidth > e.clientWidth + 4 && ["auto", "scroll"].includes(getComputedStyle(e).overflowX)) return true;
+        if (e.matches?.("input,select,textarea,.house3d,.h3d,.hslider,.vslider,[data-slider]")) return true;
+      }
+      return false;
+    };
+    app.addEventListener("touchstart", (e) => {
+      const tch = e.touches[0];
+      ok = e.touches.length === 1 && !this._modal && !this._edit && !this._saver && !["room", "settings", "layout", "house"].includes(this._view) && !sideways(e.target);
+      x0 = tch.clientX; y0 = tch.clientY;
+    }, { passive: true });
+    app.addEventListener("touchend", (e) => {
+      if (!ok) return;
+      ok = false;
+      const tch = e.changedTouches[0], dx = tch.clientX - x0, dy = tch.clientY - y0;
+      if (Math.abs(dx) < Math.max(70, window.innerWidth * 0.18) || Math.abs(dx) < Math.abs(dy) * 2) return;
+      const keys = this._dockKeys(), i = Math.max(0, keys.indexOf(this._view)), dir = dx < 0 ? 1 : -1;
+      if (keys.length < 2) return;
+      this._swipeDir = dir;
+      this._go(keys[(i + dir + keys.length) % keys.length]);
+      this._swipeDir = 0;
+    }, { passive: true });
   }
 
   /** Smaller dock when it doesn't fit: first only the active tab keeps its name, then icons only. */
@@ -1589,6 +1672,7 @@ class Pine3WallPanel extends HTMLElement {
     else if (this._view === "calendar") body = agendaView(this);
     else if (this._view === "chores") body = choresView(this);
     else if (this._view === "family") body = familyView(this);
+    else if (this._view.startsWith("ambient/")) body = ambientView(this, this._view);
     else if (this._view === "climate") body = this._climateView(rooms);
     else if (this._view === "house") body = houseView(this, rooms);
     else body = this._homeView(rooms);
@@ -1617,7 +1701,7 @@ class Pine3WallPanel extends HTMLElement {
     // entering another screen: the content flows in (no blur on the 3D Home, a filter would flatten it)
     const viewKey = `${this._view}:${this._view === "room" ? this._room : ""}`;
     const anim = this._animOn(cfg);
-    const vin = this._viewKey && this._viewKey !== viewKey && anim ? (this._view === "house" ? "vin flat" : "vin") : "";
+    const vin = this._viewKey && this._viewKey !== viewKey && anim ? (this._swipeDir ? (this._swipeDir > 0 ? "vin-r" : "vin-l") : this._view === "house" ? "vin flat" : "vin") : "";
     this.classList.toggle("noanim", !anim);
     this.classList.toggle("lite", this._liteFx());
     if (!this._app) {
@@ -1629,6 +1713,7 @@ class Pine3WallPanel extends HTMLElement {
       this._app = root.getElementById("app");
       this._dockEl = root.querySelector(".dock");
       new ResizeObserver(() => this._placeBlob(false)).observe(this._dockEl); // fonts loading, window size…
+      this._bindSwipe(this._app);
       document.fonts?.ready?.then(() => { if (this._dockEl) { this._dockEl._fit = null; this._fitDock(); this._placeBlob(false); this._fitRows(); this._fitDays(); this._fillHome(); } });
     }
     // appearance: a fixed theme, or the day / night one by the sun; light themes get the light stylesheet
@@ -1636,7 +1721,7 @@ class Pine3WallPanel extends HTMLElement {
     const light = isLight(themeKey);
     this.classList.toggle("light", light);
     if (this._styleLight !== light) {
-      const all = `${css}${css3d}${cssPlan}${cssEditor}${cssCalendar}${cssChores}${cssFamily}`;
+      const all = `${css}${css3d}${cssPlan}${cssEditor}${cssCalendar}${cssChores}${cssFamily}${cssAmbient}`;
       this._styleEl.textContent = light ? (this._lightCss ||= toLight(all)) : all;
       this._styleLight = light;
     }
@@ -1829,6 +1914,17 @@ class Pine3WallPanel extends HTMLElement {
           <div class="ctl"><span data-media="media_previous_track" data-ent-id="${media}"><ha-icon icon="mdi:skip-previous"></ha-icon></span><span class="pp" data-media="media_play_pause" data-ent-id="${media}"><ha-icon icon="mdi:${this._s(media).state === "playing" ? "pause" : "play"}"></ha-icon></span><span data-media="media_next_track" data-ent-id="${media}"><ha-icon icon="mdi:skip-next"></ha-icon></span></div></div></div>`);
     }
 
+    // with an editor layout: only its summary cards, plus its device and module cards (calendar, chores)
+    if (cfg._cards) {
+      const keep = new Set(cfg.room_order);
+      for (let i = cards.length - 1; i >= 0; i--) if (!keep.has(cards[i].match(/data-key="([^"]+)"/)?.[1])) cards.splice(i, 1);
+      const tag = (html, key) => html.replace(/^(\s*<div)/, `$1 data-key="${esc(key)}"`);
+      for (const c of cfg._cards) {
+        if (c.type === "device" && this._s(c.entity)) cards.push(this._tile(c.entity));
+        if (c.type === "upcoming") cards.push(tag(upcomingCard(this, c), `@upcoming:${c.person || ""}`));
+        if (c.type === "chores_today") cards.push(tag(choresCard(this, c), `@chores:${c.person || ""}`));
+      }
+    }
     const others = this._activeOthers(all);
     const grid = rooms.length || this._edit ? `<div class="grid hgrid" data-sortable="rooms">${this._homeItems(rooms, cfg.show_summary ? cards : []).join("")}${this._restoreCard(this._hiddenRooms.length)}</div>`
       : `<div class="empty">${t("Ainda não há divisões com dispositivos. Atribui áreas aos teus dispositivos no Home Assistant.")}</div>`;
@@ -2545,6 +2641,7 @@ class Pine3WallPanel extends HTMLElement {
       if (this._view === "calendar") bindAgenda(this, root);
       if (this._view === "chores") bindChores(this, root);
       if (this._view === "family") bindFamily(this, root);
+      if (this._view.startsWith("ambient/")) tickAmbient(this, root); else clearInterval(this._ambTimer);
     }
 
     // modal

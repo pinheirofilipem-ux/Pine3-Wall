@@ -271,7 +271,7 @@ export const cssCalendar = `
 .cal-whos{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .cal-who{font-size:13px;font-weight:600;padding:3px 10px;border-radius:999px;background:var(--c);color:var(--ink)}
 .calcard{cursor:pointer}
-.calcard .row1{display:flex;align-items:center;gap:12px}
+.calcard .row1{display:flex;align-items:center;gap:12px;justify-content:flex-start}
 .calcard .nm{font-family:var(--display);font-size:20px}
 .cal-list{display:flex;flex-direction:column;gap:10px;margin-top:12px}
 .cal-row{display:flex;gap:12px;align-items:center}

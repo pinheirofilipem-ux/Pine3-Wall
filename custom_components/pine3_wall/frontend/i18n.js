@@ -18,6 +18,7 @@ export function tp(n, one, many, vars) { return t(n === 1 ? one : many, { n, ...
 export function num(n) { return LANG === "en" ? String(n) : String(n).replace(".", ","); }
 
 export const EN = {
+  "Este ecrã já não existe no layout.": "This screen is no longer in the layout.",
   // the family's day
   "O dia da família": "The family's day",
   "Junta o calendário e as tarefas de cada pessoa. Escolhe o calendário em Definições → Calendário e cria as tarefas em Definições → Tarefas.": "It joins each person's calendar and chores. Choose the calendar in Settings → Calendar and create the chores in Settings → Chores.",

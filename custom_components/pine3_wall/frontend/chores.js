@@ -172,7 +172,7 @@ export const cssChores = `
 .ch-task.now{background:var(--amber);color:var(--ink);font-weight:600}
 .ch-none{color:var(--muted)}
 .chcard{cursor:pointer}
-.chcard .row1{display:flex;align-items:center;gap:12px}
+.chcard .row1{display:flex;align-items:center;gap:12px;justify-content:flex-start}
 .chcard .nm{font-family:var(--display);font-size:20px}
 .chcard .ch-task{font-size:13px;padding:4px 10px}
 .chcard .ch-tasks{flex-basis:100%}
