@@ -6,7 +6,8 @@ junta, num tablet de parede, acordar com o movimento, desligar o ecrã sem luz, 
 A app e a integração têm **a mesma versão** (ficheiro `VERSION` na raiz). Pode estar instalada ao lado da app antiga do Pine3 View
 (`applicationId` `pt.pine3.wall`), mas precisa da integração **Pine3 Wall**, não da Pine3 View.
 
-> Testada à mão num OPPO Pad SE (Android 13, ColorOS, 90 Hz); outros dispositivos podem comportar-se de forma diferente.
+> Testada num OPPO Pad SE de 11" (ColorOS, 90 Hz) montado na parede; outros tablets podem comportar-se de forma diferente
+> (ver "Num tablet ColorOS" e o passo a passo em [Preparar o tablet](../README.pt.md#preparar-o-tablet)).
 
 ## Ligação ao Home Assistant
 - WebSocket com token de acesso de longa duração. Lê o **mesmo modelo da casa** do painel web (`pine3_wall/home`, `pine3_wall/subscribe`)
@@ -59,6 +60,9 @@ A app e a integração têm **a mesma versão** (ficheiro `VERSION` na raiz). Po
 - As janelas normais (detalhe de dispositivo, previsão, escolha de portas) fecham sozinhas ao fim do tempo definido em Screensaver
   (por omissão 10 s, 0 = nunca); a câmara e a campainha ficam abertas.
 - Atalho para as definições: dois dedos premidos durante 2 s, ou o menu ⋮.
+- **Deslizar entre vistas**: para a esquerda ou para a direita passa para a vista seguinte ou anterior da dock (dá a volta no fim). Não
+  funciona dentro de uma divisão, no modo de edição, por cima da Casa 3D nem a partir de uma fila que desliza de lado (cenas, horas do
+  tempo, entradas).
 
 ## Ecrãs ambiente
 - Ecrãs compostos (módulo `ambient`), criados no **Editor de layout** do painel web (*Novo ecrã ambiente*): 1 a 3 faces lado a lado —
@@ -86,7 +90,7 @@ A lente de vidro desliza com mola por baixo do separador ativo e estica como uma
 segue o dedo e assenta no separador mais próximo. Animações elásticas por toda a app (desligam-se com "Animações").
 
 ## Fora do âmbito
-Editor de planta (continua no painel web), formato estreito/telemóvel, vídeo MJPEG, modos 3D leve e planta 2D, e leitor de música
+Editor de planta e editor de layout (no painel web), formato de telemóvel (o painel web serve para isso), vídeo MJPEG, modos 3D leve e planta 2D, e leitor de música
 (Apple Music/AirPlay não está implementado).
 
 ## Num tablet ColorOS (OPPO)
@@ -122,4 +126,3 @@ O APK fica em `app/build/outputs/apk/release/`. A versão (`versionName` e `vers
 ## Créditos
 Ícones: [Material Design Icons](https://pictogrammers.com/library/mdi/) (Apache 2.0). Tipos de letra Outfit e Figtree (SIL OFL 1.1).
 
-**Deslizar entre vistas:** desliza o dedo para a esquerda ou para a direita na página para passar para a vista seguinte ou anterior da dock (dá a volta no fim). Não funciona dentro de uma divisão, no modo de edição, por cima da casa 3D nem a partir de uma fila que desliza de lado (cenas, horas do tempo, entradas).
