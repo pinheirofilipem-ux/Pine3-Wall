@@ -102,6 +102,11 @@ fun allLights(home: Home): List<String> = devices(home).filter { it.kind == "lig
 class WxCard(kit: Kit, private val home: Home, private val kind: String, private val onClick: () -> Unit) : Card(kit.ctx) {
     private val k = kit
     private val pref = home.settings.optString("weather_entity", "")
+    /** Onde estava a fila das horas: o cartão volta a ser desenhado a cada mudança de estado na casa e não deve voltar ao início. */
+    private var hourScroll = 0
+    /** Dedo na fila das horas: não se redesenha a meio do gesto (fica para quando o dedo sai). */
+    private var touching = false
+    private var pending = false
     init {
         isClickable = true; setOnClickListener { onClick() }
         Weather.load(pref) { post { update() } }
@@ -117,6 +122,8 @@ class WxCard(kit: Kit, private val home: Home, private val kind: String, private
     }
 
     override fun update() {
+        if (touching) { pending = true; return }
+        pending = false
         removeAllViews()
         val tall = kind.contains("tall")
         val wide = kind == "wide"
@@ -158,6 +165,17 @@ class WxCard(kit: Kit, private val home: Home, private val kind: String, private
             val hsv = android.widget.HorizontalScrollView(k.ctx).apply {
                 isHorizontalScrollBarEnabled = false; overScrollMode = View.OVER_SCROLL_NEVER; addView(hr)
                 setOnClickListener { onClick() } // um toque abre a previsão; deslizar mostra mais horas
+                // fica onde estava depois de redesenhado; não se redesenha com o dedo em cima
+                setOnScrollChangeListener { _, x, _, _, _ -> hourScroll = x }
+                setOnTouchListener { _, e ->
+                    when (e.actionMasked) {
+                        android.view.MotionEvent.ACTION_DOWN -> touching = true
+                        android.view.MotionEvent.ACTION_UP, android.view.MotionEvent.ACTION_CANCEL -> { touching = false; if (pending) postDelayed({ if (!touching && pending) update() }, 600) }
+                    }
+                    false
+                }
+                val keep = hourScroll
+                if (keep > 0) post { scrollTo(keep, 0) }
             }
             col.addView(hsv, if (tall) LinearLayout.LayoutParams(-1, -2) else LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = k.dp(12); marginEnd = k.dp(12) })
         }

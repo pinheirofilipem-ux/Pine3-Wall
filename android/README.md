@@ -121,3 +121,5 @@ O APK fica em `app/build/outputs/apk/release/`. A versão (`versionName` e `vers
 
 ## Créditos
 Ícones: [Material Design Icons](https://pictogrammers.com/library/mdi/) (Apache 2.0). Tipos de letra Outfit e Figtree (SIL OFL 1.1).
+
+**Deslizar entre vistas:** desliza o dedo para a esquerda ou para a direita na página para passar para a vista seguinte ou anterior da dock (dá a volta no fim). Não funciona dentro de uma divisão, no modo de edição, por cima da casa 3D nem a partir de uma fila que desliza de lado (cenas, horas do tempo, entradas).

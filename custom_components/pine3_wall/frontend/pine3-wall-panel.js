@@ -2342,7 +2342,7 @@ class Pine3WallPanel extends HTMLElement {
     const id = this._modal, s = id && this._s(id);
     if (!s) return "";
     const d = dom(id), a = s.attributes, on = this._isOn(id);
-    if (d === "light" || d === "media_player") return this._compactSheet(id);
+    if (d === "light" || d === "media_player" || d === "switch" || d === "input_boolean") return this._compactSheet(id);
     const compact = !!this._meta?.[id]?.members?.some((e) => this._s(e)); // a whole-device card: keep it short
     let content = "";
     if (d === "light" && (a.supported_color_modes || []).some((m) => m !== "onoff")) {
