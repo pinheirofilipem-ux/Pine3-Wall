@@ -87,6 +87,8 @@ object Ha {
     /** Ids do pedido do modelo e da subscrição nesta ligação (mudam quando se volta a pedir: o HA não aceita ids repetidos). */
     @Volatile private var homeId = ID_HOME
     @Volatile private var homeSubId = ID_HOME_SUB
+    /** Id da subscrição dos comandos do tablet (panel/connect) nesta ligação: muda quando se volta a pedir depois de um unknown_command. */
+    @Volatile private var panelSubId = ID_PANEL
 
     private fun notifyMain(block: (Listener) -> Unit) = main.post { listeners.forEach(block) }
     private fun setStatus(text: String, ok: Boolean) { status = text; connected = ok; notifyMain { it.onStatus() } }
@@ -270,7 +272,7 @@ object Ha {
         setStatus(Tr.s("Ligado", "Connected"), true)
         socket.send(JSONObject().put("id", ID_EVENTS).put("type", "subscribe_events").put("event_type", "state_changed").toString())
         socket.send(JSONObject().put("id", ID_STATES).put("type", "get_states").toString())
-        homeId = ID_HOME; homeSubId = ID_HOME_SUB
+        homeId = ID_HOME; homeSubId = ID_HOME_SUB; panelSubId = ID_PANEL
         // o tablet regista-se (dispositivo no HA) e recebe os comandos dos serviços; o modelo vem com o layout deste tablet
         socket.send(JSONObject().put("id", ID_PANEL).put("type", "pine3_wall/panel/connect").put("panel_id", panelId).put("name", panelName)
             .put("model", "${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL}".trim().take(80)).put("app_version", appVersion).toString())
@@ -326,12 +328,16 @@ object Ha {
                         retryHome()
                     }
                 }
-                ID_PANEL -> if (m.optBoolean("success")) { log("Tablet registado no HA"); onPanelConnected?.let { main.post(it) } }
-                else -> if (rid == homeSubId && m.optBoolean("success")) log("Subscrição do modelo ativa")
+                else -> when {
+                    rid == panelSubId -> if (m.optBoolean("success")) { log("Tablet registado no HA"); onPanelConnected?.let { main.post(it) } }
+                        else log("pine3_wall/panel/connect falhou: ${m.optJSONObject("error")?.optString("code").orEmpty()}")
+                    rid == homeSubId && m.optBoolean("success") -> log("Subscrição do modelo ativa")
+                }
             }
             "event" -> when (m.optInt("id")) {
                 homeSubId -> m.optJSONObject("event")?.let { setHome(it) }
-                ID_PANEL -> m.optJSONObject("event")?.let { cmd ->
+                // os comandos chegam com o id da subscrição que o HA aceitou (a primeira, ou a de um novo pedido)
+                panelSubId -> m.optJSONObject("event")?.let { cmd ->
                     log("Comando: ${cmd.optString("command")}")
                     pendingCommand = cmd to System.currentTimeMillis()
                     main.post { onPanelCommand?.invoke(cmd); listeners.forEach { it.onCommand(cmd) } }
@@ -355,7 +361,10 @@ object Ha {
                     homeId = hid; homeSubId = sid
                     socket.send(JSONObject().put("id", hid).put("type", "pine3_wall/home").put("panel_id", panelId).toString())
                     socket.send(JSONObject().put("id", sid).put("type", "pine3_wall/subscribe").put("panel_id", panelId).toString())
-                    socket.send(JSONObject().put("id", ids.incrementAndGet()).put("type", "pine3_wall/panel/connect").put("panel_id", panelId).put("name", panelName).put("app_version", appVersion).toString())
+                    val pid = ids.incrementAndGet()
+                    panelSubId = pid
+                    socket.send(JSONObject().put("id", pid).put("type", "pine3_wall/panel/connect").put("panel_id", panelId).put("name", panelName)
+                        .put("model", "${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL}".trim().take(80)).put("app_version", appVersion).toString())
                     log("A pedir de novo o modelo da casa")
                 } catch (_: Exception) {}
             }.start()
