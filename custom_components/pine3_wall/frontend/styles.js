@@ -354,11 +354,11 @@ a.pill{color:inherit;text-decoration:none}
 .fh b{font-family:var(--display);font-weight:500;font-size:18px}
 .pp{color:#7cc4ff!important}
 .fds{display:flex;flex-direction:column;margin-top:8px}
-.fd{display:grid;grid-template-columns:52px 26px 44px 36px minmax(60px,1fr) 38px;align-items:center;gap:10px;padding:11px 4px;border-bottom:1px solid var(--line);font-size:16px}
-.fd:last-child{border-bottom:0}
+.fday{display:grid;grid-template-columns:52px 26px 44px 36px minmax(60px,1fr) 38px;align-items:center;gap:10px;padding:11px 4px;border-bottom:1px solid var(--line);font-size:16px}
+.fday:last-child{border-bottom:0}
 
-.fd b{font-family:var(--display);font-weight:500;text-align:right}
-.fd small{color:var(--muted);text-align:right}
+.fday b{font-family:var(--display);font-weight:500;text-align:right}
+.fday small{color:var(--muted);text-align:right}
 .opt.col{flex-direction:column;align-items:stretch}
 .seg{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 .seg .pill{height:40px;font-size:15px;padding:0 16px}
@@ -481,7 +481,7 @@ a.pill{color:inherit;text-decoration:none}
 
   .rc.big{grid-column:span 2}.edbar{right:12px;bottom:14px}.edbar .pill{height:46px;padding:0 18px}
   .as-list .rc .foot{flex-direction:column;align-items:flex-start;gap:2px}.as-list .rc .dots{display:none}.as-list .tiles{grid-template-columns:1fr}
-  .fd{grid-template-columns:44px 24px 40px 32px minmax(40px,1fr) 34px;gap:8px;font-size:14px}.stage{height:58vh;min-height:340px;border-radius:24px;margin-bottom:20px}.hint3{display:none}
+  .fday{grid-template-columns:44px 24px 40px 32px minmax(40px,1fr) 34px;gap:8px;font-size:14px}.stage{height:58vh;min-height:340px;border-radius:24px;margin-bottom:20px}.hint3{display:none}
 
   .set{padding-top:20px}.set-body{grid-template-columns:1fr;gap:18px;margin-top:22px}
   .set-nav{flex-direction:row;overflow-x:auto;position:static;scrollbar-width:none}.set-nav::-webkit-scrollbar{display:none}
@@ -800,11 +800,11 @@ a.pill{color:inherit;text-decoration:none}
 .fsrc{margin-top:18px;font-size:13px;color:var(--muted)}
 .fcst .fh{width:72px;padding:12px 4px;border-radius:18px}
 .fcst .fh ha-icon{--mdc-icon-size:24px}
-.fcst .fd small{text-align:right}.fcst .fd>span{font-weight:600}
+.fcst .fday small{text-align:right}.fcst .fday>span{font-weight:600}
 .frng{position:relative;height:6px;border-radius:999px;background:rgba(255,255,255,.1)}
 .frng i{position:absolute;top:0;bottom:0;border-radius:999px}
 .frng .fdot{width:10px;height:10px;top:-2px;margin-left:-5px;background:#fff;border:2px solid rgba(0,0,0,.35);box-sizing:border-box}
-.fcst .fd b{text-align:left}
+.fcst .fday b{text-align:left}
 /* home: the date row (with the people when shown), what is on as chips, rows with a "+N" and the small menus */
 .drow{display:flex;align-items:center;gap:12px;min-width:0}
 .drow .people{flex:none}.drow .av{width:30px;height:30px;font-size:13px;margin-left:-8px;border-width:1.5px}.drow .av:first-child{margin-left:0}.drow .av i{width:9px;height:9px;border-width:1.5px}
