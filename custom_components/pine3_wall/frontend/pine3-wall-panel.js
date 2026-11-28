@@ -1041,7 +1041,7 @@ class Pine3WallPanel extends HTMLElement {
     const day = (f, k) => {
       const lo = f.low ?? f.temp, hi = f.temp;
       const dot = k === 0 && today && w?.temp != null ? `<i class="fdot" style="left:${pos(w.temp)}%"></i>` : "";
-      return `<div class="fd"><span>${k === 0 && today ? t("Hoje") : cap(f.time.toLocaleDateString(locale(), { weekday: "short" }).replace(".", "").slice(0, 3))}</span><ha-icon icon="${icon(f.cond)}"></ha-icon>
+      return `<div class="fday"><span>${k === 0 && today ? t("Hoje") : cap(f.time.toLocaleDateString(locale(), { weekday: "short" }).replace(".", "").slice(0, 3))}</span><ha-icon icon="${icon(f.cond)}"></ha-icon>
         <small class="pp">${f.precip != null ? Math.round(f.precip) + "%" : ""}</small><small>${deg(lo)}</small>
         <div class="frng"><i style="left:${pos(lo)}%;width:${Math.max(4, pos(hi) - pos(lo))}%;background:linear-gradient(90deg,${tempColor(lo)},${tempColor(hi)})"></i>${dot}</div><b>${deg(hi)}</b></div>`;
     };
